@@ -1,0 +1,266 @@
+import type { DiagramSpec } from "@/components/Diagram";
+
+/**
+ * One architecture diagram per case study, keyed by project slug.
+ *
+ * Layout convention across all five: the main flow runs left to right along
+ * the middle row, with supporting concerns placed above and below it. Edges
+ * only ever travel through empty cells or the gaps between columns, which is
+ * why some of them declare an explicit route.
+ */
+export const diagrams: Record<string, DiagramSpec> = {
+  forecast: {
+    title: "Weekly forecast pipeline, from ERP extract to replenishment",
+    description:
+      "The ERP feeds a daily Dagster ingest into a Bronze layer, refined into Silver features and Gold training frames. A model tournament trains from Gold and logs to MLflow; the weekly forecast job writes into the replenishment system, and a horizon audit checks the served forecast every week.",
+    lanes: ["source", "ingest", "lake", "modelling", "serving"],
+    nodes: [
+      { id: "erp", col: 0, row: 0, label: "ERP", sub: "sales · stock · master data" },
+      { id: "ingest", col: 1, row: 0, label: "Daily ingest", sub: "Dagster asset" },
+      { id: "bronze", col: 2, row: 0, label: "Bronze", sub: "raw, append-only", tone: "store" },
+      { id: "silver", col: 2, row: 1, label: "Silver", sub: "cleaned + features", tone: "store" },
+      { id: "gold", col: 2, row: 2, label: "Gold", sub: "training frames", tone: "store" },
+      { id: "weekly", col: 3, row: 0, label: "Weekly forecast", sub: "Dagster schedule" },
+      {
+        id: "tourney",
+        col: 3,
+        row: 1,
+        label: "Model tournament",
+        sub: "LightGBM · Croston/SBA",
+        tone: "accent",
+      },
+      { id: "mlflow", col: 3, row: 2, label: "MLflow", sub: "runs · metrics · artefacts" },
+      {
+        id: "replen",
+        col: 4,
+        row: 0,
+        label: "Replenishment",
+        sub: "merchandise reorder",
+        tone: "accent",
+      },
+      {
+        id: "audit",
+        col: 4,
+        row: 1,
+        label: "Horizon audit",
+        sub: "weeks of usable forecast",
+        tone: "gate",
+      },
+    ],
+    edges: [
+      { from: "erp", to: "ingest" },
+      { from: "ingest", to: "bronze" },
+      { from: "bronze", to: "silver" },
+      { from: "silver", to: "gold" },
+      { from: "gold", to: "tourney", route: "hvh" },
+      { from: "tourney", to: "weekly", route: "v" },
+      { from: "tourney", to: "mlflow", route: "v" },
+      { from: "weekly", to: "replen" },
+      { from: "replen", to: "audit", route: "v", dashed: true, label: "audited weekly" },
+    ],
+  },
+
+  "market-prices": {
+    title: "From a weekly PDF bulletin to a price reading the buyers act on",
+    description:
+      "DANE bulletins are scraped and unit-normalised into a medallion lake. A 52-week forecast runs per product with model selection by multi-horizon MAPE. A language model writes the reading of each series, cached by payload hash, and the authenticated FastAPI application serves it to the commercial team.",
+    lanes: ["source", "ingest", "lake", "intelligence", "delivery"],
+    nodes: [
+      {
+        id: "dane",
+        col: 0,
+        row: 1,
+        label: "DANE SIPSA bulletins",
+        sub: "weekly · formatted for humans",
+      },
+      {
+        id: "norm",
+        col: 1,
+        row: 0,
+        label: "Unit normalisation",
+        sub: "per-sheet, not global",
+        tone: "gate",
+      },
+      { id: "scrape", col: 1, row: 1, label: "Scrape + parse", sub: "schema drift tolerated" },
+      { id: "lake", col: 2, row: 1, label: "Medallion lake", sub: "Delta Lake · upserts", tone: "store" },
+      { id: "layers", col: 2, row: 2, label: "Bronze / Silver / Gold", sub: "per-product series", tone: "store" },
+      { id: "sel", col: 3, row: 0, label: "Model selection", sub: "multi-horizon MAPE" },
+      {
+        id: "fc",
+        col: 3,
+        row: 1,
+        label: "52-week forecast",
+        sub: "XGBoost · LightGBM",
+        tone: "accent",
+      },
+      { id: "llm", col: 3, row: 2, label: "LLM reading", sub: "one paragraph per series", tone: "accent" },
+      { id: "team", col: 4, row: 0, label: "Commercial team", sub: "supplier negotiation", tone: "accent" },
+      { id: "api", col: 4, row: 1, label: "FastAPI + HTMX", sub: "authenticated, on the internet" },
+      { id: "cache", col: 4, row: 2, label: "Insight cache", sub: "keyed by payload hash", tone: "store" },
+    ],
+    edges: [
+      { from: "dane", to: "scrape" },
+      { from: "norm", to: "scrape", route: "v" },
+      { from: "scrape", to: "lake" },
+      { from: "lake", to: "layers", route: "v" },
+      { from: "lake", to: "fc" },
+      { from: "sel", to: "fc", route: "v" },
+      { from: "fc", to: "llm", route: "v" },
+      { from: "llm", to: "cache" },
+      { from: "cache", to: "api", route: "v", label: "hit → no call" },
+      { from: "fc", to: "api" },
+      { from: "api", to: "team", route: "v" },
+    ],
+  },
+
+  rag: {
+    title: "Two answer paths, one source of numbers",
+    description:
+      "A question from Telegram hits an intent router that sends it down one of two paths. The certified path runs closed SQL recipes into a deterministic metric composer. The dynamic path has a language model write SQL, which is lexically validated and dry-run before it touches the warehouse. Both paths read from the same data warehouse, and every model call goes through a single paid-provider entry point.",
+    lanes: ["channel", "routing", "path", "execution", "answer"],
+    nodes: [
+      { id: "user", col: 0, row: 1, label: "Question", sub: "Telegram, plain language" },
+      { id: "router", col: 1, row: 1, label: "Intent router", sub: "path mix = health signal", tone: "accent" },
+      {
+        id: "spend",
+        col: 1,
+        row: 2,
+        label: "Paid-provider gate",
+        sub: "one entry point, test-enforced",
+        tone: "gate",
+      },
+      { id: "certified", col: 2, row: 0, label: "Certified path", sub: "closed SQL recipes" },
+      { id: "dynamic", col: 2, row: 2, label: "Dynamic path", sub: "LLM writes the SQL", tone: "gate" },
+      { id: "composer", col: 3, row: 0, label: "Metric composer", sub: "assembled in code" },
+      {
+        id: "validate",
+        col: 3,
+        row: 2,
+        label: "Validate · dry-run",
+        sub: "bounded retry",
+        tone: "gate",
+      },
+      {
+        id: "dwh",
+        col: 3,
+        row: 1,
+        label: "Data warehouse",
+        sub: "the only source of numbers",
+        tone: "store",
+      },
+      {
+        id: "answer",
+        col: 4,
+        row: 1,
+        label: "Answer",
+        sub: "every figure has a query",
+        tone: "accent",
+      },
+    ],
+    edges: [
+      { from: "user", to: "router" },
+      { from: "router", to: "certified", route: "hvh" },
+      { from: "router", to: "dynamic", route: "hvh" },
+      { from: "spend", to: "dynamic", label: "calls" },
+      { from: "certified", to: "composer" },
+      { from: "dynamic", to: "validate" },
+      { from: "composer", to: "dwh", route: "v" },
+      { from: "validate", to: "dwh", route: "v" },
+      { from: "dwh", to: "answer" },
+    ],
+  },
+
+  "operations-platform": {
+    title: "One API where separate scripts used to be",
+    description:
+      "The operations team works in a plain-JavaScript web UI backed by a single FastAPI core that holds the transfer, buying-factor and reporting logic previously spread across standalone scripts. Dagster drives the recurring report runs, delivery goes out over the Gmail API with OAuth2, and SQL Server remains the transactional source.",
+    lanes: ["users", "interface", "platform", "delivery", "systems"],
+    nodes: [
+      { id: "ops", col: 0, row: 1, label: "Operations & planning", sub: "used to queue behind me" },
+      { id: "dagster", col: 1, row: 0, label: "Dagster", sub: "recurring schedules" },
+      { id: "ui", col: 1, row: 1, label: "Web UI", sub: "plain JS, no build step" },
+      {
+        id: "api",
+        col: 2,
+        row: 1,
+        label: "FastAPI core",
+        sub: "transfers · factors · reports",
+        tone: "accent",
+      },
+      {
+        id: "legacy",
+        col: 2,
+        row: 2,
+        label: "Standalone scripts",
+        sub: "absorbed one at a time",
+        tone: "ghost",
+      },
+      { id: "gmail", col: 3, row: 0, label: "Gmail API", sub: "OAuth2, not SMTP" },
+      { id: "inbox", col: 4, row: 0, label: "Inboxes", sub: "no human in the loop", tone: "accent" },
+      { id: "db", col: 4, row: 1, label: "SQL Server", sub: "transactional source", tone: "store" },
+    ],
+    edges: [
+      { from: "ops", to: "ui" },
+      { from: "ui", to: "api" },
+      { from: "dagster", to: "api", route: "hv" },
+      { from: "legacy", to: "api", route: "v", dashed: true, label: "migrated" },
+      { from: "api", to: "gmail", route: "hvh" },
+      { from: "gmail", to: "inbox" },
+      { from: "api", to: "db" },
+    ],
+  },
+
+  cortana: {
+    title: "Memory and runtime, split on purpose",
+    description:
+      "Requests arrive over Telegram or the web UI into a FastAPI runtime that dispatches to a lane per domain — memory, finance, calendar. Every lane's irreversible actions pass through a human-in-the-loop gate before touching persistence. Long-term memory is a Git-versioned Markdown vault the runtime reconciles with rather than overwrites; transactional state is Postgres, guarded by restore-tested backups.",
+    groups: [
+      { label: "runtime", cols: [1, 3], rows: [0, 2] },
+      { label: "persistence", cols: [4, 4], rows: [0, 2] },
+    ],
+    nodes: [
+      { id: "me", col: 0, row: 1, label: "Me", sub: "Telegram · web UI" },
+      { id: "api", col: 1, row: 1, label: "FastAPI runtime", sub: "channel + orchestration" },
+      { id: "mem", col: 2, row: 0, label: "Memory lane", sub: "search · read · edit" },
+      { id: "fin", col: 2, row: 1, label: "Finance lane", sub: "statements · balances" },
+      { id: "cal", col: 2, row: 2, label: "Calendar lane", sub: "events · tasks" },
+      {
+        id: "hil",
+        col: 3,
+        row: 1,
+        label: "Human-in-the-loop gate",
+        sub: "nothing irreversible",
+        tone: "gate",
+      },
+      {
+        id: "vault",
+        col: 4,
+        row: 0,
+        label: "Vault (Git)",
+        sub: "Markdown · pull-first",
+        tone: "accent",
+      },
+      { id: "pg", col: 4, row: 1, label: "Postgres", sub: "transactional state", tone: "store" },
+      {
+        id: "backup",
+        col: 4,
+        row: 2,
+        label: "Backups + restore drill",
+        sub: "destructive ops blocked",
+        tone: "gate",
+      },
+    ],
+    edges: [
+      { from: "me", to: "api" },
+      { from: "api", to: "mem", route: "hvh" },
+      { from: "api", to: "fin" },
+      { from: "api", to: "cal", route: "hvh" },
+      { from: "mem", to: "hil", route: "hv" },
+      { from: "fin", to: "hil" },
+      { from: "cal", to: "hil", route: "hv" },
+      { from: "hil", to: "vault", route: "hvh" },
+      { from: "hil", to: "pg", route: "hvh" },
+      { from: "pg", to: "backup", route: "v" },
+    ],
+  },
+};
