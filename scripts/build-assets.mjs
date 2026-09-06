@@ -60,34 +60,84 @@ await square
    ------------------------------------------------------------------------- */
 const LOGO = path.join("assets", "source", "mark.png");
 
+/**
+ * Lifts a flat-coloured mark off a flat background into real transparency.
+ *
+ * The brand files ship as the mark painted onto an opaque plate (the one named
+ * "no_bg" is a white plate with a fully opaque alpha channel, which is why it
+ * still shows a box on a dark page). Trimming only crops the border; the plate
+ * behind the glyph survives.
+ *
+ * A blended edge pixel is `P = a*C + (1-a)*B` for mark colour C over background
+ * B, so alpha recovers exactly: `a = (B - P) / (B - C)`, measured on whichever
+ * channel separates C from B the most. Output is flat C with that alpha, which
+ * keeps anti-aliased edges smooth instead of stair-stepped.
+ */
+async function keyOut(file) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const n = info.width * info.height;
+  const ch = info.channels;
+
+  // Background is whatever fills the corners.
+  const bg = [data[0], data[1], data[2]];
+
+  // Mark colour: the pixel furthest from the background, which for a flat
+  // glyph is the glyph itself.
+  let best = -1;
+  let mark = [0, 0, 0];
+  for (let i = 0; i < n; i++) {
+    const o = i * ch;
+    const d =
+      Math.abs(data[o] - bg[0]) + Math.abs(data[o + 1] - bg[1]) + Math.abs(data[o + 2] - bg[2]);
+    if (d > best) {
+      best = d;
+      mark = [data[o], data[o + 1], data[o + 2]];
+    }
+  }
+
+  // Measure alpha on the channel with the widest separation.
+  let k = 0;
+  for (let c = 1; c < 3; c++) {
+    if (Math.abs(bg[c] - mark[c]) > Math.abs(bg[k] - mark[k])) k = c;
+  }
+  const span = bg[k] - mark[k];
+
+  const out = Buffer.alloc(n * 4);
+  for (let i = 0; i < n; i++) {
+    const a = Math.round(((bg[k] - data[i * ch + k]) / span) * 255);
+    out[i * 4] = mark[0];
+    out[i * 4 + 1] = mark[1];
+    out[i * 4 + 2] = mark[2];
+    out[i * 4 + 3] = Math.max(0, Math.min(255, a));
+  }
+
+  console.log(
+    `mark keyed: glyph rgb(${mark.join(",")}) off background rgb(${bg.join(",")})`,
+  );
+
+  return sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .trim({ threshold: 1 })
+    .png()
+    .toBuffer();
+}
+
 if (fs.existsSync(LOGO)) {
-  // Source already has a real alpha channel, so the mark only needs trimming
-  // to its ink and resizing. Nothing is keyed or recoloured: the violet is the
-  // brand's own.
-  const trimmed = await sharp(LOGO).ensureAlpha().trim({ threshold: 1 }).png().toBuffer();
+  const cut = await keyOut(LOGO);
 
-  await sharp(trimmed)
-    .resize({
-      width: 512,
-      height: 512,
-      fit: "contain",
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .png({ compressionLevel: 9 })
-    .toFile(path.join("public", "mark.png"));
-
-  // Tab icon: transparent, so the browser shows it on its own tab colour the
-  // way a product mark should. Built at final size because sharp runs resize
-  // before composite.
-  await sharp(trimmed)
-    .resize({
-      width: 256,
-      height: 256,
-      fit: "contain",
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .png({ compressionLevel: 9 })
-    .toFile(path.join("src", "app", "icon.png"));
+  for (const [size, target] of [
+    [512, path.join("public", "mark.png")],
+    [256, path.join("src", "app", "icon.png")],
+  ]) {
+    await sharp(cut)
+      .resize({
+        width: size,
+        height: size,
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .png({ compressionLevel: 9 })
+      .toFile(target);
+  }
 
   // Note: there must be no `src/app/favicon.ico`. Next gives favicon.ico
   // precedence over icon.png, so a stale one silently wins in the tab.
