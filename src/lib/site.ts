@@ -10,9 +10,9 @@ export const site = {
 
   /** The longer version, for /about and for meta descriptions. */
   intro: [
-    "I'm the data and automation engineer at Mercaldas, a retail grocery chain in Colombia, and the only person there who writes code.",
-    "I built the weekly demand forecast for thousands of product and store combinations, a market price platform the commercial team now takes into supplier negotiations, and an assistant that answers business questions with verified numbers instead of invented ones.",
-    "Next I want to apply the same engineering to energy access and distributed generation data, on a team where I'm not the person who knows the most in the room.",
+    "I'm a data and automation engineer at Mercaldas, a retail grocery chain in Colombia, where I build the systems behind forecasting, pricing and internal operations.",
+    "I built the weekly demand forecast for thousands of product and store combinations, a market price platform the commercial team takes into supplier negotiations, and an assistant that answers business questions with verified numbers instead of invented ones.",
+    "Outside work I build my own infrastructure, and I'm interested in how these same methods apply to energy data: load forecasting, distributed generation, and the reliability problems that come with both.",
   ],
 
   url: "https://pablo-lopez.vercel.app",
@@ -23,7 +23,7 @@ export const site = {
     linkedinLabel: "linkedin.com/in/pablo-a-lopez-s",
     github: "https://github.com/PogloLopez",
     githubLabel: "github.com/PogloLopez",
-    location: "Based in Manizales, Colombia. I work with teams anywhere.",
+    location: "Manizales, Colombia",
   },
 
   cv: {
@@ -51,7 +51,7 @@ export const headlineStats = [
     label: "In production, each designed and built end to end",
   },
   {
-    value: "Sole engineer",
-    label: "The entire data and AI function at the company",
+    value: "End to end",
+    label: "Ingestion, modelling, orchestration and interface on every one",
   },
 ] as const;

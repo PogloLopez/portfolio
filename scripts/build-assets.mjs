@@ -61,28 +61,12 @@ await square
 const LOGO = path.join("assets", "source", "mark.png");
 
 if (fs.existsSync(LOGO)) {
-  const { data, info } = await sharp(LOGO).greyscale().raw().toBuffer({ resolveWithObject: true });
+  // Source already has a real alpha channel, so the mark only needs trimming
+  // to its ink and resizing. Nothing is keyed or recoloured: the violet is the
+  // brand's own.
+  const trimmed = await sharp(LOGO).ensureAlpha().trim({ threshold: 1 }).png().toBuffer();
 
-  // Build RGBA directly: flat accent colour, alpha taken from the source's
-  // luminance. Doing it as a composite blend does not work — a greyscale PNG
-  // is fully opaque, so `dest-in` would key against nothing.
-  const rgba = Buffer.alloc(info.width * info.height * 4);
-  for (let i = 0; i < info.width * info.height; i++) {
-    const v = data[i];
-    rgba[i * 4] = 124;
-    rgba[i * 4 + 1] = 92;
-    rgba[i * 4 + 2] = 255;
-    rgba[i * 4 + 3] = v <= 28 ? 0 : v >= 90 ? 255 : Math.round(((v - 28) / 62) * 255);
-  }
-
-  const cut = await sharp(rgba, {
-    raw: { width: info.width, height: info.height, channels: 4 },
-  })
-    .trim({ threshold: 1 })
-    .png()
-    .toBuffer();
-
-  await sharp(cut)
+  await sharp(trimmed)
     .resize({
       width: 512,
       height: 512,
@@ -92,29 +76,21 @@ if (fs.existsSync(LOGO)) {
     .png({ compressionLevel: 9 })
     .toFile(path.join("public", "mark.png"));
 
-  // Tab icon: the same mark on the site's ground, so it reads at 16px.
-  // Note: there must be no `src/app/favicon.ico`. Next gives favicon.ico
-  // precedence over icon.png, so a stale one silently wins in the tab.
-  // Built at its final size — sharp runs resize before composite, so shrinking
-  // after the overlay would try to paste the mark onto a smaller base.
-  await sharp({
-    create: { width: 256, height: 256, channels: 4, background: "#05060e" },
-  })
-    .composite([
-      {
-        input: await sharp(cut)
-          .resize({
-            width: 184,
-            height: 184,
-            fit: "contain",
-            background: { r: 0, g: 0, b: 0, alpha: 0 },
-          })
-          .toBuffer(),
-        gravity: "center",
-      },
-    ])
+  // Tab icon: transparent, so the browser shows it on its own tab colour the
+  // way a product mark should. Built at final size because sharp runs resize
+  // before composite.
+  await sharp(trimmed)
+    .resize({
+      width: 256,
+      height: 256,
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
     .png({ compressionLevel: 9 })
     .toFile(path.join("src", "app", "icon.png"));
+
+  // Note: there must be no `src/app/favicon.ico`. Next gives favicon.ico
+  // precedence over icon.png, so a stale one silently wins in the tab.
 
   console.log("mark.png + icon.png written from the maieutik mark");
 }

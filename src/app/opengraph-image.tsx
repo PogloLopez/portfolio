@@ -8,7 +8,7 @@ export const alt = `${site.name} · ${site.role}`;
 export default function Image() {
   return ogCard({
     eyebrow: "Data engineer · AI & automation",
-    title: "Systems that run in production, not in notebooks.",
+    title: "Forecasting, pipelines and AI agents in production.",
     footer: site.name,
   });
 }

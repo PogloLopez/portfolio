@@ -82,8 +82,8 @@ export default function Home() {
         <SectionLabel>Selected work</SectionLabel>
         <p className="mb-10 max-w-2xl text-base leading-relaxed text-fg-2">
           Five systems I designed, built and operate. Four run at Mercaldas, a retail grocery
-          chain where I am the only person who writes code. The fifth is my own infrastructure.
-          Every one has a working demo you can click.
+          chain in Colombia. The fifth is my own infrastructure. Every one has a working demo
+          you can click.
         </p>
         <ul className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project, i) => (

@@ -157,3 +157,60 @@ export function Segmented<T extends string>({
     </div>
   );
 }
+
+/**
+ * A timeline the reader drags. Chosen over a "next" button because a track with
+ * a handle on it explains itself: people grab it without being told to, and the
+ * position of the handle is itself the state readout.
+ */
+export function Timeline({
+  value,
+  max,
+  onChange,
+  label,
+  tickLabel,
+  disabled,
+}: {
+  value: number;
+  max: number;
+  onChange: (v: number) => void;
+  label: string;
+  tickLabel: (i: number) => string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className={disabled ? "opacity-40" : undefined}>
+      <label className="block">
+        <span className="mb-3 block text-sm font-medium text-fg-2">{label}</span>
+        <input
+          type="range"
+          min={0}
+          max={max}
+          step={1}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="demo-range w-full"
+          // The filled portion of the track is painted from this, so the
+          // handle always has a coloured run behind it.
+          style={{ ["--fill" as string]: `${(value / max) * 100}%` }}
+        />
+      </label>
+      <div className="mt-2 flex justify-between">
+        {Array.from({ length: max + 1 }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(i)}
+            className={`min-w-8 rounded px-1 py-1 font-mono text-[0.6875rem] transition-colors ${
+              i === value ? "font-semibold text-iris" : "text-fg-3 hover:text-fg-2"
+            }`}
+          >
+            {tickLabel(i)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

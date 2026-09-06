@@ -3,17 +3,17 @@
 import { useMemo, useState } from "react";
 import { DemoFrame } from "./DemoFrame";
 import { LineChart, type Series } from "./LineChart";
-import { Button } from "./controls";
+import { Segmented, Timeline } from "./controls";
 import { seriesColor, status } from "./palette";
 
 /**
  * The horizon-degradation story from the forecast case study, made playable.
  *
- * It has to explain itself with no prose beside it, so the framing lives inside
- * the demo: a one-line scenario, one obvious button, and two panels labelled
- * "what the team saw" against "what was actually true". The contrast between
- * those two is the whole point, so they are named for the reader rather than
- * for the tools involved.
+ * It has to explain itself to someone who clicks before reading, so the
+ * controls carry the meaning: a track you drag, and a switch between two named
+ * states. Dragging in "before" watches the forecast quietly rot while every job
+ * reports success; dragging in "after" shows the same week going red on day
+ * one. The comparison is the point, so both states stay draggable.
  *
  * Synthetic throughout: no Mercaldas data, no real run history.
  */
@@ -63,8 +63,8 @@ export function ForecastDemo() {
   const [week, setWeek] = useState(0);
   const [fixed, setFixed] = useState(false);
 
-  const shown = fixed ? 0 : week;
-  const horizon = horizonFor(shown);
+  // After the fix nothing stale is ever served, so the usable horizon holds.
+  const horizon = fixed ? HEALTHY_HORIZON : horizonFor(week);
   const pct = Math.round((horizon / HEALTHY_HORIZON) * 100);
 
   const { labels, series } = useMemo(() => {
@@ -73,7 +73,7 @@ export function ForecastDemo() {
     const expected: (number | null)[] = [];
     for (let i = 0; i <= MAX_WEEK; i++) {
       labels.push(i === 0 ? "now" : `+${i}w`);
-      measured.push(i <= shown ? horizonFor(i) : null);
+      measured.push(i <= week ? (fixed ? HEALTHY_HORIZON : horizonFor(i)) : null);
       expected.push(HEALTHY_HORIZON);
     }
     const s: Series[] = [
@@ -87,31 +87,32 @@ export function ForecastDemo() {
       },
     ];
     return { labels, series: s };
-  }, [shown]);
+  }, [week, fixed]);
 
-  const verdict = fixed
-    ? {
-        tone: status.good,
-        head: "Fixed. Now it fails loudly.",
-        body: "The forecast job refuses to run on stale data. Someone finds out the same day instead of two months later. This is the change that shipped.",
-      }
-    : shown === 0
+  const verdict =
+    week === 0
       ? {
           tone: status.good,
           head: "Everything is healthy.",
-          body: "Fresh data this morning, a full 12 week forecast going out to the stores. Press the button and let the weeks pass.",
+          body: "Fresh data this morning, a full 12 week forecast going out to the stores. Now drag the timeline.",
         }
-      : shown < 4
+      : fixed
         ? {
-            tone: status.warn,
-            head: `${shown} week${shown > 1 ? "s" : ""} in. Still no alarm.`,
-            body: "The data feed stopped, but the forecast job never depended on it strictly enough to notice. It keeps running on older and older data, and keeps reporting success.",
+            tone: status.good,
+            head: "Caught in week one.",
+            body: "The forecast now refuses to run on stale inputs, so nothing degraded ever reaches the stores. The pipeline goes red immediately and someone goes and fixes the feed. This is the change that shipped.",
           }
-        : {
-            tone: status.bad,
-            head: `${shown} weeks in. Still no alarm.`,
-            body: `The dashboard is entirely green while the stores reorder from a forecast that can only see ${horizon} weeks ahead instead of ${HEALTHY_HORIZON}. Nothing in the monitoring would ever have caught this.`,
-          };
+        : week < 4
+          ? {
+              tone: status.warn,
+              head: `${week} week${week > 1 ? "s" : ""} in. Still no alarm.`,
+              body: "The data feed stopped, but the forecast job never depended on it strictly enough to notice. It keeps running on older and older data, and keeps reporting success.",
+            }
+          : {
+              tone: status.bad,
+              head: `${week} weeks in. Still no alarm.`,
+              body: `The dashboard is entirely green while the stores reorder from a forecast that can only see ${horizon} weeks ahead instead of ${HEALTHY_HORIZON}. Nothing in the monitoring would ever have caught this.`,
+            };
 
   return (
     <DemoFrame
@@ -119,47 +120,35 @@ export function ForecastDemo() {
       subtitle="mercaldas-forecast · demo build"
       note="A reconstruction of a real failure I found in my own pipeline, and the fix for it. Run history and figures are invented."
     >
-      {/* The scenario, stated before anything else. */}
+      {/* The controls carry the explanation: a track you drag, and a switch
+          between two named states. Both are understood without instructions. */}
       <div className="mb-6 rounded-lg border border-line bg-surface-2/50 p-4 sm:p-5">
-        <p className="text-[0.9375rem] leading-relaxed text-fg-2">
-          <span className="font-semibold text-fg">The setup.</span> Stores reorder their stock from
-          a forecast that runs every week. One day the job that loads fresh sales data stops
-          running, and nothing errors out.
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Button
-            onClick={() => setWeek((w) => Math.min(MAX_WEEK, w + 1))}
-            disabled={fixed || week >= MAX_WEEK}
-          >
-            {week === 0 ? "Let a week pass" : "Let another week pass"}
-          </Button>
-          {(week > 0 || fixed) && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setFixed(true);
-                setWeek(0);
-              }}
-              disabled={fixed}
-            >
-              Show me the fix
-            </Button>
-          )}
-          {(week > 0 || fixed) && (
-            <Button
-              variant="danger"
-              onClick={() => {
-                setFixed(false);
-                setWeek(0);
-              }}
-            >
-              Start over
-            </Button>
-          )}
-          <span className="font-mono text-xs text-fg-3">
-            {fixed ? "after the fix" : `week ${week} of ${MAX_WEEK}`}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <Segmented
+            ariaLabel="Pipeline version"
+            value={fixed ? "after" : "before"}
+            onChange={(v) => setFixed(v === "after")}
+            options={[
+              { value: "before", label: "Before the fix" },
+              { value: "after", label: "After the fix" },
+            ]}
+          />
+          <span className="text-xs text-fg-3">
+            The daily data feed stopped. Drag to watch what happens next.
           </span>
         </div>
+
+        <Timeline
+          value={week}
+          max={MAX_WEEK}
+          onChange={setWeek}
+          label={
+            week === 0
+              ? "Weeks since the data feed stopped"
+              : `${week} week${week > 1 ? "s" : ""} since the data feed stopped`
+          }
+          tickLabel={(i) => (i === 0 ? "0" : `${i}w`)}
+        />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -197,7 +186,7 @@ export function ForecastDemo() {
             className="mt-5 border-t border-line pt-4 text-sm font-semibold"
             style={{ color: fixed && week > 0 ? status.bad : status.good }}
           >
-            {fixed && shown > 0 ? "1 job stopped" : "0 failures"}
+            {fixed && week > 0 ? "1 job stopped, loudly" : "0 failures"}
           </p>
         </div>
 
@@ -233,15 +222,19 @@ export function ForecastDemo() {
         </div>
       </div>
 
-      <div className="mt-7">
-        <LineChart
-          xLabels={labels}
-          series={series}
-          format={(n) => `${n} wk`}
-          height={190}
-          caption="Weeks of usable forecast measured independently, against the twelve the pipeline is supposed to deliver. Synthetic values."
-        />
-      </div>
+      {/* After the fix the horizon never moves, so the chart would be two
+          flat lines on top of each other. The two panels carry that state. */}
+      {!fixed && (
+        <div className="mt-7">
+          <LineChart
+            xLabels={labels}
+            series={series}
+            format={(n) => `${n} wk`}
+            height={190}
+            caption="Weeks of usable forecast measured independently, against the twelve the pipeline is supposed to deliver. Synthetic values."
+          />
+        </div>
+      )}
     </DemoFrame>
   );
 }

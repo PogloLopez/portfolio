@@ -70,8 +70,8 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl px-5 pt-14 pb-16 sm:px-8 sm:pt-20 sm:pb-20">
           <Eyebrow>About</Eyebrow>
           <h1 className="mt-6 max-w-3xl text-3xl leading-[1.1] font-bold tracking-[-0.03em] text-fg sm:text-5xl">
-            The only person writing code at a retail chain. A good way to learn, and a bad way
-            to stay.
+            I build data systems for a retail chain, and I am the person who operates them
+            afterwards.
           </h1>
           <div className="mt-9 grid max-w-4xl gap-5 text-base leading-relaxed text-fg-2 sm:text-[1.0625rem]">
             {site.intro.map((p) => (
@@ -137,9 +137,9 @@ export default function AboutPage() {
           </div>
 
           <p className="mt-10 max-w-2xl text-base leading-relaxed text-fg-2">
-            What I am looking for is a team with senior engineers to be measured against. Being the
-            person who knows the most about data in the room is a fine place to be for a year and a
-            poor place to calibrate judgment for a career.
+            A forecast that has to be right every week teaches the same lessons whether the
+            series is demand or load: inputs go stale, monitoring lies to you, and the interval
+            matters more than the point estimate.
           </p>
         </div>
       </section>
