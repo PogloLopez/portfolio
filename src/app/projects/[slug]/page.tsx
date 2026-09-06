@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { projects, projectBySlug } from "@/content/projects";
 import { tocFor } from "@/lib/toc";
 import { Arrow, ChipRow, Eyebrow, SectionLabel, Stat } from "@/components/ui";
+import { DemoSlot } from "@/components/demos/DemoSlot";
+import { hasDemo } from "@/components/demos/registry";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -114,6 +116,19 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           </div>
         </div>
       </section>
+
+      {/* -------------------------------------------------------------
+          The demo sits between the summary and the deep dive: after the
+          reader is interested, before they commit to a long read.
+      ------------------------------------------------------------- */}
+      {hasDemo(slug) && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+            <SectionLabel>Try it</SectionLabel>
+            <DemoSlot slug={slug} />
+          </div>
+        </section>
+      )}
 
       {/* -------------------------------------------------------------
           Layer 2 — the technical deep dive. Rendered inline rather than

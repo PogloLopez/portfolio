@@ -50,10 +50,12 @@ await square
   .webp({ quality: 80, effort: 6 })
   .toFile(path.join(OUT, "burst.webp"));
 
+// 256px is plenty for a tab icon, and quantising keeps it small enough that
+// it is not the heaviest thing in the repo.
 await square
   .clone()
-  .resize({ width: 512 })
-  .png({ compressionLevel: 9 })
+  .resize({ width: 256 })
+  .png({ compressionLevel: 9, palette: true, quality: 90 })
   .toFile(path.join("src", "app", "icon.png"));
 
 for (const f of fs.readdirSync(OUT)) {
