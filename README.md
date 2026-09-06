@@ -83,7 +83,17 @@ and the CV read as one identity.
 
 ## Deploying
 
-Pushes to `main` deploy through Vercel. Preview deployments come from pull requests.
+```bash
+npx vercel deploy          # preview
+npx vercel deploy --prod   # production
+```
+
+The Vercel project is `pablo-lopez` on the hobby team `poglolopezs-projects`. Git integration is
+not connected yet, so deploys are manual; installing the Vercel GitHub App and linking this
+repository turns on deploy-on-push and per-PR previews.
+
+**The site is currently behind Vercel Authentication** — every `*.vercel.app` URL asks for a
+login. See `DECISIONS.md` for the two steps that make it public.
 
 ## Structure
 

@@ -95,10 +95,26 @@ The identity this site inherits — the GitHub header, the LinkedIn banner — i
 mode would be a second design with none of the same character. The palette is committed to once
 and defined explicitly, so nothing borrows a colour from the browser's default.
 
+## Where the deployment stands
+
+The Vercel project is **`pablo-lopez`** under the hobby team `poglolopezs-projects`, and the
+site is deployed and verified rendering. It is **not public yet**, and that is deliberate.
+
+Vercel Authentication is on for the project with scope `all_except_custom_domains`, so every
+`*.vercel.app` URL — preview and production alike — asks for a Vercel login first. Signed in as
+the account owner the site opens normally; to anyone else it is a login page.
+
+Git integration is **not** connected: the Vercel GitHub App is not installed on the account, so
+deploys are manual (`npx vercel deploy`) rather than on push.
+
 ## What is left for Pablo
 
-- **Promote to production.** Previews deploy automatically; production is his call, per the
-  plan's own rule about publishing.
+- **Make it public, when he is happy with it.** Two steps, in this order:
+  1. Project Settings → Deployment Protection → turn **Vercel Authentication** off.
+  2. `npx vercel deploy --prod` from this repo.
+  Left undone on purpose — publishing is the decision the plan reserves for him.
+- **Optional: connect Git.** Installing the Vercel GitHub App (`github.com/apps/vercel`) and
+  linking `PogloLopez/portfolio` gives deploy-on-push and preview deployments per pull request.
 - **Verify the figures.** `case-studies.md` in the vault carries a note saying the ranges are
   representative of each repo's state as of 2026-09-05 but were never checked figure by figure.
   Nothing here invented a number, but nothing here verified one either.
