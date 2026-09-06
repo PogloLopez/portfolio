@@ -1,70 +1,78 @@
 import Link from "next/link";
 import type { Project } from "@/content/projects";
 import { Arrow, Chip } from "@/components/ui";
+import { CardVisual } from "@/components/CardVisual";
 
 /**
- * `featured` widens the card across both grid columns. It exists so the fifth
- * case study does not sit alone on a half-width row — and it lands on Cortana,
- * which is the intended closer of the sequence anyway.
+ * A home-page card. Ordered for a three-second scan: what it is, the two
+ * numbers that matter, a picture of the output, then the one interesting line.
+ *
+ * The whole card is the link, and it carries a visible button-shaped call to
+ * action, because a card that only turns a slightly different colour on hover
+ * does not read as clickable.
  */
-export function ProjectCard({
-  project,
-  index,
-  featured = false,
-}: {
-  project: Project;
-  index: number;
-  featured?: boolean;
-}) {
+export function ProjectCard({ project, index }: { project: Project; index: number }) {
   return (
-    <li className={featured ? "md:col-span-2" : undefined}>
+    <li>
       <Link
         href={`/projects/${project.slug}`}
-        className={`group relative flex h-full overflow-hidden rounded-xl border border-line bg-surface/70 p-6 transition-colors hover:border-iris/45 sm:p-7 ${
-          featured ? "flex-col gap-8 lg:flex-row lg:items-center lg:gap-14" : "flex-col"
-        }`}
+        className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line-strong bg-surface/80 p-6 transition-all hover:-translate-y-0.5 hover:border-iris/60 hover:bg-surface sm:p-7"
       >
         <span
           aria-hidden
           className="pointer-events-none absolute -top-24 -right-16 h-48 w-48 rounded-full bg-glow/0 blur-3xl transition-colors duration-500 group-hover:bg-glow/25"
         />
 
-        <div className={featured ? "lg:flex-1" : "contents"}>
-          <div className="flex items-baseline justify-between gap-4">
-            <span className="font-mono text-xs text-fg-3">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            <span className="font-mono text-xs text-fg-3">{project.kicker}</span>
-          </div>
-
-          <h3 className="mt-5 text-xl font-semibold tracking-[-0.015em] text-fg">
-            {project.title}
-          </h3>
-
-          <p className="mt-1.5 font-mono text-xs text-iris">{project.repo}</p>
-
-          <p className="mt-4 flex-1 text-[0.9375rem] leading-relaxed text-fg-2">{project.hook}</p>
-        </div>
-
-        <div className={featured ? "lg:w-80 lg:shrink-0" : "contents"}>
-          <ul className={`flex flex-wrap gap-2 ${featured ? "" : "mt-6"}`}>
-            {project.stack.slice(0, featured ? 6 : 4).map((s) => (
-              <li key={s}>
-                <Chip>{s}</Chip>
-              </li>
-            ))}
-            {project.stack.length > (featured ? 6 : 4) && (
-              <li>
-                <Chip>+{project.stack.length - (featured ? 6 : 4)}</Chip>
-              </li>
-            )}
-          </ul>
-
-          <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-fg-2 transition-colors group-hover:text-iris">
-            Read the case study
-            <Arrow className="transition-transform group-hover:translate-x-0.5" />
+        <div className="flex items-center justify-between gap-4">
+          <span className="font-mono text-xs text-fg-3">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="truncate font-mono text-[0.6875rem] tracking-[0.08em] text-iris uppercase">
+            {project.kicker}
           </span>
         </div>
+
+        <h3 className="mt-4 text-[1.375rem] leading-snug font-semibold tracking-[-0.02em] text-fg">
+          {project.title}
+        </h3>
+
+        <dl className="mt-5 flex gap-8">
+          {project.cardStats.map((s) => (
+            <div key={s.label}>
+              <dt className="sr-only">{s.label}</dt>
+              <dd>
+                <span className="block text-2xl leading-none font-semibold text-fg">
+                  {s.value}
+                </span>
+                <span className="mt-1.5 block text-xs text-fg-3">{s.label}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-5">
+          <CardVisual spec={project.visual} />
+        </div>
+
+        <p className="mt-5 flex-1 text-[0.9375rem] leading-relaxed text-fg-2">{project.hook}</p>
+
+        <ul className="mt-5 flex flex-wrap gap-2">
+          {project.stack.slice(0, 3).map((s) => (
+            <li key={s}>
+              <Chip>{s}</Chip>
+            </li>
+          ))}
+          {project.stack.length > 3 && (
+            <li>
+              <Chip>+{project.stack.length - 3}</Chip>
+            </li>
+          )}
+        </ul>
+
+        <span className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg border border-iris/55 bg-iris/12 px-4 py-2 text-sm font-semibold text-iris transition-colors group-hover:border-iris group-hover:bg-iris group-hover:text-ground">
+          Open case study
+          <Arrow className="transition-transform group-hover:translate-x-0.5" />
+        </span>
       </Link>
     </li>
   );

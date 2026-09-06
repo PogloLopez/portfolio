@@ -1,101 +1,74 @@
 import { Diagram } from "@/components/Diagram";
 import { diagrams } from "@/content/diagrams";
 
-## Context and constraints
+## Context
 
-Mercaldas is a retail grocery chain: more than a dozen stores, tens of thousands of active
-items, and a replenishment decision to make every week for each combination of the two. That
-decision was driven by the forecasting module bundled into the ERP — a black box in the strict
-sense. It produced a number, it did not produce a reason, and there was no parameter anyone
-inside the company could turn to make it better. When a store ran out of something, the honest
-answer to "why did the forecast miss?" was that nobody could know.
+A grocery chain: 12+ stores, tens of thousands of active items, one replenishment
+decision per combination every week. That decision came from the ERP's forecasting
+module, a black box that produced a number but never a reason.
 
-The constraints on the replacement were unglamorous and they shaped everything. There is no
-cloud budget and no GPU: the pipeline runs on a shared Windows server that also does other
-work. There is no data team; there is me. That second constraint matters more than the first,
-because it rules out any design whose failure mode is "someone notices and fixes it." Whatever
-I built had to fail loudly on its own, because there is no second pair of eyes.
+Two constraints shaped the replacement. **No cloud budget and no GPU**, so it runs on a
+shared Windows server. **No data team**, just me. The second one matters more: it rules
+out any design whose failure mode is "someone notices". Whatever I built had to fail
+loudly on its own.
 
-## Architecture decisions
-
-The lake is a medallion layout — Bronze, Silver, Gold — on the local filesystem rather than on
-object storage. Delta Lake gives the layer semantics without a warehouse behind it. Bronze is
-raw and append-only, so a bad transform is always recoverable by replaying from it; Silver
-holds cleaned series with the calendar and promotional features attached; Gold holds the
-training frames the models actually consume. The reason to keep these separate on a single
-server, where they could all be one script, is that the boundaries are where you put assertions.
+## Architecture
 
 <Diagram spec={diagrams.forecast} />
 
-The modelling layer is a **tournament rather than a model**. Series in a grocery catalogue do
-not behave alike: a fast-moving cleaning product and a slow, lumpy durable good need different
-machinery. Series are segmented by K-Means and the main workhorse is LightGBM per cluster, but
-intermittent demand goes to Croston and SBA through `statsforecast`, because tree models on a
-mostly-zero series learn to predict zero and are technically right and operationally useless.
+**Medallion layout on Delta Lake, local filesystem.** Bronze is raw and append-only, so a
+bad transform is always recoverable. Silver holds cleaned series with calendar and
+promotional features. Gold holds training frames. The boundaries exist because that is
+where the assertions go.
 
-The part I care about more than the model choice is the **switching rule**. A champion/challenger
-setup where the criterion for promoting a challenger is "it looked better" degenerates into the
-engineer's taste within two quarters. So the criterion is defined in the pipeline, measured on
-held-out horizons, and applied by the job. MLflow keeps the runs so a promotion can be argued
-about afterwards with the evidence still attached.
+**A tournament, not a model.** Series in a grocery catalogue do not behave alike. K-Means
+segments them, LightGBM handles the bulk per cluster, and intermittent demand goes to
+Croston and SBA. A tree model on a mostly-zero series learns to predict zero: technically
+right, operationally useless.
 
-Orchestration is Dagster on a weekly schedule, with daily ingestion as a separate asset. That
-split is the origin of the most interesting thing that has happened to this system.
+**The switching rule is code.** A champion/challenger setup where challengers get promoted
+because they "looked better" becomes the engineer's taste within two quarters. The
+criterion is defined in the pipeline, measured on held-out horizons, applied by the job.
+MLflow keeps the evidence.
 
 ## The hard part
 
-Some months in, I decided to audit the pipeline. Not because anything was on fire — everything
-was reporting success — but because "everything reports success" is exactly the state in which
-a silent failure is invisible, and I had no independent measurement of whether the forecast was
-still any good.
+Months in, I audited the pipeline. Nothing was on fire. That was the point: "everything
+reports success" is exactly the state where a silent failure hides.
 
-What the audit measured was the *usable horizon*: how many weeks ahead the system could still
-forecast from the data it actually had. That number had been shrinking for weeks.
+The audit measured **usable horizon**, how many weeks ahead the system could still forecast
+from the data it actually had. That number had been shrinking for weeks.
 
-The cause turned out to be structural rather than a bug in the ordinary sense. The daily
-ingestion job had stopped running. The weekly forecast job declared a dependency on the ingested
-data, but the dependency was declared and not enforced: Dagster was happy to materialise the
-forecast from whatever was already in the lake. So the weekly job ran, succeeded, and produced a
-forecast — from data that was progressively more stale, losing a week of real horizon for every
-week that passed. Every green checkmark in the system was accurate. The system was still wrong.
+The cause was structural. The daily ingest had stopped running. The weekly forecast
+*declared* a dependency on it but did not *enforce* one, so Dagster happily materialised a
+forecast from whatever was already in the lake. The job ran, succeeded, and produced a
+forecast from data that got staler every week.
 
-Two things came out of it. The immediate fix was to make the dependency real, so that a stale
-upstream stops the downstream job instead of quietly degrading it. The durable fix was the audit
-itself: horizon health is now measured every week as an independent signal, not inferred from
-job status. The distinction is the whole lesson — **a pipeline's own success reporting cannot be
-the evidence that a pipeline is working**, because the failure modes that survive longest are
-precisely the ones the reporting does not cover.
+Every green checkmark was accurate. The system was still wrong.
 
-I would rather show this than a leaderboard score. A model that beats a baseline on a held-out
-set is table stakes. Finding your own silent production failure before the business does, by
-building the instrument that could see it, is the part of the job that is actually hard.
+The immediate fix made the dependency real. The durable fix was the audit itself: horizon
+health is now measured independently, never inferred from job status. **A pipeline's own
+success reporting cannot be the evidence that it works.** The failure modes that survive
+longest are precisely the ones the reporting does not cover.
 
 ## Trade-offs
 
-**Pipeline reliability before model sophistication.** Hierarchical reconciliation — forcing
-store-level forecasts to sum consistently to category and chain level — is not implemented. It
-is a real gap and a well-understood technique. It is also the wrong next investment while the
-base pipeline's failure modes are not fully instrumented. A reconciled forecast built on data
-you cannot vouch for is a more confident version of the same problem.
+**Reliability before sophistication.** Hierarchical reconciliation is not implemented. It
+is a real gap and the wrong next investment while the base pipeline's failure modes are
+not fully instrumented.
 
-**Local filesystem over cloud storage.** This buys zero infrastructure cost and no vendor
-dependency, and it costs horizontal scale and a straightforward disaster-recovery story. At the
-current data volume that trade is clearly right; it is also the decision most likely to be
-revisited first, and it is documented as such rather than left as a discovery for whoever
-inherits the system.
+**Local filesystem over cloud storage.** Zero infrastructure cost and no vendor lock-in,
+against horizontal scale and an easy disaster-recovery story. Right at this volume, and
+the first decision I would revisit.
 
-**Weekly cadence over daily.** Replenishment operates weekly, so a daily forecast would be
-precision the business cannot consume. Matching the model's cadence to the decision's cadence
-also keeps the compute inside the window the shared server can actually give it.
+**Weekly, not daily.** Replenishment operates weekly. Matching the model's cadence to the
+decision's cadence also keeps compute inside the window a shared server can give it.
 
-## What the numbers are
+## Results
 
-Against the ERP baseline it replaced, the system cut WMAPE by a double-digit percentage across
-several product categories, with the largest gains in fast-moving lines such as household
-cleaning and durables. Thousands of product×store series are forecast every week across more
-than a dozen stores, and the output feeds the merchandise reordering system directly rather
-than landing in a report someone has to read. The test suite is over 350 cases and is green
-before anything deploys.
+Double-digit percentage WMAPE reduction against the ERP baseline across several
+categories, largest in fast-moving lines. Thousands of series forecast weekly across 12+
+stores, feeding merchandise reordering directly. Over 350 tests, green before deploy.
 
-Business figures are given as ranges deliberately: the company is named, the exact numbers
-are not mine to publish.
+*Business figures are published as ranges. The company is named, the exact numbers are not
+mine to publish.*

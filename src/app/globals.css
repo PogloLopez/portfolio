@@ -38,16 +38,17 @@
 }
 
 @layer base {
+  /*
+   * No global `scroll-behavior: smooth`: it also animates the scroll-to-top
+   * that Next runs on every navigation, which reads as the page lurching
+   * before it moves. Hash links animate themselves (see components/nav.tsx).
+   */
   html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 6rem;
+    scroll-padding-top: 5rem;
     -webkit-text-size-adjust: 100%;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
     *,
     *::before,
     *::after {

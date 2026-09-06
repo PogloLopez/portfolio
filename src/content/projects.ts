@@ -1,13 +1,16 @@
 /**
- * Layer 1 of every case study — the summary a hiring manager reads without
+ * Layer 1 of every case study: the summary a hiring manager reads without
  * scrolling. Layer 2 (the technical deep dive) lives in `projects/<slug>.mdx`.
  *
- * Confidentiality rule, applied to all four Mercaldas projects: the company is
+ * Confidentiality, applied to all four Mercaldas projects: the company is
  * named, but business figures appear only as ranges, orders of magnitude or
  * relative percentages. Exact revenue, margin, cost and volume figures are out.
- * Purely technical counts (tests, releases, series) are exact where the repo's
- * own README already states them. `cortana` is a personal project and carries
- * no such restriction.
+ * Technical counts can be exact where the project's own repo already states
+ * them. `cortana` is personal and carries no such restriction.
+ *
+ * Titles are written to be understood in about three seconds. A recruiter
+ * scanning the grid should know what each system is before reading anything
+ * else, so the clever line goes in `hook`, never in `title`.
  */
 
 export type Achievement = {
@@ -16,24 +19,32 @@ export type Achievement = {
   label: string;
 };
 
+/** The miniature that makes a home-page card visual rather than a text block. */
+export type CardVisual =
+  | { kind: "line"; points: number[]; caption: string }
+  | { kind: "bars"; points: number[]; caption: string }
+  | { kind: "chat"; caption: string }
+  | { kind: "gate"; caption: string };
+
 export type Project = {
   slug: string;
-  /** Repository name, shown as the technical identifier. */
   repo: string;
   title: string;
   kicker: string;
   /** The five-second answer to "what is this". */
   oneLiner: string;
-  /** What the home-page card leads with. */
+  /** The single sharp line the home-page card leads with. */
   hook: string;
   org: string;
   confidential: boolean;
   problem: string;
+  /** The two figures the card shows big. */
+  cardStats: Achievement[];
+  visual: CardVisual;
   achievements: Achievement[];
   stack: string[];
   role: string;
   duration: string;
-  /** Technical metrics, kept separate from the business outcomes above. */
   technical: Achievement[];
 };
 
@@ -41,34 +52,34 @@ export const projects: Project[] = [
   {
     slug: "forecast",
     repo: "mercaldas-forecast",
-    title: "Weekly demand forecasting at scale",
-    kicker: "MLOps · Time series · Production",
+    title: "ML demand forecasting in production",
+    kicker: "MLOps · Time series",
     oneLiner:
-      "A weekly forecasting system covering thousands of product×store series that feeds replenishment directly, built to replace the black box inside the ERP.",
-    hook:
-      "Replaced the ERP's black-box forecast and caught a silent production failure with an audit I designed myself.",
+      "A weekly forecasting system covering thousands of product and store series, feeding replenishment directly.",
+    hook: "Replaced the ERP's black box, then caught a silent production failure with an audit I designed myself.",
     org: "Mercaldas",
     confidential: true,
     problem:
-      "Mercaldas forecast its demand with the black-box module bundled into its ERP. When a forecast was wrong nobody could see why, and there was no lever to make it better — the vendor owned the model and the explanation. Replenishment for every store ran on top of it anyway.",
+      "Mercaldas forecast demand with the black box bundled into its ERP. Nobody could see why a forecast missed, and there was no lever to make it better. Replenishment for every store ran on it anyway.",
+    cardStats: [
+      { value: "1,000s", label: "Series, weekly" },
+      { value: "Double digit", label: "% WMAPE cut" },
+    ],
+    visual: {
+      kind: "line",
+      points: [62, 58, 64, 71, 66, 74, 81, 77, 85, 92, 88, 96],
+      caption: "Forecast against actuals",
+    },
     achievements: [
       {
         value: "Double-digit %",
-        label:
-          "WMAPE reduction against the previous baseline across several product categories, with the largest gains in fast-moving lines",
+        label: "WMAPE cut against the previous baseline, largest gains in fast-moving lines",
       },
-      {
-        value: "Thousands",
-        label: "Product×store series forecast every week, across more than a dozen stores",
-      },
-      {
-        value: "Feeds replenishment",
-        label: "Output goes straight into the merchandise reordering system, not into a report",
-      },
+      { value: "Thousands", label: "Product and store series forecast weekly, across 12+ stores" },
+      { value: "Feeds reordering", label: "Output drives replenishment directly, not a report" },
       {
         value: "Caught in production",
-        label:
-          "A silent horizon degradation found and root-caused by an audit I designed, before the business noticed it",
+        label: "A silent horizon failure found and root-caused by an audit I built",
       },
     ],
     stack: [
@@ -81,46 +92,44 @@ export const projects: Project[] = [
       "MLflow",
       "SQL Server",
     ],
-    role: "Sole engineer — design, build and operation",
-    duration: "In production since 2025 · continuous improvement",
+    role: "Sole engineer, design to operation",
+    duration: "In production since 2025",
     technical: [
       { value: "350+", label: "Automated tests, green before every deploy" },
-      { value: "Medallion", label: "Bronze / Silver / Gold layers on a local-filesystem data lake" },
-      { value: "Champion / challenger", label: "Multi-model tournament with measurable switching criteria" },
+      { value: "Medallion", label: "Bronze, Silver and Gold layers on a local data lake" },
+      { value: "Tournament", label: "Multi-model selection with measurable switching criteria" },
     ],
   },
 
   {
     slug: "market-prices",
     repo: "mercaldas-precios-mercado",
-    title: "Market price intelligence with generative AI",
-    kicker: "Data platform · Forecasting · LLM in the loop",
+    title: "Market price intelligence platform",
+    kicker: "Data platform · Generative AI",
     oneLiner:
-      "A platform that ingests Colombia's weekly wholesale price bulletins, forecasts 52 weeks ahead per product, and has a language model write the reading of each series.",
-    hook:
-      "Turned a hostile public data source into a tool the commercial team now takes into supplier negotiations.",
+      "Ingests Colombia's weekly wholesale price bulletins, forecasts 52 weeks per product, and has a model write the reading of each series.",
+    hook: "A hostile public data source, turned into a tool the commercial team takes into supplier negotiations.",
     org: "Mercaldas",
     confidential: true,
     problem:
-      "The national statistics office (DANE) publishes wholesale agricultural prices as weekly bulletins: public, authoritative, and formatted for humans rather than machines. Buyers at Mercaldas had no benchmark for what the market was doing, so internal prices were negotiated without an outside reference.",
+      "The national statistics office publishes wholesale prices as weekly bulletins built for humans, not machines. Buyers had no outside benchmark, so internal prices were negotiated blind.",
+    cardStats: [
+      { value: "52 wk", label: "Forecast horizon" },
+      { value: "100s", label: "Products covered" },
+    ],
+    visual: {
+      kind: "line",
+      points: [58, 54, 61, 92, 74, 63, 66, 59, 71, 68, 64, 67],
+      caption: "Market price with forecast tail",
+    },
     achievements: [
+      { value: "Hundreds", label: "Products covered, with years of price history each" },
+      { value: "52 weeks", label: "Forecast horizon, model chosen by multi-horizon MAPE" },
       {
-        value: "Hundreds",
-        label: "Products covered, with several years of price history behind each series",
+        value: "Internal tool to product",
+        label: "Now authenticated and internet-facing, used in supplier negotiation",
       },
-      {
-        value: "52 weeks",
-        label: "Forecast horizon per product, with model selection by multi-horizon MAPE",
-      },
-      {
-        value: "Internal tool → product",
-        label:
-          "Exposed to the internet with authentication this year, so the commercial team uses it directly in supplier negotiations",
-      },
-      {
-        value: "Cached by payload hash",
-        label: "LLM insights are never paid for twice for data that was already interpreted",
-      },
+      { value: "Cached by hash", label: "An AI reading is never paid for twice on unchanged data" },
     ],
     stack: [
       "Python",
@@ -132,131 +141,130 @@ export const projects: Project[] = [
       "HTMX",
       "Anthropic API",
     ],
-    role: "Sole engineer — design, build and operation",
-    duration: "In production since 2025 · active releases",
+    role: "Sole engineer, design to operation",
+    duration: "In production since 2025",
     technical: [
       { value: "Hundreds", label: "Automated tests running in CI" },
-      { value: "Delta Lake", label: "Chosen over flat Parquet specifically for incremental upserts" },
-      { value: "HTMX", label: "Reactive UI without carrying the weight of a single-page app" },
+      { value: "Delta Lake", label: "Chosen over flat Parquet for incremental upserts" },
+      { value: "HTMX", label: "Reactive UI without the weight of a single-page app" },
     ],
   },
 
   {
     slug: "rag",
     repo: "mercaldas-rag",
-    title: "A data assistant that never invents a number",
-    kicker: "Applied AI · Guardrails · SQL generation",
+    title: "AI assistant for business data",
+    kicker: "Applied AI · Guardrails",
     oneLiner:
-      "A Telegram assistant that lets management ask about the business in plain language, where every figure on screen comes from a real query — never from the model.",
-    hook:
-      "Adversarial audits proved my own spend guardrail was bypassable, so I moved the control out of shell patterns and into code.",
+      "A Telegram assistant that answers business questions in plain language, where every figure comes from a real query.",
+    hook: "Built the spend guardrails first, then broke them on purpose. The fix moved the control into code.",
     org: "Mercaldas",
     confidential: true,
     problem:
-      "Every ad-hoc business question — sales, inventory, margin — went through the one person who could write the query. That is a bottleneck for management and a poor use of the analyst. The obvious fix, pointing a language model at the warehouse, fails in the way that matters most: a model that invents a plausible number is worse than no answer at all.",
+      "Every ad-hoc question about sales, inventory or margin went through the one person who could write the query. Pointing a model at the warehouse is the obvious fix and the obvious trap: an invented number looks exactly like an answer.",
+    cardStats: [
+      { value: "2 paths", label: "Certified + dynamic" },
+      { value: "0", label: "Figures from the model" },
+    ],
+    visual: { kind: "chat", caption: "Question, routed path, verified answer" },
     achievements: [
       {
-        value: "Zero invented figures",
-        label:
-          "Every number the user sees comes from an executed, verifiable query — a non-negotiable design constraint, not a prompt instruction",
+        value: "No invented figures",
+        label: "Every number comes from an executed query, enforced by design and not by prompt",
       },
       {
         value: "Two answer paths",
-        label:
-          "A certified path of closed SQL recipes for high-confidence questions, and a dynamic path where generated SQL is validated and dry-run first",
+        label: "Closed SQL recipes for known questions, validated model-written SQL for the rest",
       },
       {
-        value: "Path mix as health signal",
-        label:
-          "The share of questions falling into each path is measured as a diagnostic, deliberately not as a metric to optimise",
+        value: "Validated before it runs",
+        label: "Generated SQL passes lexical checks and a dry run before touching real data",
       },
       {
-        value: "Guardrail rebuilt",
-        label:
-          "Adversarial audit found most invocations bypassed the spend control; redesigned around a single paid-provider entry point enforced by a test",
+        value: "One paid entry point",
+        label: "Spend control lives in code, with a test that fails if a second door appears",
       },
     ],
     stack: ["Python", "Groq", "Open-weight LLMs", "SQL Server", "Telegram"],
     role: "Sole engineer",
-    duration: "In active construction since 2026",
+    duration: "In active development",
     technical: [
-      { value: "Standard library", label: "Core carries no external dependencies — a deliberately minimal failure surface" },
-      { value: "Dozens", label: "Automated tests, from SQL validation to the spend guardrails themselves" },
-      { value: "Pre-committed thresholds", label: "Model switching criteria defined before measuring, not tuned after" },
+      { value: "Standard library", label: "Core carries no external dependencies by design" },
+      { value: "Dozens", label: "Automated tests, from SQL validation to the guardrails" },
+      { value: "Pre-committed", label: "Model switching thresholds set before measuring" },
     ],
   },
 
   {
     slug: "operations-platform",
     repo: "mercaldas-data",
-    title: "From loose scripts to a central operations platform",
-    kicker: "Backend · Orchestration · Internal tooling",
+    title: "Internal operations platform",
+    kicker: "Backend · Internal tooling",
     oneLiner:
-      "A central API that absorbed the recurring work operations and planning used to do by hand — inter-store transfers, promotional buying factors, scheduled reports.",
-    hook:
-      "Inter-store transfer planning went from a request queued behind me to a web tool operations runs on their own.",
+      "A central API that absorbed the recurring work operations used to do by hand: inter-store transfers, buying factors, scheduled reports.",
+    hook: "Transfer planning went from a request queued behind me to a tool operations runs on their own.",
     org: "Mercaldas",
     confidential: true,
     problem:
-      "Recurring operational work lived in individual scripts with no shared API and no interface. Planning a transfer of inventory between stores meant asking the data person and waiting; sales and inventory reports were assembled by hand on a schedule. Every one of those tasks was a standing interruption.",
+      "Recurring operational work lived in individual scripts with no shared API and no interface. Planning a stock transfer meant asking the data person and waiting. Every task was a standing interruption.",
+    cardStats: [
+      { value: "Minutes", label: "Per plan, was hours" },
+      { value: "Self-serve", label: "Run by operations" },
+    ],
+    visual: {
+      kind: "bars",
+      points: [85, 22, 68, 14, 41, 30],
+      caption: "Days of cover by store",
+    },
     achievements: [
       {
         value: "Self-service",
-        label:
-          "Operations plans inter-store transfers directly in a web tool instead of queuing a request behind one engineer",
+        label: "Operations plans transfers in a web tool instead of queuing behind one engineer",
       },
-      {
-        value: "Several per week",
-        label: "Recurring reports generated and delivered with no human in the loop, previously assembled by hand",
-      },
-      {
-        value: "One API",
-        label: "Business logic consolidated from separate scripts without stopping the operation during migration",
-      },
+      { value: "Hours to minutes", label: "Time to produce a transfer plan" },
+      { value: "Several per week", label: "Recurring reports generated and delivered unattended" },
+      { value: "One API", label: "Scripts consolidated without stopping the operation" },
     ],
     stack: ["Python", "FastAPI", "pandas", "SQL Server", "Dagster", "Docker", "Gmail API"],
     role: "Sole engineer",
     duration: "In production since 2025",
     technical: [
-      { value: "No medallion", label: "A deliberate divergence: the problem here is operational, not analytical" },
-      { value: "Plain JavaScript UI", label: "No frontend framework — minimising build complexity for a one-person team" },
-      { value: "OAuth2 delivery", label: "Reports go out over the Gmail API rather than traditional SMTP" },
+      { value: "No medallion", label: "A deliberate divergence: this problem is operational" },
+      { value: "Plain JS UI", label: "No frontend framework, minimal build for a team of one" },
+      { value: "OAuth2", label: "Delivery over the Gmail API rather than SMTP" },
     ],
   },
 
   {
     slug: "cortana",
     repo: "cortana + cortana-app",
-    title: "Cortana — a personal AI operating system",
-    kicker: "Multi-agent · Human-in-the-loop · Local-first",
+    title: "Personal AI operating system",
+    kicker: "Multi-agent · Local-first",
     oneLiner:
-      "My own AI assistant: a plain-text knowledge vault as long-term memory, and a multi-agent runtime that asks for approval before doing anything it cannot undo.",
-    hook:
-      "A Git-versioned Markdown vault as the memory, and an agent runtime that has to ask me before it does anything irreversible.",
+      "My own assistant: a Git-versioned Markdown vault as long-term memory, and a multi-agent runtime that asks before doing anything it cannot undo.",
+    hook: "The memory is plain text in Git, so it outlives the runtime that reads it.",
     org: "Personal project",
     confidential: false,
+    visual: { kind: "gate", caption: "Proposed change, held for approval" },
     problem:
-      "I wanted an assistant that manages my memory, knowledge, finances and calendar without renting my long-term memory from a vendor. Closed 'AI with memory' products keep the memory in a proprietary format you cannot read, audit, diff or take with you. The interesting constraint was building one where the memory outlives the runtime.",
+      "I wanted an assistant for my memory, knowledge, finances and calendar without renting my long-term memory from a vendor. Closed products keep it in a format you cannot read, diff or take with you.",
+    cardStats: [
+      { value: "4 gates", label: "Required in CI" },
+      { value: "< $20/mo", label: "Cloud spend ceiling" },
+    ],
     achievements: [
       {
         value: "Memory is plain text",
-        label:
-          "A Markdown vault versioned in Git is the source of truth — readable, diffable and portable to any other tool",
+        label: "A Markdown vault in Git is the source of truth: readable, diffable, portable",
       },
       {
-        value: "Human-in-the-loop gate",
-        label:
-          "No irreversible action — sending a message, editing a financial record, cancelling an event — executes without explicit approval",
+        value: "Approval gate",
+        label: "Nothing irreversible runs without me approving it first",
       },
-      {
-        value: "Under $20/month",
-        label:
-          "A hard cloud-spend ceiling every stack decision is evaluated against, including which tasks are worth a paid model at all",
-      },
+      { value: "Under $20/month", label: "A hard spend ceiling every stack decision answers to" },
       {
         value: "Restore-tested backups",
-        label:
-          "Not 'backups exist' but 'restoring was rehearsed and verified', plus a guard that refuses destructive database operations outside a test environment",
+        label: "Recovery rehearsed and verified, plus a guard against destructive operations",
       },
     ],
     stack: [
@@ -269,12 +277,12 @@ export const projects: Project[] = [
       "Telegram",
       "Docker",
     ],
-    role: "Sole engineer — architect, builder and the only user",
-    duration: "In development and daily use since 2026",
+    role: "Sole engineer, architect and only user",
+    duration: "In daily use since 2026",
     technical: [
-      { value: "4 CI gates", label: "Lint, format, type check and the test suite, all required before merge" },
-      { value: "Hundreds", label: "Automated tests — the suite has caught real regressions before they shipped" },
-      { value: "Pull before write", label: "The runtime never overwrites the vault; it reconciles with it" },
+      { value: "4 CI gates", label: "Lint, format, type check and tests, all required" },
+      { value: "Hundreds", label: "Tests, and they have caught real regressions" },
+      { value: "Pull before write", label: "The runtime reconciles with the vault, never overwrites" },
     ],
   },
 ];

@@ -54,9 +54,9 @@ GROUP BY c.category_name;`,
     question: "Which stores are carrying more than 60 days of beverage stock?",
     path: "dynamic",
     checks: [
-      "Lexical validation — read-only, no DDL, no cross-schema reference",
-      "Dry run against the query planner — 1 table scan, 4.2k rows estimated",
-      "Row cap applied — LIMIT 50",
+      "Lexical validation: read-only, no DDL, no cross-schema reference",
+      "Dry run against the query planner: 1 table scan, 4.2k rows estimated",
+      "Row cap applied: LIMIT 50",
     ],
     sql: `-- written by the model, validated and dry-run before execution
 SELECT  s.store_name,
@@ -94,7 +94,7 @@ WHERE   p.product_group = :group
 GROUP BY p.product_name
 ORDER BY net_sales DESC;`,
     answer:
-      "Rice returned a 14.2% gross margin in July on 289.4M of net sales. That is 1.1 points below June and roughly in line with July of last year — the dip is seasonal, not a pricing change.",
+      "Rice returned a 14.2% gross margin in July on 289.4M of net sales. That is 1.1 points below June and roughly in line with July of last year, so the dip is seasonal rather than a pricing change.",
     figures: 3,
     modelCalls: 0,
   },
@@ -173,11 +173,11 @@ export function RagDemo() {
     <DemoFrame
       title="Ask the data assistant"
       subtitle="mercaldas-rag · demo build"
-      note="The real assistant runs over Telegram against a documented data warehouse. Here the three questions, the SQL and the answers are fixed and nothing is executed — but the routing, the validation steps and the counter below reproduce how the real one behaves."
+      note="The real assistant runs over Telegram against a documented data warehouse. Here the three questions, the SQL and the answers are fixed and nothing is executed, but the routing, the validation steps and the counter below reproduce how the real one behaves."
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_17rem]">
         <div className="min-w-0">
-          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-fg-3 uppercase">
+          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-iris uppercase">
             Pick a question
           </p>
           <ul className="mt-3 flex flex-wrap gap-2">
@@ -186,10 +186,10 @@ export function RagDemo() {
                 <button
                   type="button"
                   onClick={() => ask(ex)}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                  className={`rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all ${
                     current?.id === ex.id
-                      ? "border-iris/60 bg-iris/10 text-fg"
-                      : "border-line-strong bg-surface-2 text-fg-2 hover:border-iris/50 hover:text-fg"
+                      ? "border-iris bg-iris/18 text-fg"
+                      : "border-iris/40 bg-iris/6 text-fg-2 hover:-translate-y-px hover:border-iris hover:bg-iris/14 hover:text-fg"
                   }`}
                 >
                   {ex.question}
@@ -198,7 +198,7 @@ export function RagDemo() {
             ))}
           </ul>
 
-          <div className="mt-6 min-h-72 rounded-lg border border-line bg-surface-2/40 p-4 sm:p-5">
+          <div className="mt-6 min-h-44 rounded-lg border border-line bg-surface-2/40 p-4 sm:p-5">
             {!current && (
               <p className="text-sm leading-relaxed text-fg-3">
                 Choose one of the three questions above. The assistant will show which of its two

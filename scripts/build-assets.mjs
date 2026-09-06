@@ -50,13 +50,72 @@ await square
   .webp({ quality: 80, effort: 6 })
   .toFile(path.join(OUT, "burst.webp"));
 
-// 256px is plenty for a tab icon, and quantising keeps it small enough that
-// it is not the heaviest thing in the repo.
-await square
-  .clone()
-  .resize({ width: 256 })
-  .png({ compressionLevel: 9, palette: true, quality: 90 })
-  .toFile(path.join("src", "app", "icon.png"));
+/* -------------------------------------------------------------------------
+   The brand mark.
+
+   Source: maieutik-data's logo — a flat violet mark baked onto a near-black
+   square with no alpha channel. Luminance separates mark from background
+   cleanly, so it becomes the alpha, and the result is a transparent PNG that
+   can be recoloured with a CSS filter or sit on any surface.
+   ------------------------------------------------------------------------- */
+const LOGO = path.join("assets", "source", "mark.png");
+
+if (fs.existsSync(LOGO)) {
+  const { data, info } = await sharp(LOGO).greyscale().raw().toBuffer({ resolveWithObject: true });
+
+  // Build RGBA directly: flat accent colour, alpha taken from the source's
+  // luminance. Doing it as a composite blend does not work — a greyscale PNG
+  // is fully opaque, so `dest-in` would key against nothing.
+  const rgba = Buffer.alloc(info.width * info.height * 4);
+  for (let i = 0; i < info.width * info.height; i++) {
+    const v = data[i];
+    rgba[i * 4] = 124;
+    rgba[i * 4 + 1] = 92;
+    rgba[i * 4 + 2] = 255;
+    rgba[i * 4 + 3] = v <= 28 ? 0 : v >= 90 ? 255 : Math.round(((v - 28) / 62) * 255);
+  }
+
+  const cut = await sharp(rgba, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .trim({ threshold: 1 })
+    .png()
+    .toBuffer();
+
+  await sharp(cut)
+    .resize({
+      width: 512,
+      height: 512,
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png({ compressionLevel: 9 })
+    .toFile(path.join("public", "mark.png"));
+
+  // Tab icon: the same mark on the site's ground, so it reads at 16px.
+  // Built at its final size — sharp runs resize before composite, so shrinking
+  // after the overlay would try to paste the mark onto a smaller base.
+  await sharp({
+    create: { width: 256, height: 256, channels: 4, background: "#05060e" },
+  })
+    .composite([
+      {
+        input: await sharp(cut)
+          .resize({
+            width: 184,
+            height: 184,
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .toBuffer(),
+        gravity: "center",
+      },
+    ])
+    .png({ compressionLevel: 9 })
+    .toFile(path.join("src", "app", "icon.png"));
+
+  console.log("mark.png + icon.png written from the maieutik mark");
+}
 
 for (const f of fs.readdirSync(OUT)) {
   const { size } = fs.statSync(path.join(OUT, f));

@@ -1,118 +1,100 @@
 import { Diagram } from "@/components/Diagram";
 import { diagrams } from "@/content/diagrams";
 
-## Context and constraints
+## Context
 
-Cortana is mine. Not a work project, not a product — my own assistant, which manages my memory,
-my knowledge, my personal finances and my calendar, and which I talk to over Telegram. It is
-the project where I get to make architectural decisions with nobody's constraints but my own,
-which is exactly why it is the one worth reading closely.
+Cortana is mine. Not a work project, not a product. My own assistant for memory, knowledge,
+personal finances and calendar, which I talk to over Telegram. It is the project where I
+make architectural decisions with nobody's constraints but my own, which is why it is worth
+reading closely.
 
-The premise came from a specific irritation with assistants that advertise memory. They all
-keep it in a store you cannot read, cannot diff, cannot grep, and cannot take with you. Your
-long-term memory becomes the most valuable thing you own inside the product and the least
-portable. I wanted the opposite property, stated as a requirement: **the memory has to outlive
-the runtime.** If I delete the application tomorrow, everything it knows about me should still
-be sitting there in a form I can open in any text editor.
+The premise came from a specific irritation with assistants that advertise memory. They keep
+it in a store you cannot read, diff, grep or take with you. Your long-term memory becomes
+the most valuable thing you own inside the product and the least portable. I wanted the
+opposite, stated as a requirement: **the memory has to outlive the runtime.** Delete the
+application tomorrow and everything it knows should still open in a text editor.
 
-The second constraint was money. This runs on a fixed personal budget under twenty dollars a
-month, which turns out to be a much better design constraint than an unlimited one, because it
-forces every "just call the model" instinct to justify itself against a deterministic
-alternative that is cheaper and usually more reliable.
+Second constraint: a fixed budget under twenty dollars a month. That turns out to be a
+better design constraint than an unlimited one, because it forces every "just call the
+model" instinct to justify itself against a cheaper deterministic alternative.
 
-## Architecture decisions
+## Architecture
 
-The whole system follows from one split: **memory and runtime are separate, and memory wins.**
+Everything follows from one split: **memory and runtime are separate, and memory wins.**
 
 <Diagram spec={diagrams.cortana} />
 
-Long-term memory is a Markdown vault versioned in Git. Plain text files with front-matter,
-linked to each other, in a repository with a history. That is the source of truth. The
-application maintains a local clone and treats it the way you would treat someone else's
-repository: **pull before write, push after**, never assume it owns the working copy. The vault
-can be edited by me directly in an editor, by a coding agent in a terminal, or by the
-application, and none of the three has to know about the others — Git is the reconciliation
-mechanism, and it is one I already trust with everything else I make.
+**Long-term memory is a Markdown vault in Git.** Plain text files with front-matter, linked
+to each other, in a repository with history. The application keeps a local clone and treats
+it like someone else's repo: pull before write, push after, never assume it owns the working
+copy. The vault can be edited by me in an editor, by a coding agent in a terminal, or by the
+application, and none of the three needs to know about the others. Git is the reconciliation
+mechanism, and it is one I already trust with everything else.
 
-Above the memory sits a runtime — FastAPI, Postgres for transactional state, a Next.js front
-end — dispatching to a lane per domain: memory, finance, calendar. Lanes are separate because
-their failure modes and their permissions are different. A memory operation that goes wrong
-writes a bad note. A finance operation that goes wrong corrupts a record of real money.
+**A runtime on top**, FastAPI with Postgres for transactional state and a Next.js front end,
+dispatching to one lane per domain: memory, finance, calendar. Lanes are separate because
+their failure modes differ. A memory operation that goes wrong writes a bad note. A finance
+operation that goes wrong corrupts a record of real money.
 
-Which is why everything irreversible passes through a **human-in-the-loop gate**. Not a
-confirmation dialog bolted on at the end — a stage every lane's write path goes through, where
-the proposed action is described to me and does not execute until I approve it. Sending a
-message, editing a financial record, cancelling a calendar event: all gated. Reads are not.
-The line is drawn at reversibility, not at importance, because reversibility is the property
-you can actually evaluate mechanically.
-
-The economics show up in the routing. A model call is one option among several, and the cheap
-deterministic path is preferred whenever it can do the job. That is not austerity for its own
-sake — the deterministic path is usually also the more predictable one, and the budget ceiling
-is what keeps me from reaching for a model where a parser would do.
+**Everything irreversible passes a human-in-the-loop gate.** Not a confirmation dialog bolted
+on at the end, a stage every write path goes through, where the proposed action is described
+to me and waits. Sending a message, editing a financial record, cancelling an event: all
+gated. Reads are not. The line is drawn at reversibility rather than importance, because
+reversibility is the property you can evaluate mechanically.
 
 ## The hard part
 
-The best work in this project came out of a near-miss rather than a feature.
+The best work here came from a near-miss.
 
-I was building the personal finance side, which means the system holds records of real
-transactions and balances that I actually rely on. While working through a schema change I
-realised how close the system was to a specific bad outcome: a migration executed against the
-wrong target, or a test run pointed at the wrong database, could destroy financial history with
-nothing to restore from. Not a hypothetical class of risk — a concrete path from a plausible
-mistake to unrecoverable data loss, in a system whose entire selling point to me is that I can
-trust what it remembers.
+Building the finance side meant the system held records of real transactions I rely on.
+Working through a schema change, I realised how close it sat to a specific bad outcome: a
+migration against the wrong target, or a test run pointed at the wrong database, could
+destroy financial history with nothing to restore from. Not a hypothetical, a concrete path
+from a plausible mistake to unrecoverable loss, in a system whose whole selling point is
+that I can trust what it remembers.
 
-What went in afterwards has three parts, and the third is the one I would argue for hardest:
+Three things went in, and the third is the one I argue for hardest:
 
-1. **Automatic backups**, on a schedule, off the machine that holds the primary.
-2. **A hard guard on destructive database operations.** The code refuses to truncate or drop
-   unless the target database name marks it as a test database. It is a cheap check and it
-   makes the dangerous case structurally impossible rather than merely discouraged — the same
-   shape as the single-entry-point fix in my RAG project, arrived at independently.
-3. **A restore drill.** Backups were restored, from scratch, and verified. The difference
-   between "we take backups" and "we have restored from backup and know it works" is the
-   difference between a belief and a fact, and untested backups fail exactly when you need
-   them. This is the one everybody skips.
+1. **Automatic backups**, on a schedule, off the machine holding the primary.
+2. **A hard guard on destructive operations.** The code refuses to truncate or drop unless
+   the target database name marks it as a test database. Cheap, and it makes the dangerous
+   case structurally impossible rather than discouraged. Same shape as the single-entry-point
+   fix in my RAG project, arrived at independently.
+3. **A restore drill.** Backups were restored from scratch and verified. The difference
+   between "we take backups" and "we have restored and know it works" is the difference
+   between a belief and a fact. This is the one everybody skips.
 
-There is a smaller story I like as much. Cortana's continuous integration has four required
-gates — lint, format, type check, and the full test suite — and the type check is the one I
-kept forgetting to run locally. It had `main` red for three commits before I made it a required
-gate rather than a habit. A rule you have to remember is not a rule. Making it a gate is the
-whole of the fix, and that is a lesson about process design, not about types.
+A smaller story I like as much: CI has four required gates, lint, format, type check and
+tests, and the type check is the one I kept forgetting to run. It had `main` red for three
+commits before I made it a gate rather than a habit. **A rule you have to remember is not a
+rule.**
 
 ## Trade-offs
 
 **A hand-written scheduler instead of an orchestrator.** I run Dagster at work and did not
-reach for it here. The task volume is a handful of periodic jobs; the operational cost of a
-tool built for a much larger scale — its own service, its own upgrade path, its own failure
-modes — is a genuine tax on a system whose only operator is me on a weekend. The rule I applied
-is that a dependency has to pay for its own operational weight, and at this scale that one does
-not.
+reach for it here. A handful of periodic jobs does not justify a tool built for much larger
+scale, whose own service, upgrade path and failure modes become a tax on a system operated by
+me on a weekend.
 
-**Markdown as memory is slower to query than a database.** Grepping and parsing text will never
-match an index. That cost is accepted deliberately, and it has already been tested rather than
-assumed: I built a graph-based retrieval layer to sit on top of the vault, ran it head to head
-against plain `grep` on real queries, and it did not win. The graph layer was dropped. Being
-willing to delete your own more sophisticated implementation when the boring one measures the
-same is, I think, the more useful engineering habit.
+**Markdown is slower to query than a database.** Accepted deliberately, and tested rather
+than assumed: I built a graph-based retrieval layer over the vault, ran it head to head
+against plain `grep` on real queries, and it did not win. The graph layer was dropped.
+Deleting your own more sophisticated implementation when the boring one measures the same is
+the more useful habit.
 
-**Local-first means it is down when my machine is down.** No cloud fallback, no high
-availability. For a personal assistant that is not a real cost, and it is what keeps the bill
-under the ceiling.
+**Local-first means it is down when my machine is down.** No cloud fallback. For a personal
+assistant that is not a real cost, and it is what keeps the bill under the ceiling.
 
-**One user means N=1 forever.** Nothing here is multi-tenant. There is no auth model beyond
-me, no tenancy in the data model, and no plan to sell it. That decision closed off a whole
-category of design work and made everything else simpler — and I made it explicitly, in
-writing, rather than drifting into it.
+**One user means N=1 forever.** Nothing is multi-tenant. That closed off a whole category of
+design work and made everything else simpler, and I made the call explicitly, in writing,
+rather than drifting into it.
 
-## What the numbers are
+## Results
 
-Four required CI gates before anything merges. Hundreds of automated tests, and the suite has
-caught real regressions on the way to production rather than in theory — including a batch of
-nineteen that only the full suite surfaced, because the individual test files passed in
-isolation. Backups run automatically and have been restored under drill conditions. Cloud spend
-sits under twenty dollars a month by design.
+Four required CI gates before anything merges. Hundreds of tests that have caught real
+regressions on the way to production, including a batch of nineteen only the full suite
+surfaced because the individual files passed in isolation. Backups run automatically and have
+been restored under drill conditions. Cloud spend stays under twenty dollars a month by
+design.
 
-This is a personal project, so unlike the four Mercaldas systems above, nothing here is held
-back for confidentiality.
+*Personal project, so unlike the four Mercaldas systems nothing here is held back.*

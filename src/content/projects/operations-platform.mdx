@@ -1,100 +1,85 @@
 import { Diagram } from "@/components/Diagram";
 import { diagrams } from "@/content/diagrams";
 
-## Context and constraints
+## Context
 
-This is the least glamorous project here and the one that removed the most friction per line of
+The least glamorous project here, and the one that removed the most friction per line of
 code.
 
-Operations and planning at Mercaldas ran on a collection of scripts. Each one solved a real
-problem — plan a transfer of inventory between stores, work out promotional buying factors,
-assemble a sales and inventory report — and each one had been written on its own, with its own
-conventions, its own connection handling, and no interface. Running any of them meant asking
-me. The reports that went out on a schedule went out because someone assembled them on a
-schedule.
+Operations and planning ran on a collection of scripts. Each solved a real problem: plan a
+stock transfer between stores, work out promotional buying factors, assemble a sales and
+inventory report. Each had its own conventions and no interface. Running any of them meant
+asking me.
 
-The constraint that shaped the design is that **the operation could not stop while this was
-fixed**. There is no window in which the stores agree to stop needing transfers. So this could
-not be a rewrite that lands one day; it had to be a consolidation that absorbed one module at a
-time while the old path kept working.
+The constraint that shaped the design: **the operation could not stop while this was
+fixed.** There is no window in which the stores agree to stop needing transfers. So it had
+to be a consolidation that absorbed one module at a time, with the old path alive
+throughout.
 
-## Architecture decisions
-
-The centre is a FastAPI service that holds the business logic the scripts used to hold
-individually. Not a rewrite of each script's algorithm — those were mostly fine — but a single
-place for the parts every script had reimplemented: database access, environment handling,
-scheduling, delivery, error reporting.
+## Architecture
 
 <Diagram spec={diagrams["operations-platform"]} />
 
-**No medallion architecture, no data lake, and that divergence is the point.** Every other data
-project I run at Mercaldas is layered Bronze/Silver/Gold on Delta Lake, and applying that here
-would have been consistent and wrong. Those pipelines exist to build trustworthy history for
-models. This one moves data between transactional systems so a person can make a decision in
-the next ten minutes. The medallion pattern buys reproducibility and lineage at the cost of
-latency and indirection; an operations tool wants the opposite trade. Using the house pattern
-where it does not fit is how a house pattern turns into a cargo cult.
+**One FastAPI core** holding the logic the scripts held individually. Not a rewrite of each
+algorithm, those were mostly fine, but a single place for what every script had
+reimplemented: database access, environment handling, scheduling, delivery, error reporting.
 
-**The UI is plain JavaScript with no framework.** Not a preference about frameworks — a
-calculation about maintenance. A React or Vue frontend adds a build pipeline, a dependency
-tree, and an upgrade cadence, all maintained by a team of one who is also responsible for the
-forecast pipeline and the price platform. The transfer planner needs forms, a table, and a
-handful of interactions. Server-rendered pages with vanilla JavaScript do that, and they still
-work in three years without anyone touching them.
+**No medallion architecture, no data lake, and the divergence is the point.** Every other
+data project I run here is layered Bronze/Silver/Gold on Delta Lake. Applying that would
+have been consistent and wrong. Those pipelines build trustworthy history for models. This
+one moves data between transactional systems so a person can decide in the next ten
+minutes. Medallion buys reproducibility and lineage at the cost of latency and indirection.
+An operations tool wants the opposite trade. Using the house pattern where it does not fit
+is how a house pattern becomes a cargo cult.
 
-**Dagster drives the recurring reports**, which is consistent with the rest of the stack and
-means schedule failures are visible in the same place as everything else's schedule failures.
-Delivery goes over the **Gmail API with OAuth2** rather than SMTP: no password living in a
-config file, revocable access, and it survives the security policy changes that periodically
-break SMTP integrations.
+**Plain JavaScript UI, no framework.** Not a preference, a maintenance calculation. React
+adds a build pipeline, a dependency tree and an upgrade cadence, all maintained by one
+person who also owns the forecast pipeline and the price platform. The transfer planner
+needs forms, a table and a few interactions. Server-rendered pages with vanilla JavaScript
+do that, and still work in three years.
 
-Docker for deployment, so the thing that runs on the server is the thing that was tested.
+**Dagster for recurring reports**, so schedule failures surface where every other schedule
+failure does. **Gmail API with OAuth2** rather than SMTP: no password in a config file,
+revocable access, and it survives the policy changes that periodically break SMTP.
 
 ## The hard part
 
-The genuinely interesting problem was not technical. It was deciding that **inter-store transfer
-planning should be self-service**.
+Not technical. It was deciding that **transfer planning should be self-service.**
 
-The easy version of this project is an API that I call on someone's behalf, or a report that
-lands in their inbox. That keeps the engineer in the loop, keeps the interface simple, and
-keeps the work coming back to me forever. The harder version is a tool the operations team
-opens and drives themselves, which means the interface has to encode enough of the domain that
-someone who does not know the data model can get a correct answer out of it — sensible
-defaults, constraints that make invalid plans hard to express, and output that is obviously
-right or obviously wrong rather than plausibly either.
+The easy version is an API I call on someone's behalf, or a report that lands in an inbox.
+That keeps the interface simple and keeps the work coming back to me forever. The harder
+version is a tool the operations team drives themselves, which means the interface has to
+encode enough of the domain that someone who does not know the data model gets a correct
+answer: sensible defaults, constraints that make invalid plans hard to express, output that
+is obviously right or obviously wrong.
 
-That is a different design problem from the pipeline work, and it is the one with the larger
-payoff. A transfer plan used to be a request in a queue behind whatever else I was doing. Now
-it is a thing the team does when they need it, and the ceiling on how many transfer plans the
-company can make in a week is no longer me.
-
-The migration ran the same way: one module at a time, old path alive until the new one had been
-used for real work. Unexciting, and the reason nothing broke.
+Different design problem from pipeline work, and the one with the larger payoff. A transfer
+plan used to be a request in a queue behind whatever else I was doing. Now the ceiling on
+how many the company can make in a week is no longer me.
 
 ## Trade-offs
 
-**Test coverage came second, and I will say so plainly.** The modules people needed most went
-to production before an automated test suite existed. That was the right call for the first
-weeks — an operations team waiting on a tool is a real cost being paid daily, and the old
-manual path was the fallback — and it is technical debt now. It is tracked as debt in the
-project's own backlog rather than discovered later by whoever inherits it. The distinction
-between a decision and an oversight is whether it is written down.
+**Test coverage came second, and I will say so plainly.** The modules people needed most
+shipped before an automated suite existed. Right call for the first weeks, since an
+operations team waiting on a tool is a cost paid daily and the manual path was the fallback.
+It is technical debt now, tracked as debt in the project's own backlog rather than
+discovered later by whoever inherits it. The difference between a decision and an oversight
+is whether it is written down.
 
-**A shared Postgres instance with another internal data project.** Cheap, and one failure
-domain covering two systems. It is managed as a known risk: I know what falls over together and
-what the recovery looks like. Naming it beats being surprised by it.
+**A shared Postgres instance with another internal project.** Cheap, and one failure domain
+covering two systems. Managed as a known risk: I know what falls over together and what
+recovery looks like.
 
-**Consolidation, not rewrite.** Some of the absorbed logic still carries the shape of the
-script it came from. The alternative was a clean rewrite that would have taken longer and
-delivered nothing until it was finished. Given the choice between an inconsistent platform in
-production and an elegant one in progress, operations gets more from the first.
+**Consolidation, not rewrite.** Some absorbed logic still carries the shape of the script it
+came from. The alternative was a clean rewrite delivering nothing until finished. Operations
+gets more from an inconsistent platform in production than an elegant one in progress.
 
-## What the numbers are
+## Results
 
-Several recurring reports now generate and deliver themselves with no human in the loop, where
-each used to be assembled by hand. Inter-store transfer planning runs as a self-service web
-tool used directly by the operations team. The business logic that lived in separate scripts is
-consolidated behind one API, migrated module by module without an outage.
+Several recurring reports generate and deliver themselves, each previously assembled by
+hand. Transfer planning runs as a self-service web tool used directly by the operations
+team, cutting each plan from hours to minutes. Business logic consolidated behind one API,
+migrated module by module without an outage.
 
-Business figures are given as ranges deliberately: the company is named, the exact numbers
-are not mine to publish.
+*Business figures are published as ranges. The company is named, the exact numbers are not
+mine to publish.*

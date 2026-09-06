@@ -334,7 +334,7 @@ export function LineChart({
                     <svg aria-hidden viewBox="0 0 14 8" className="h-2 w-3.5 shrink-0">
                       <line x1="0" y1="4" x2="14" y2="4" stroke={s.color} strokeWidth="2" />
                     </svg>
-                    <span className="font-semibold text-fg">{v == null ? "—" : format(v)}</span>
+                    <span className="font-semibold text-fg">{v == null ? "n/a" : format(v)}</span>
                     <span className="text-fg-3">{s.name}</span>
                   </li>
                 );
@@ -380,7 +380,7 @@ export function LineChart({
                       key={s.id}
                       className="px-3 py-1.5 text-right text-fg-2 tabular-nums"
                     >
-                      {s.values[i] == null ? "—" : format(s.values[i]!)}
+                      {s.values[i] == null ? "n/a" : format(s.values[i]!)}
                     </td>
                   ))}
                 </tr>

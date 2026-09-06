@@ -216,7 +216,7 @@ export function OperationsDemo() {
           </div>
           <p className="mt-3 text-xs leading-relaxed text-fg-3">
             Cover is on-hand units divided by the store&rsquo;s daily rate. Red is under twelve
-            days, amber over fifty-five — the two states that cost money at opposite ends.
+            days, amber over fifty-five. Those are the two states that cost money.
           </p>
         </div>
 
@@ -227,7 +227,7 @@ export function OperationsDemo() {
 
           {moves.length === 0 ? (
             <p className="mt-3 rounded-lg border border-line bg-surface-2/40 p-4 text-sm text-fg-3">
-              Nothing to move — every store is inside the target band for this product.
+              Nothing to move. Every store is inside the target band for this product.
             </p>
           ) : (
             <ul className="mt-3 space-y-2.5">
@@ -274,7 +274,7 @@ export function OperationsDemo() {
               <span className="text-fg-2">{shortfall.toLocaleString("en-US")} units</span> short,
               and {listJoin(stillShort.map((r) => r.store))} stay
               {stillShort.length === 1 ? "s" : ""} well under target. The tool says so rather than
-              proposing moves that only spread the shortage around — this is a purchasing
+              proposing moves that only spread the shortage around. This is a purchasing
               decision, not a transfer one.
             </p>
           )}

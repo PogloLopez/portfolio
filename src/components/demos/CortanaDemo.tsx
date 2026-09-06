@@ -33,7 +33,7 @@ type Request = {
 const REQUESTS: Request[] = [
   {
     id: "bill",
-    prompt: "Log the electricity bill I just paid — 214,300 pesos.",
+    prompt: "Log the electricity bill I just paid, 214,300 pesos.",
     lane: "finance",
     reversible: false,
     intent: "Append a transaction and update the running balance",
@@ -57,7 +57,7 @@ const REQUESTS: Request[] = [
     target: "07-KNOWLEDGE/vercel-hobby-limits.md",
     diff: [
       { kind: "add", text: "---" },
-      { kind: "add", text: "title: Vercel Hobby — sin tarjeta, sin cobro posible" },
+      { kind: "add", text: "title: Vercel Hobby, sin tarjeta y sin cobro posible" },
       { kind: "add", text: "status: vivo" },
       { kind: "add", text: "updated: 2026-09-06" },
       { kind: "add", text: "type: referencia" },
@@ -74,7 +74,7 @@ const REQUESTS: Request[] = [
     lane: "memory",
     reversible: true,
     intent: "Read three notes from the vault",
-    target: "— nothing is written",
+    target: "nothing is written",
     diff: [],
     commit: "",
     readOnlyAnswer:
@@ -116,13 +116,13 @@ export function CortanaDemo() {
 
   return (
     <DemoFrame
-      title="Cortana — the human-in-the-loop gate"
+      title="Cortana, the human-in-the-loop gate"
       subtitle="cortana-app · demo build"
       note="The real assistant runs over Telegram against a Git-versioned Markdown vault, with Postgres for transactional state. The notes, balances and commit hashes below are invented, and nothing is written anywhere."
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
         <div className="min-w-0">
-          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-fg-3 uppercase">
+          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-iris uppercase">
             Say something to it
           </p>
           <ul className="mt-3 space-y-2">
@@ -131,10 +131,10 @@ export function CortanaDemo() {
                 <button
                   type="button"
                   onClick={() => send(r)}
-                  className={`w-full rounded-lg border px-3.5 py-2.5 text-left text-sm transition-colors ${
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all ${
                     request?.id === r.id
-                      ? "border-iris/60 bg-iris/10 text-fg"
-                      : "border-line-strong bg-surface-2 text-fg-2 hover:border-iris/50 hover:text-fg"
+                      ? "border-iris bg-iris/18 text-fg"
+                      : "border-iris/40 bg-iris/6 text-fg-2 hover:-translate-y-px hover:border-iris hover:bg-iris/14 hover:text-fg"
                   }`}
                 >
                   {r.prompt}
@@ -152,8 +152,8 @@ export function CortanaDemo() {
             </p>
             <p className="mt-2.5 text-xs leading-relaxed text-fg-3">
               Reversibility, not importance. Reads pass straight through. Anything that cannot be
-              undone easily — a financial record, a sent message, a cancelled event — stops here
-              and waits for me, whatever it is worth.
+              undone easily, such as a financial record, a sent message or a cancelled event, stops
+              here and waits for me, whatever it is worth.
             </p>
           </div>
         </div>
@@ -195,7 +195,7 @@ export function CortanaDemo() {
                     {request.readOnlyAnswer}
                   </p>
                   <p className="font-mono text-[0.6875rem]" style={{ color: status.good }}>
-                    No gate — nothing was written.
+                    No gate. Nothing was written.
                   </p>
                 </>
               )}
@@ -236,7 +236,7 @@ export function CortanaDemo() {
                       <button
                         type="button"
                         onClick={() => setPhase("approved")}
-                        className="rounded-lg bg-fg px-4 py-2 text-sm font-semibold text-ground transition-opacity hover:opacity-90"
+                        className="rounded-lg bg-iris px-4 py-2 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet"
                       >
                         Approve
                       </button>
@@ -259,8 +259,8 @@ export function CortanaDemo() {
                       </p>
                       <p className="mt-3 text-xs leading-relaxed text-fg-3">
                         The change lives in a text file in a Git repository. I can read it, diff
-                        it, revert it, or take the whole vault somewhere else — which is the
-                        reason the memory is plain text in the first place.
+                        it, revert it, or take the whole vault somewhere else. That is the reason
+                        the memory is plain text in the first place.
                       </p>
                     </div>
                   )}

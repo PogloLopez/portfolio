@@ -46,7 +46,7 @@ const ASSETS: Asset[] = [
     schedule: "weekly",
     state: (week, enforced) =>
       enforced && week > 0
-        ? { label: "Blocked — upstream stale", tone: "blocked" }
+        ? { label: "Blocked, upstream stale", tone: "blocked" }
         : { label: "Succeeded", tone: "ok" },
   },
 ];
@@ -111,17 +111,17 @@ export function ForecastDemo() {
         ? {
             tone: status.warn,
             title: "Zero failures. Horizon already falling.",
-            body: `The daily ingest has not run for ${effectiveWeek} week${effectiveWeek > 1 ? "s" : ""}. Nothing failed — the weekly job declared a dependency on the ingested data but does not require it to have materialised, so it happily forecasts from what is already in the lake.`,
+            body: `The daily ingest has not run for ${effectiveWeek} week${effectiveWeek > 1 ? "s" : ""}. Nothing failed. The weekly job declared a dependency on the ingested data but does not require it to have materialised, so it happily forecasts from what is already in the lake.`,
           }
         : {
             tone: status.bad,
             title: "Still zero failures.",
-            body: `${effectiveWeek} weeks of stale input. Every asset in the run reports success and the dashboard is green, while the forecast reaching replenishment is down to ${horizon} weeks of real horizon. This is the state the audit was built to catch — and did.`,
+            body: `${effectiveWeek} weeks of stale input. Every asset in the run reports success and the dashboard is green, while the forecast reaching replenishment is down to ${horizon} weeks of real horizon. This is the state the audit was built to catch, and did.`,
           };
 
   return (
     <DemoFrame
-      title="Pipeline health — the horizon audit"
+      title="Pipeline health, the horizon audit"
       subtitle="mercaldas-forecast · demo build"
       note="The real pipeline forecasts thousands of product×store series weekly on Dagster. This reproduces one thing from it: the shape of the silent failure an audit caught in production. Run history, asset names and figures here are invented."
     >

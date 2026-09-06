@@ -64,7 +64,7 @@ const PRODUCTS: Product[] = [
       )} ${pct(f.changeQuarter)} over the last quarter, and it currently sits in the ${
         f.rangePosition > 66 ? "upper" : f.rangePosition > 33 ? "middle" : "lower"
       } third of its twelve-month range.`,
-      `The seasonal shape is intact — this product moves with the gap between harvests, and the swing between its low and high weeks is the dominant signal in the series. Week-to-week noise stays moderate: the largest single move in the period is ${pct(
+      `The seasonal shape is intact. This product moves with the gap between harvests, and the swing between its low and high weeks is the dominant signal. Week-to-week noise stays moderate: the largest single move in the period is ${pct(
         f.biggestWeeklyMove,
       )}.`,
       `The forecast ends the horizon near ${f.forecastEnd.toLocaleString(
@@ -87,9 +87,9 @@ const PRODUCTS: Product[] = [
     reading: (f) => [
       `One of the calmest series in the catalogue. The largest weekly move in the whole period is ${pct(
         f.biggestWeeklyMove,
-      )}, and the six-month change is ${dir(f.changeSemester)} ${pct(f.changeSemester)} — a trend rather than a shock.`,
+      )}, and the six-month change is ${dir(f.changeSemester)} ${pct(f.changeSemester)}, a trend rather than a shock.`,
       `The internal price tracks the market closely and sits slightly under it for most of the period, which is the expected shape for a product bought on standing agreements rather than negotiated week by week. Turn the comparison on to see it.`,
-      `Because the variance is low the interval stays tight — around ${pct(
+      `Because the variance is low the interval stays tight, around ${pct(
         f.intervalWidthEnd,
         0,
       )} of the level at the end of the horizon. This is a series where a 52-week projection is worth planning against.`,
@@ -107,7 +107,7 @@ const PRODUCTS: Product[] = [
     reading: (f) => [
       `The most volatile series shown here. The largest single weekly move is ${pct(
         f.biggestWeeklyMove,
-      )}, and moves of that order recur — the amplitude, not the direction, is what matters for this product.`,
+      )}, and moves of that order recur. The amplitude, not the direction, is what matters for this product.`,
       `Over six months the level is ${dir(f.changeSemester)} ${pct(
         f.changeSemester,
       )}, which for this series is inside the noise rather than a trend. Anyone reading a direction into it is reading the last spike.`,
@@ -375,7 +375,7 @@ export function MarketPricesDemo() {
               In the real platform a model reads the series and writes this paragraph once; the
               result is cached against a hash of the data it was given, so the same series is
               never paid for twice. Here the wording is fixed and the figures inside it are
-              computed from the series above — which is why the prose and the chart never
+              computed from the series above, which is why the prose and the chart never
               disagree.
             </p>
           )}

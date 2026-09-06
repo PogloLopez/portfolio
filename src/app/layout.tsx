@@ -20,16 +20,16 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.shortName} — ${site.role}`,
-    template: `%s — ${site.shortName}`,
+    default: `${site.shortName} · ${site.role}`,
+    template: `%s · ${site.shortName}`,
   },
   description: site.oneLiner,
   authors: [{ name: site.name, url: site.contact.github }],
   openGraph: {
     type: "website",
-    siteName: `${site.shortName} — ${site.role}`,
+    siteName: `${site.shortName} · ${site.role}`,
     locale: "en",
-    title: `${site.shortName} — ${site.role}`,
+    title: `${site.shortName} · ${site.role}`,
     description: site.oneLiner,
   },
   twitter: { card: "summary_large_image" },

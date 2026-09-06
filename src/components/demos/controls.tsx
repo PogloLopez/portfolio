@@ -32,7 +32,7 @@ export function Select<T extends string>({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="w-full appearance-none rounded-lg border border-line-strong bg-surface-2 py-2 pr-9 pl-3 text-sm text-fg transition-colors hover:border-iris/60"
+        className="w-full appearance-none rounded-lg border border-line-strong bg-surface-2 py-2.5 pr-9 pl-3 text-sm font-medium text-fg transition-colors hover:border-iris focus:border-iris focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-surface-2 text-fg">
@@ -71,7 +71,11 @@ export function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="inline-flex items-center gap-3 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-sm text-fg-2 transition-colors hover:border-iris/60"
+      className={`inline-flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+        checked
+          ? "border-iris/60 bg-iris/12 text-fg"
+          : "border-line-strong bg-surface-2 text-fg-2 hover:border-iris/60 hover:text-fg"
+      }`}
     >
       <span
         aria-hidden
@@ -102,9 +106,10 @@ export function Button({
   disabled?: boolean;
 }) {
   const styles = {
-    primary: "bg-fg text-ground hover:opacity-90",
-    ghost: "border border-line-strong text-fg-2 hover:border-iris hover:text-fg",
-    danger: "border border-white/20 text-fg-3 hover:border-white/40 hover:text-fg-2",
+    primary: "bg-iris text-ground shadow-sm shadow-iris/25 hover:bg-violet",
+    ghost:
+      "border border-iris/45 bg-iris/8 text-iris hover:border-iris hover:bg-iris/18",
+    danger: "border border-line-strong text-fg-2 hover:border-white/45 hover:text-fg",
   }[variant];
 
   return (

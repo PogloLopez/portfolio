@@ -21,7 +21,7 @@ export function DemoFrame({
   children: ReactNode;
 }) {
   return (
-    <section className="not-prose" aria-label={`${title} — interactive demo`}>
+    <section className="not-prose" aria-label={`${title}, interactive demo`}>
       <div className="overflow-hidden rounded-xl border border-line bg-surface">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface-2/60 px-4 py-3 sm:px-5">
           <span aria-hidden className="hidden gap-1.5 sm:flex">

@@ -213,7 +213,7 @@ export const diagrams: Record<string, DiagramSpec> = {
   cortana: {
     title: "Memory and runtime, split on purpose",
     description:
-      "Requests arrive over Telegram or the web UI into a FastAPI runtime that dispatches to a lane per domain — memory, finance, calendar. Every lane's irreversible actions pass through a human-in-the-loop gate before touching persistence. Long-term memory is a Git-versioned Markdown vault the runtime reconciles with rather than overwrites; transactional state is Postgres, guarded by restore-tested backups.",
+      "Requests arrive over Telegram or the web UI into a FastAPI runtime that dispatches to a lane per domain: memory, finance and calendar. Every lane's irreversible actions pass through a human-in-the-loop gate before touching persistence. Long-term memory is a Git-versioned Markdown vault the runtime reconciles with rather than overwrites; transactional state is Postgres, guarded by restore-tested backups.",
     groups: [
       { label: "runtime", cols: [1, 3], rows: [0, 2] },
       { label: "persistence", cols: [4, 4], rows: [0, 2] },

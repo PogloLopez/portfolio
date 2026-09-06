@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
 import { Eyebrow, SectionLabel } from "@/components/ui";
+import { CopyEmail } from "@/components/nav";
 
 export const metadata: Metadata = {
   title: "About",
@@ -18,7 +19,7 @@ const transfers: { from: string; to: string }[] = [
     to: "Multi-series load and demand forecasting at scale",
   },
   {
-    from: "Ingesting a state statistics office's weekly bulletins — no API, drifting format",
+    from: "Ingesting a state statistics office's weekly bulletins with no API and a drifting format",
     to: "Ingesting regulated market data: system operators, grid operators, meters",
   },
   {
@@ -41,20 +42,20 @@ const transfers: { from: string; to: string }[] = [
 
 const principles: { title: string; body: string }[] = [
   {
-    title: "Put the control where it is enforceable",
-    body: "A rule you have to remember is not a rule. A denylist over a shell is theatre. When I need a guarantee I make it structural — one entry point with a test that fails if a second appears, a required CI gate instead of a habit — because that is the kind of control that is still true in six months.",
+    title: "Controls live in code, not in habits",
+    body: "A rule you have to remember is not a rule. When I need a guarantee I make it structural: one entry point with a test that fails if a second appears, a required CI gate instead of a reminder.",
   },
   {
-    title: "Audit your own systems before something else does",
-    body: "Green checkmarks are not evidence. The failures that last longest are the ones the reporting does not cover, so the useful question is not 'did the job succeed' but 'is the output still good', measured independently. That habit is what caught the horizon degradation in the forecast pipeline.",
+    title: "Green checkmarks are not evidence",
+    body: "The failures that last longest are the ones the reporting does not cover. The useful question is not whether the job succeeded but whether the output is still good, measured independently. That is what caught a silent production failure.",
   },
   {
-    title: "Every dependency pays its own operational weight",
-    body: "I run Dagster where the orchestration earns it and a hand-written scheduler where it does not. I built a graph retrieval layer for my own knowledge base, measured it head to head against grep, and deleted it when it did not win. Sophistication that does not measure better is cost.",
+    title: "Every dependency pays its own weight",
+    body: "I run Dagster where orchestration earns it, and a hand-written scheduler where it does not. I built a graph retrieval layer, measured it against plain grep, and deleted it when it did not win. Sophistication that does not measure better is cost.",
   },
   {
-    title: "Write down the trade-off, not just the decision",
-    body: "Missing test coverage that is tracked as debt is a decision. The same gap undocumented is an oversight, and the difference is entirely whether the next person can see the reasoning. Every case study on this site names what was given up and why.",
+    title: "Write down the trade-off",
+    body: "Test coverage tracked as debt is a decision. The same gap undocumented is an oversight. Every case study here names what was given up and why.",
   },
 ];
 
@@ -69,8 +70,8 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl px-5 pt-14 pb-16 sm:px-8 sm:pt-20 sm:pb-20">
           <Eyebrow>About</Eyebrow>
           <h1 className="mt-6 max-w-3xl text-3xl leading-[1.1] font-bold tracking-[-0.03em] text-fg sm:text-5xl">
-            The only person writing code at a retail chain — which is a good way to learn and a
-            bad way to stay.
+            The only person writing code at a retail chain. A good way to learn, and a bad way
+            to stay.
           </h1>
           <div className="mt-9 grid max-w-4xl gap-5 text-base leading-relaxed text-fg-2 sm:text-[1.0625rem]">
             {site.intro.map((p) => (
@@ -83,9 +84,8 @@ export default function AboutPage() {
       <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
         <SectionLabel>How I work</SectionLabel>
         <p className="mb-10 max-w-2xl text-base leading-relaxed text-fg-2">
-          I have one year of professional experience, so I do not sell myself on years. These four
-          habits are what the five case studies actually have in common, and they are the part I
-          would want a technical interviewer to press on.
+          One year of professional experience, so I do not sell myself on years. These four habits
+          are what the five case studies have in common, and the part I want to be pressed on.
         </p>
         <ul className="grid gap-8 md:grid-cols-2 lg:gap-x-14">
           {principles.map((p) => (
@@ -105,9 +105,8 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
           <SectionLabel>What transfers to energy</SectionLabel>
           <p className="mb-10 max-w-2xl text-base leading-relaxed text-fg-2">
-            What I want next is energy access and distributed generation data. The domain changes;
-            most of the engineering does not. Rather than ask a reader in that sector to do the
-            translation, here it is.
+            The domain changes. Most of the engineering does not. Rather than ask a reader in that
+            sector to do the translation, here it is.
           </p>
 
           <div className="overflow-x-auto">
@@ -138,10 +137,9 @@ export default function AboutPage() {
           </div>
 
           <p className="mt-10 max-w-2xl text-base leading-relaxed text-fg-2">
-            The thing I am explicitly looking for is a team with senior engineers to be measured
-            against. Being the person who knows the most about data in the room is a fine place to
-            be for a year and a poor place to calibrate judgment for a career — I would rather
-            have my work corrected by people who are better at it.
+            What I am looking for is a team with senior engineers to be measured against. Being the
+            person who knows the most about data in the room is a fine place to be for a year and a
+            poor place to calibrate judgment for a career.
           </p>
         </div>
       </section>
@@ -149,12 +147,7 @@ export default function AboutPage() {
       <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
         <SectionLabel>Contact</SectionLabel>
         <div className="flex flex-wrap gap-3">
-          <a
-            href={`mailto:${site.contact.email}`}
-            className="rounded-lg bg-fg px-5 py-2.5 text-sm font-semibold text-ground transition-opacity hover:opacity-90"
-          >
-            {site.contact.email}
-          </a>
+          <CopyEmail className="inline-flex items-center gap-2 rounded-lg bg-iris px-5 py-2.5 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet" />
           <a
             href={site.contact.linkedin}
             className="rounded-lg border border-line-strong px-5 py-2.5 text-sm font-medium text-fg-2 transition-colors hover:border-iris hover:text-fg"

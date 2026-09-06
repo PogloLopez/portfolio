@@ -1,106 +1,74 @@
 import { Diagram } from "@/components/Diagram";
 import { diagrams } from "@/content/diagrams";
 
-## Context and constraints
+## Context
 
-Colombia's national statistics office publishes wholesale agricultural prices every week
-through SIPSA. The data is public, authoritative, and free. It is also published as bulletins
-built for a person to read: spreadsheets whose sheet names, column positions and header rows
-move between releases, whose units are declared per sheet rather than per dataset, and whose
-history exists only as a pile of separate files. There is no API and no contract. The source
-will not change to suit you, and it will not tell you when it changes.
+Colombia's statistics office publishes wholesale agricultural prices every week through
+SIPSA. Public, authoritative, free, and built for a person to read: sheet names and column
+positions move between releases, units are declared per sheet, and history exists only as
+a pile of separate files. No API, no contract, no warning when it changes.
 
-The business problem underneath was simpler than the data problem. Buyers negotiated with
-suppliers with no external reference for what the market was doing — only internal history,
-which tells you what you paid, not what you should have paid. What was missing was a benchmark
-and a forward view.
+The business problem was simpler than the data problem. Buyers negotiated with no external
+reference for what the market was doing.
 
-## Architecture decisions
-
-Ingestion is written on the assumption that the source will drift, because it does. The parser
-resolves structure by content rather than by position, and unit normalisation happens **per
-sheet, not once globally** — a decision that looks like over-engineering until you meet the
-bulletin that declares a different unit on one sheet than on all the others. Everything lands
-in Bronze exactly as received, so when a parsing assumption turns out to be wrong the fix is a
-reprocess rather than a re-scrape of data that may no longer be available.
+## Architecture
 
 <Diagram spec={diagrams["market-prices"]} />
 
-The lake is Delta Lake rather than flat Parquet, and the reason is narrow and specific:
-**incremental upserts**. A weekly bulletin frequently restates prior weeks. With plain Parquet
-that means rewriting partitions and hand-rolling the merge logic; with Delta it is a merge
-operation with transactional semantics. This is the kind of decision I want to be able to
-defend in one sentence — the feature that justified the dependency, not the general reputation
-of the technology.
+**Ingestion assumes drift, because the source drifts.** The parser resolves structure by
+content rather than position. Unit normalisation happens per sheet, not once globally.
+Everything lands in Bronze exactly as received, so a wrong parsing assumption is a
+reprocess, not a re-scrape of data that may be gone.
 
-Polars is the processing engine throughout. On a single machine with these volumes, its
-lazy-execution model does the work in a fraction of the memory that a pandas-shaped pipeline
-would need, which matters when the machine is shared.
+**Delta Lake over flat Parquet, for one reason: incremental upserts.** A weekly bulletin
+frequently restates prior weeks. With plain Parquet that means rewriting partitions and
+hand-rolling merge logic. With Delta it is a transactional merge. That is the feature that
+justified the dependency.
 
-Forecasting is autoregressive to 52 weeks per product, with model selection by **multi-horizon
-MAPE** rather than a single-step score. A model that is excellent at week one and useless at
-week thirty is worse than one that is merely good throughout, because a buyer planning a
-season is reading the far end of the curve. Scoring across horizons is what makes the selection
-match the use.
+**Polars throughout.** On a shared machine, its lazy execution does the work in a fraction
+of the memory a pandas-shaped pipeline needs.
 
-The interface is FastAPI with HTMX. There is no single-page application, because there is no
-requirement that needs one and there is one engineer to maintain it. HTMX gives partial updates
-over the wire with server-rendered HTML, which means no separate frontend build, no state
-duplicated across a client store, and no framework upgrade treadmill.
+**Forecast selection by multi-horizon MAPE.** A model that is excellent at week one and
+useless at week thirty is worse than one that is merely good throughout, because a buyer
+planning a season reads the far end of the curve.
+
+**FastAPI with HTMX, no single-page app.** Partial updates over the wire with
+server-rendered HTML: no separate frontend build, no duplicated client state, no framework
+upgrade treadmill for a team of one.
 
 ## The hard part
 
-Two things, one technical and one about what the product turned out to be.
+**Making the AI layer economical.** A model writing the reading of each series is what
+turns a chart into something a buyer acts on. It is also a per-view cost on data that does
+not change. So readings are cached in Delta Lake, keyed by a hash of the payload the model
+was given. Identical input means the answer already exists. Keying on the payload rather
+than the product means the cache invalidates itself correctly when the data moves, with no
+expiry heuristic to tune. I documented the pattern as reusable.
 
-**The generative layer had to be made economical before it could be useful.** A language model
-writing the reading of each series — what moved, how it compares to the internal price, what
-the forecast implies — is the feature that turns a chart into something a buyer acts on. It is
-also a per-view cost, and the same series gets viewed repeatedly without changing. So insights
-are cached in Delta Lake keyed by a **hash of the payload the model was given**. Identical input
-means the answer already exists; the call is never paid for twice. Keying on the payload rather
-than on the product means the cache invalidates itself correctly the moment the underlying data
-moves, with no expiry heuristic to tune. I wrote the pattern up as reusable, and it has since
-been the default shape for LLM features elsewhere in my work.
+**The unit bug is the one I tell in interviews.** Milled rice prices were ingested an order
+of magnitude off, for a long stretch of history, because that product's sheet declares its
+unit differently from every other sheet. Nothing crashed. The series looked like a series.
+It was just wrong, in a way that would have quietly poisoned any negotiation leaning on it.
 
-**The unit bug is the one I tell in interviews.** Milled rice prices were being ingested an
-order of magnitude off, and had been for a long stretch of history, because that product's
-sheet in the DANE bulletin declares its unit differently from every other sheet. Nothing
-crashed. The series looked like a series. It was just wrong, and it was wrong in a way that
-would have quietly poisoned any negotiation that leaned on it. Finding it meant diffing against
-an external reference rather than trusting internal consistency — a series can be perfectly
-self-consistent and perfectly wrong. The fix was the per-sheet normalisation described above
-plus a full historical backfill of the affected series.
-
-The product shift was the other surprise. This was built as an internal analysis tool. This
-year it was put on the internet behind authentication, because the commercial team wanted it in
-the room during supplier negotiations. That changed what the project is: an internal notebook
-does not need auth, uptime, or a story about who can see what, and a tool people negotiate with
-does.
+Finding it meant diffing against an external reference. **A series can be perfectly
+self-consistent and perfectly wrong.** The fix was per-sheet normalisation plus a full
+historical backfill.
 
 ## Trade-offs
 
-**No orchestrator, on purpose — for now.** The weekly run is a manual sequence rather than a
-Dagster job, which is inconsistent with how my other pipelines work. Adding orchestration is
-maybe a day of work and it is deliberately not done yet: the ingest is still the part most
-likely to need a human when the source drifts, and automating around an unstable boundary buys
-you unattended failure rather than unattended success. It gets orchestrated when the parser
-stops surprising me.
+**No orchestrator yet, on purpose.** The weekly run is a manual sequence. Adding Dagster is
+about a day of work, and it is deliberately not done: ingest is still the part most likely
+to need a human when the source drifts, and automating around an unstable boundary buys
+unattended failure rather than unattended success.
 
-**Cached insights can be stale by design.** If the model would now write a better paragraph
-about unchanged data, the cache will not notice, because the cache key is the data and not the
-model version. That is the right default at this cost profile, and the escape hatch is a
-version component in the key when a model change actually warrants re-spending.
+**Cached readings can go stale.** The cache key is the data, not the model version. Right
+default at this cost profile, and the escape hatch is a version component in the key.
 
-**HTMX over a SPA.** Less client-side interactivity than a React application would give, in
-exchange for one deployable, one language in the hot path, and no build step on the frontend.
-For a data tool with a single maintainer this has been the right side of the trade every time
-it has come up.
+## Results
 
-## What the numbers are
+Hundreds of products, several years of history each, forecast 52 weeks ahead, with hundreds
+of tests in CI. This year it moved from an internal tool to an authenticated,
+internet-facing application used in supplier negotiation.
 
-Hundreds of products are covered with several years of price history each, forecast 52 weeks
-ahead, with hundreds of automated tests running in CI. The platform moved from an internal tool
-to an authenticated, internet-facing application used in supplier negotiation this year.
-
-Business figures are given as ranges deliberately: the company is named, the exact numbers
-are not mine to publish.
+*Business figures are published as ranges. The company is named, the exact numbers are not
+mine to publish.*

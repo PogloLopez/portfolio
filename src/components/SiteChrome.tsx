@@ -1,35 +1,46 @@
+import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { projects } from "@/content/projects";
+import { CopyEmail, SectionLink } from "@/components/nav";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-ground/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
+    <header className="sticky top-0 z-50 border-b border-line bg-ground/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
         <Link
           href="/"
-          className="group flex items-center gap-2.5 text-sm font-semibold text-fg"
-          aria-label={`${site.shortName} — home`}
+          className="group flex items-center gap-2.5 rounded-md text-sm font-semibold text-fg"
+          aria-label={`${site.shortName}, home`}
         >
-          <span
-            aria-hidden
-            className="h-2 w-2 rounded-[2px] bg-iris transition-colors group-hover:bg-violet"
+          <Image
+            src="/mark.png"
+            alt=""
+            width={28}
+            height={28}
+            priority
+            className="h-7 w-7 transition-transform group-hover:scale-105"
           />
-          {site.shortName}
+          <span className="hidden xs:inline">{site.shortName}</span>
         </Link>
-        <nav className="flex items-center gap-5 text-sm text-fg-3 sm:gap-7">
-          <Link href="/#work" className="transition-colors hover:text-fg">
+
+        <nav className="flex items-center gap-1.5 sm:gap-3">
+          <SectionLink
+            hash="work"
+            className="rounded-md px-3 py-2 text-sm font-medium text-fg-2 transition-colors hover:bg-white/6 hover:text-fg"
+          >
             Work
-          </Link>
-          <Link href="/about" className="transition-colors hover:text-fg">
+          </SectionLink>
+          <Link
+            href="/about"
+            className="rounded-md px-3 py-2 text-sm font-medium text-fg-2 transition-colors hover:bg-white/6 hover:text-fg"
+          >
             About
           </Link>
-          <a
-            href={`mailto:${site.contact.email}`}
-            className="hidden transition-colors hover:text-fg xs:inline"
-          >
-            Contact
-          </a>
+          <CopyEmail
+            label="Contact"
+            className="inline-flex items-center gap-2 rounded-lg border border-iris/55 bg-iris/12 px-3 py-2 text-sm font-semibold text-iris transition-colors hover:border-iris hover:bg-iris/20"
+          />
         </nav>
       </div>
     </header>
@@ -42,8 +53,11 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
         <div className="grid gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <p className="text-sm font-semibold text-fg">{site.name}</p>
-            <p className="mt-2 max-w-xs text-sm leading-relaxed text-fg-3">{site.tagline}</p>
+            <div className="flex items-center gap-2.5">
+              <Image src="/mark.png" alt="" width={24} height={24} className="h-6 w-6" />
+              <p className="text-sm font-semibold text-fg">{site.name}</p>
+            </div>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-fg-3">{site.tagline}</p>
             <p className="mt-4 font-mono text-xs text-fg-3">{site.contact.location}</p>
           </div>
 
@@ -56,9 +70,9 @@ export function SiteFooter() {
                 <li key={p.slug}>
                   <Link
                     href={`/projects/${p.slug}`}
-                    className="text-fg-2 transition-colors hover:text-iris"
+                    className="text-fg-2 underline-offset-4 transition-colors hover:text-iris hover:underline"
                   >
-                    {p.repo}
+                    {p.title}
                   </Link>
                 </li>
               ))}
@@ -71,28 +85,29 @@ export function SiteFooter() {
             </p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <a
-                  href={`mailto:${site.contact.email}`}
-                  className="text-fg-2 transition-colors hover:text-iris"
-                >
-                  {site.contact.email}
-                </a>
+                <CopyEmail className="inline-flex items-center gap-2 text-fg-2 underline-offset-4 transition-colors hover:text-iris hover:underline" />
               </li>
               <li>
                 <a
                   href={site.contact.linkedin}
-                  className="text-fg-2 transition-colors hover:text-iris"
+                  className="text-fg-2 underline-offset-4 transition-colors hover:text-iris hover:underline"
                 >
                   LinkedIn
                 </a>
               </li>
               <li>
-                <a href={site.contact.github} className="text-fg-2 transition-colors hover:text-iris">
+                <a
+                  href={site.contact.github}
+                  className="text-fg-2 underline-offset-4 transition-colors hover:text-iris hover:underline"
+                >
                   GitHub
                 </a>
               </li>
               <li>
-                <a href={site.cv.en} className="text-fg-2 transition-colors hover:text-iris">
+                <a
+                  href={site.cv.en}
+                  className="text-fg-2 underline-offset-4 transition-colors hover:text-iris hover:underline"
+                >
                   CV (PDF)
                 </a>
               </li>
