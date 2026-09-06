@@ -32,7 +32,7 @@ export function Select<T extends string>({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="w-full appearance-none rounded-lg border border-line-strong bg-surface-2 py-2.5 pr-9 pl-3 text-sm font-medium text-fg transition-colors hover:border-iris focus:border-iris focus:outline-none"
+        className="w-full appearance-none rounded-lg border border-iris/45 bg-iris/8 py-2.5 pr-9 pl-3 text-sm font-medium text-fg transition-colors hover:border-iris hover:bg-iris/16 focus:border-iris focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-surface-2 text-fg">
@@ -43,7 +43,7 @@ export function Select<T extends string>({
       <svg
         aria-hidden
         viewBox="0 0 12 12"
-        className="pointer-events-none absolute top-1/2 right-3 h-3 w-3 -translate-y-1/2 text-fg-3"
+        className="pointer-events-none absolute top-1/2 right-3 h-3 w-3 -translate-y-1/2 text-iris"
         fill="none"
         stroke="currentColor"
         strokeWidth={1.6}
@@ -71,16 +71,16 @@ export function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`inline-flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${
+      className={`inline-flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
         checked
-          ? "border-iris/60 bg-iris/12 text-fg"
-          : "border-line-strong bg-surface-2 text-fg-2 hover:border-iris/60 hover:text-fg"
+          ? "border-iris bg-iris/18 text-fg"
+          : "border-iris/45 bg-iris/8 text-fg-2 hover:border-iris hover:bg-iris/16 hover:text-fg"
       }`}
     >
       <span
         aria-hidden
         className={`relative block h-4.5 w-8 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-iris" : "bg-white/15"
+          checked ? "bg-iris" : "bg-white/25"
         }`}
       >
         <span

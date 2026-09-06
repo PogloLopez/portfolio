@@ -104,6 +104,19 @@
   margin-top: 1.15em;
 }
 
+/*
+ * The measure is set on the text, not on the column, so figures can use the
+ * full width of the grid track while paragraphs stay comfortable to read.
+ */
+.prose > * {
+  max-width: 68ch;
+}
+
+.prose > figure,
+.prose > .not-prose {
+  max-width: none;
+}
+
 .prose h2 {
   margin-top: 2.75em;
   margin-bottom: 0.9em;

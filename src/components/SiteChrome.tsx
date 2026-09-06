@@ -37,10 +37,12 @@ export function SiteHeader() {
           >
             About
           </Link>
-          <CopyEmail
-            label="Contact"
+          <SectionLink
+            hash="contact"
             className="inline-flex items-center gap-2 rounded-lg border border-iris/55 bg-iris/12 px-3 py-2 text-sm font-semibold text-iris transition-colors hover:border-iris hover:bg-iris/20"
-          />
+          >
+            Contact
+          </SectionLink>
         </nav>
       </div>
     </header>
@@ -115,9 +117,6 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <p className="mt-12 font-mono text-xs text-fg-3">
-          Built with Next.js. Business figures from employer projects are published as ranges.
-        </p>
       </div>
     </footer>
   );

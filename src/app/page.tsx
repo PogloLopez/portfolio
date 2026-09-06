@@ -108,12 +108,15 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="rounded-xl border border-line-strong bg-surface/80 p-6 sm:p-7">
+          <div
+            id="contact"
+            className="scroll-mt-24 rounded-xl border border-line-strong bg-surface/80 p-6 sm:p-7"
+          >
             <p className="font-mono text-[0.6875rem] tracking-[0.16em] text-fg-3 uppercase">
               Get in touch
             </p>
             <div className="mt-5 space-y-2.5">
-              <CopyEmail className="flex w-full items-center justify-center gap-2 rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-ground transition-opacity hover:opacity-90" />
+              <CopyEmail className="flex w-full items-center justify-center gap-2 rounded-lg bg-iris px-4 py-3 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet" />
               <div className="grid grid-cols-2 gap-2.5">
                 <a
                   href={site.contact.linkedin}

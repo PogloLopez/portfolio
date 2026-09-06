@@ -23,7 +23,7 @@ export const site = {
     linkedinLabel: "linkedin.com/in/pablo-a-lopez-s",
     github: "https://github.com/PogloLopez",
     githubLabel: "github.com/PogloLopez",
-    location: "Manizales, Colombia · open to remote",
+    location: "Based in Manizales, Colombia. I work with teams anywhere.",
   },
 
   cv: {
@@ -38,8 +38,20 @@ export const site = {
  * exact figure.
  */
 export const headlineStats = [
-  { value: "1,000s", label: "Series forecast every week, in production" },
-  { value: "Double digit", label: "Percent forecast error cut vs. the ERP" },
-  { value: "5 systems", label: "Designed, built and operated solo" },
-  { value: "Zero", label: "Business figures invented by a model" },
+  {
+    value: "12+ stores",
+    label: "Reorder their stock from my forecast every week",
+  },
+  {
+    value: "Double digit",
+    label: "Percent of forecast error removed from the system it replaced",
+  },
+  {
+    value: "5 systems",
+    label: "In production, each designed and built end to end",
+  },
+  {
+    value: "Sole engineer",
+    label: "The entire data and AI function at the company",
+  },
 ] as const;

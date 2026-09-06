@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { site } from "@/lib/site";
 
@@ -22,23 +21,18 @@ export function SectionLink({
   children: React.ReactNode;
   className?: string;
 }) {
-  const pathname = usePathname();
-
   const go = useCallback(
     (e: React.MouseEvent) => {
-      if (pathname !== "/") {
-        // Let the router handle the cross-page case; the browser lands on the
-        // anchor and `scroll-mt` on the target keeps it clear of the header.
-        return;
-      }
-      e.preventDefault();
+      // Scroll whenever the target is on the page being viewed, whichever page
+      // that is. Otherwise fall through and let the router navigate to it.
       const el = document.getElementById(hash);
       if (!el) return;
+      e.preventDefault();
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
       history.replaceState(null, "", `#${hash}`);
     },
-    [pathname, hash],
+    [hash],
   );
 
   return (

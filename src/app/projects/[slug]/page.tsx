@@ -172,7 +172,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
               </ul>
             </nav>
 
-            <div className="prose min-w-0 max-w-[70ch]">
+            <div className="prose min-w-0">
               <DeepDive />
             </div>
           </div>

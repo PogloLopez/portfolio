@@ -93,6 +93,8 @@ if (fs.existsSync(LOGO)) {
     .toFile(path.join("public", "mark.png"));
 
   // Tab icon: the same mark on the site's ground, so it reads at 16px.
+  // Note: there must be no `src/app/favicon.ico`. Next gives favicon.ico
+  // precedence over icon.png, so a stale one silently wins in the tab.
   // Built at its final size — sharp runs resize before composite, so shrinking
   // after the overlay would try to paste the mark onto a smaller base.
   await sharp({
