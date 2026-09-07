@@ -306,3 +306,91 @@
 .demo-range:disabled {
   cursor: not-allowed;
 }
+
+/* ---------------------------------------------------------------------------
+   The fixed page background. See components/SiteBackground.tsx for why it is
+   this restrained: the hero artwork is a header, this is the room.
+--------------------------------------------------------------------------- */
+
+.site-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.site-bg__aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  will-change: transform;
+}
+
+.site-bg__aurora--a {
+  top: -20vh;
+  right: -12vw;
+  width: 58vw;
+  height: 58vw;
+  max-width: 760px;
+  max-height: 760px;
+  background: radial-gradient(circle, rgba(91, 43, 224, 0.16), transparent 68%);
+  animation: bg-drift-a 30s ease-in-out infinite;
+}
+
+.site-bg__aurora--b {
+  bottom: -26vh;
+  left: -14vw;
+  width: 52vw;
+  height: 52vw;
+  max-width: 680px;
+  max-height: 680px;
+  background: radial-gradient(circle, rgba(108, 140, 255, 0.1), transparent 66%);
+  animation: bg-drift-b 38s ease-in-out infinite;
+}
+
+@keyframes bg-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-3vw, 4vh, 0) scale(1.08);
+  }
+}
+
+@keyframes bg-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  50% {
+    transform: translate3d(4vw, -3vh, 0) scale(1);
+  }
+}
+
+/*
+ * The grid drifts at a fraction of the scroll, which is what reads as depth.
+ * `--par` is set from the scroll position; with no JavaScript it stays at 0
+ * and the grid is simply static.
+ */
+.site-bg__grid {
+  position: absolute;
+  inset: -10% 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.035;
+  will-change: transform;
+  transform: translate3d(0, calc(var(--par, 0) * -1px), 0);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 78%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-bg__aurora {
+    animation: none;
+  }
+  .site-bg__grid {
+    transform: none;
+  }
+}
