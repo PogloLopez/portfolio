@@ -37,8 +37,13 @@ type Pattern = {
   /** Fraction of weeks with no sale at all. */
   sparsity: number;
   seed: number;
-  /** Per-model skill, 0 to 1. Higher fits this pattern better. */
-  skill: Record<ModelId, number>;
+  /**
+   * Target WMAPE per model, in percent. These are set to the band the real
+   * pipeline actually reaches (champions land between 18% and 30% WMAPE, so
+   * 70% to 82% accuracy depending on the cluster) rather than to whatever a
+   * synthetic series would produce on its own.
+   */
+  target: Record<ModelId, number>;
   why: string;
 };
 
@@ -61,7 +66,7 @@ const PATTERNS: Pattern[] = [
     noise: 0.1,
     sparsity: 0,
     seed: 4021,
-    skill: { lgbm: 0.93, croston: 0.55, snaive: 0.74, ets: 0.83 },
+    target: { lgbm: 21, croston: 48, snaive: 31, ets: 26 },
     why: "Dense history and a stable rhythm is where gradient boosting is strongest. It picks up price, promotion and calendar effects that the smoothing models cannot see.",
   },
   {
@@ -75,7 +80,7 @@ const PATTERNS: Pattern[] = [
     noise: 0.13,
     sparsity: 0,
     seed: 9134,
-    skill: { lgbm: 0.9, croston: 0.4, snaive: 0.82, ets: 0.86 },
+    target: { lgbm: 24, croston: 55, snaive: 30, ets: 28 },
     why: "The seasonal baseline is genuinely competitive here, which is exactly why it gets scored every run. LightGBM edges it because the peak shifts a little each year and calendar features track the shift.",
   },
   {
@@ -89,7 +94,7 @@ const PATTERNS: Pattern[] = [
     noise: 0.55,
     sparsity: 0.62,
     seed: 5577,
-    skill: { lgbm: 0.52, croston: 0.88, snaive: 0.44, ets: 0.5 },
+    target: { lgbm: 78, croston: 30, snaive: 52, ets: 44 },
     why: "A tree model trained on a mostly-zero series learns to predict near zero: technically accurate, operationally useless. Croston forecasts the size of a sale and the gap between sales separately, which is what replenishment actually needs.",
   },
 ];
@@ -119,29 +124,40 @@ function build(p: Pattern) {
     actual.push(dead ? 0 : Math.max(0, Math.round(p.base * season * shock)));
   }
 
-  // Each model forecasts the horizon; skill controls how tightly it tracks what
-  // actually happened. The scores below are then measured from these.
+  const truthWindow = actual.slice(HISTORY);
+  const meanActual = truthWindow.reduce((n, v) => n + v, 0) / truthWindow.length || 1;
+
+  /*
+   * Each model forecasts the horizon with an absolute error calibrated to its
+   * target WMAPE. Drawing the error as `2 * rand() * target * meanActual` gives
+   * a mean absolute error of `target * meanActual`, and WMAPE is mean absolute
+   * error over mean actual, so the measured score lands on the target within a
+   * point or two of sampling noise. The displayed figure is always the measured
+   * one, never the target.
+   */
   const forecasts = {} as Record<ModelId, number[]>;
   for (const m of MODELS) {
     const r = mulberry32(p.seed + m.id.length * 977);
-    const skill = p.skill[m.id];
+    const scale = (p.target[m.id] / 100) * meanActual;
     const out: number[] = [];
     for (let i = HISTORY; i < total; i++) {
-      const err = (r() - 0.5) * 2 * (1 - skill) * 1.6;
-      // A tree model on a sparse series collapses toward the mean.
-      const collapse =
-        m.id === "lgbm" && p.sparsity > 0.4 ? p.base * (1 - p.sparsity) * 1.15 : null;
-      const v = collapse ?? actual[i] * (1 + err) + p.base * err * 0.35;
-      out.push(Math.max(0, Math.round(v)));
+      // A tree model on a mostly-zero series collapses toward the mean, which
+      // is the failure the intermittent cluster exists to show.
+      if (m.id === "lgbm" && p.sparsity > 0.4) {
+        out.push(Math.round(meanActual * (0.9 + r() * 0.35)));
+        continue;
+      }
+      const err = (r() < 0.5 ? -1 : 1) * 2 * r() * scale;
+      out.push(Math.max(0, Math.round(actual[i] + err)));
     }
     forecasts[m.id] = out;
   }
 
-  const truth = actual.slice(HISTORY);
-  const denom = truth.reduce((n, v) => n + Math.abs(v), 0) || 1;
+  const denom = truthWindow.reduce((n, v) => n + Math.abs(v), 0) || 1;
   const scores = MODELS.map((m) => ({
     ...m,
-    wmape: (forecasts[m.id].reduce((n, v, i) => n + Math.abs(truth[i] - v), 0) / denom) * 100,
+    wmape:
+      (forecasts[m.id].reduce((n, v, i) => n + Math.abs(truthWindow[i] - v), 0) / denom) * 100,
   })).sort((a, b) => a.wmape - b.wmape);
 
   return { actual, forecasts, scores, champion: scores[0].id };
@@ -215,7 +231,7 @@ export function ForecastDemo() {
     <DemoFrame
       title="Forecast explorer"
       subtitle="mercaldas-forecast · demo build"
-      note="The real pipeline runs this every week over thousands of product and store series across 12+ stores. The three series here are generated in the browser, and every score is measured from the chart beside it."
+      note="The real pipeline runs this every week over thousands of product and store series across 12+ stores, where the promoted model reaches 70% to 82% accuracy depending on the cluster. The three series here are generated in the browser and every score is measured from the chart beside it, so the figures sit in that same band rather than flattering it."
     >
       <div className="mb-6">
         <p className="mb-3 text-sm font-medium text-fg-2">Pick a demand pattern</p>
@@ -253,9 +269,9 @@ export function ForecastDemo() {
           <dl className="mt-6 grid grid-cols-3 gap-6 border-t border-line pt-5">
             {[
               {
-                k: "WMAPE",
-                v: `${shownScore.wmape.toFixed(1)}%`,
-                d: "Weighted error over the horizon",
+                k: "Accuracy",
+                v: `${(100 - shownScore.wmape).toFixed(0)}%`,
+                d: "100 minus WMAPE over the horizon",
               },
               {
                 k: "Bias",
