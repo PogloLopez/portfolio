@@ -20,7 +20,7 @@ type StoreRow = { store: string; onHand: number; daily: number };
 
 const CATALOGUE: Record<ProductId, { name: string; unit: string; rows: StoreRow[] }> = {
   detergent: {
-    name: "Detergente polvo 2kg",
+    name: "Powder detergent 2kg",
     unit: "units",
     rows: [
       { store: "Centro", onHand: 940, daily: 11 },
@@ -32,7 +32,7 @@ const CATALOGUE: Record<ProductId, { name: string; unit: string; rows: StoreRow[
     ],
   },
   rice: {
-    name: "Arroz blanco 500g",
+    name: "White rice 500g",
     unit: "units",
     rows: [
       { store: "Centro", onHand: 1420, daily: 46 },
@@ -44,7 +44,7 @@ const CATALOGUE: Record<ProductId, { name: string; unit: string; rows: StoreRow[
     ],
   },
   soda: {
-    name: "Gaseosa 1.5L",
+    name: "Soda 1.5L",
     unit: "units",
     rows: [
       { store: "Centro", onHand: 2260, daily: 34 },
@@ -115,13 +115,20 @@ const CRITICAL_DAYS = 20;
 export function OperationsDemo() {
   const [productId, setProductId] = useState<ProductId>("detergent");
   const [edits, setEdits] = useState<Record<number, number>>({});
-  const [submitted, setSubmitted] = useState(false);
+  /**
+   * The moves are the tool's output, so they are not on screen before anyone
+   * asks for them. Showing them by default made the plan look like part of the
+   * inventory table it is derived from, when producing it is the whole job.
+   */
+  const [generated, setGenerated] = useState(false);
 
   const product = CATALOGUE[productId];
   // Cheap enough (six rows) to recompute; the React compiler memoises it.
   const suggested = planTransfers(product.rows);
 
-  const moves = suggested.map((m, i) => ({ ...m, units: edits[i] ?? m.units }));
+  const moves = generated
+    ? suggested.map((m, i) => ({ ...m, units: edits[i] ?? m.units }))
+    : [];
   const totalUnits = moves.reduce((n, m) => n + m.units, 0);
 
   const coverAfter: Record<string, number> = {};
@@ -145,7 +152,7 @@ export function OperationsDemo() {
   const change = (id: ProductId) => {
     setProductId(id);
     setEdits({});
-    setSubmitted(false);
+    setGenerated(false);
   };
 
   const coverTone = (days: number) =>
@@ -204,9 +211,13 @@ export function OperationsDemo() {
                       </td>
                       <td
                         className="px-3 py-2.5 text-right font-medium tabular-nums"
-                        style={{ color: coverTone(after) }}
+                        style={{ color: generated ? coverTone(after) : undefined }}
                       >
-                        {Math.round(after)}d
+                        {generated ? (
+                          `${Math.round(after)}d`
+                        ) : (
+                          <span className="text-fg-3">—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -225,7 +236,14 @@ export function OperationsDemo() {
             Suggested transfers
           </p>
 
-          {moves.length === 0 ? (
+          {!generated ? (
+            <p className="mt-3 rounded-lg border border-dashed border-line-strong bg-surface-2/30 p-4 text-sm leading-relaxed text-fg-3">
+              No plan yet. The solver matches every surplus store against every short one
+              against a {TARGET_DAYS}-day cover target, drops the moves too small to be worth a
+              truck, and returns what is left. Generate it below, then edit any quantity and
+              watch the After column move.
+            </p>
+          ) : moves.length === 0 ? (
             <p className="mt-3 rounded-lg border border-line bg-surface-2/40 p-4 text-sm text-fg-3">
               Nothing to move. Every store is inside the target band for this product.
             </p>
@@ -257,9 +275,9 @@ export function OperationsDemo() {
                           ...prev,
                           [i]: Math.max(0, Number(e.target.value) || 0),
                         }));
-                        setSubmitted(false);
                       }}
-                      className="w-24 rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-right text-sm text-fg tabular-nums focus:border-iris focus:outline-none"
+                      style={{ outlineColor: "var(--accent, var(--color-iris))" }}
+                      className="w-24 rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-right text-sm text-fg tabular-nums focus:outline-2"
                     />
                     <span className="font-mono text-[0.625rem] text-fg-3">u</span>
                   </label>
@@ -268,7 +286,7 @@ export function OperationsDemo() {
             </ul>
           )}
 
-          {stillShort.length > 0 && (
+          {generated && stillShort.length > 0 && (
             <p className="mt-4 rounded-lg border-l-2 border-[#C87A2F] bg-surface-2/40 py-3 pr-3 pl-3.5 text-xs leading-relaxed text-fg-3">
               Not solvable from stock on hand: after every worthwhile move, the network is still{" "}
               <span className="text-fg-2">{shortfall.toLocaleString("en-US")} units</span> short,
@@ -280,23 +298,22 @@ export function OperationsDemo() {
           )}
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button onClick={() => setSubmitted(true)} disabled={!moves.length || submitted}>
-              {submitted ? "Plan generated" : "Generate plan"}
-            </Button>
-            {(Object.keys(edits).length > 0 || submitted) && (
+            {!generated ? (
+              <Button onClick={() => setGenerated(true)}>Generate transfer plan</Button>
+            ) : (
               <Button
                 variant="ghost"
                 onClick={() => {
                   setEdits({});
-                  setSubmitted(false);
+                  setGenerated(false);
                 }}
               >
-                Reset
+                Clear plan
               </Button>
             )}
           </div>
 
-          {submitted && (
+          {generated && moves.length > 0 && (
             <div className="mt-4 rounded-lg border border-line bg-surface-2/40 p-4">
               <p className="text-sm font-semibold text-fg">
                 {moves.length} transfer{moves.length === 1 ? "" : "s"} ·{" "}

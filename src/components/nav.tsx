@@ -43,16 +43,54 @@ export function SectionLink({
 }
 
 /**
+ * An in-page anchor that animates instead of jumping.
+ *
+ * Same reason `SectionLink` exists rather than a global `scroll-behavior:
+ * smooth`: that rule also animates the scroll-to-top Next performs on every
+ * navigation, which reads as the page lurching before it moves. This is the
+ * plain-anchor version, for a target that is always on the page being viewed —
+ * the deep-dive index on a case study. Headings carry `scroll-margin-top`, so
+ * `block: "start"` already clears the sticky header.
+ */
+export function HashLink({
+  id,
+  children,
+  className = "",
+}: {
+  id: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const go = (e: React.MouseEvent) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    history.replaceState(null, "", `#${id}`);
+  };
+
+  return (
+    <a href={`#${id}`} onClick={go} className={className}>
+      {children}
+    </a>
+  );
+}
+
+/**
  * Copies the address instead of opening a mail client. A `mailto:` does nothing
  * at all on a machine with no mail client configured, which is most laptops a
  * recruiter opens this on.
  */
 export function CopyEmail({
   className = "",
+  style,
   children,
   label = site.contact.email,
 }: {
   className?: string;
+  /** For accent-derived colours, which cannot be expressed as utilities. */
+  style?: React.CSSProperties;
   children?: React.ReactNode;
   label?: string;
 }) {
@@ -88,7 +126,7 @@ export function CopyEmail({
   };
 
   return (
-    <button type="button" onClick={copy} className={className} aria-live="polite">
+    <button type="button" onClick={copy} className={className} style={style} aria-live="polite">
       {children ?? (
         <>
           <CopyGlyph copied={copied} />

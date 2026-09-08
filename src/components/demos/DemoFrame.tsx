@@ -35,8 +35,17 @@ export function DemoFrame({
             <span className="block truncate font-mono text-[0.6875rem] text-fg-3">{subtitle}</span>
           </span>
 
-          <span className="order-2 inline-flex w-fit shrink-0 items-center gap-1.5 rounded-md border border-violet/45 sm:order-none bg-violet/12 px-2.5 py-1 font-mono text-[0.6875rem] tracking-[0.08em] text-violet uppercase">
-            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-violet" />
+          <span className="order-2 inline-flex w-fit shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[0.6875rem] tracking-[0.08em] uppercase sm:order-none"
+            style={{
+              color: "var(--accent, var(--color-violet))",
+              borderColor: "color-mix(in srgb, var(--accent, var(--color-violet)) 45%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--accent, var(--color-violet)) 12%, transparent)",
+            }}>
+            <span
+              aria-hidden
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: "var(--accent, var(--color-violet))" }}
+            />
             Simulation · synthetic data
           </span>
         </div>

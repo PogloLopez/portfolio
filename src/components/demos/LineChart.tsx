@@ -345,7 +345,7 @@ export function LineChart({
       </div>
 
       <details className="group mt-4">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[0.6875rem] tracking-[0.12em] text-fg-3 uppercase transition-colors hover:text-iris">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[0.6875rem] tracking-[0.12em] text-fg-3 uppercase transition-all hover:brightness-150">
           <svg
             aria-hidden
             viewBox="0 0 12 12"

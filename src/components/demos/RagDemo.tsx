@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DemoFrame } from "./DemoFrame";
-import { status } from "./palette";
+import { accent, status } from "./palette";
 
 /**
  * The data assistant, reduced to the part that matters: which path answered,
@@ -116,9 +116,12 @@ const pathMeta = {
 } as const;
 
 export function RagDemo() {
-  const [current, setCurrent] = useState<Exchange | null>(null);
+  // Opens answered rather than empty: three zeros and a blank pane read as a
+  // broken widget, and the zero that matters only means something once a
+  // question has actually been answered.
+  const [current, setCurrent] = useState<Exchange | null>(EXCHANGES[0]);
   const [stage, setStage] = useState<Stage>("done");
-  const [asked, setAsked] = useState<string[]>([]);
+  const [asked, setAsked] = useState<string[]>([EXCHANGES[0].id]);
   const [showSql, setShowSql] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -177,7 +180,10 @@ export function RagDemo() {
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_17rem]">
         <div className="min-w-0">
-          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-iris uppercase">
+          <p
+            className="font-mono text-[0.6875rem] tracking-[0.14em] uppercase"
+            style={accent.fg}
+          >
             Pick a question
           </p>
           <ul className="mt-3 flex flex-wrap gap-2">
@@ -186,11 +192,8 @@ export function RagDemo() {
                 <button
                   type="button"
                   onClick={() => ask(ex)}
-                  className={`rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all ${
-                    current?.id === ex.id
-                      ? "border-iris bg-iris/18 text-fg"
-                      : "border-iris/40 bg-iris/6 text-fg-2 hover:-translate-y-px hover:border-iris hover:bg-iris/14 hover:text-fg"
-                  }`}
+                  style={accent.chip(current?.id === ex.id ? 18 : 6, current?.id === ex.id ? 100 : 40)}
+                  className="rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all hover:-translate-y-px hover:brightness-125"
                 >
                   {ex.question}
                 </button>
@@ -198,7 +201,7 @@ export function RagDemo() {
             ))}
           </ul>
 
-          <div className="mt-6 min-h-44 rounded-lg border border-line bg-surface-2/40 p-4 sm:p-5">
+          <div className="mt-6 min-h-56 rounded-lg border border-line bg-surface-2/40 p-4 sm:p-5">
             {!current && (
               <p className="text-sm leading-relaxed text-fg-3">
                 Choose one of the three questions above. The assistant will show which of its two
@@ -209,7 +212,8 @@ export function RagDemo() {
 
             {current && (
               <div className="space-y-4">
-                <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-iris/15 px-4 py-2.5 text-sm text-fg">
+                <p style={accent.bg(15)}
+                  className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm px-4 py-2.5 text-sm text-fg">
                   {current.question}
                 </p>
 
@@ -248,7 +252,7 @@ export function RagDemo() {
                     <button
                       type="button"
                       onClick={() => setShowSql((v) => !v)}
-                      className="inline-flex items-center gap-2 font-mono text-[0.6875rem] tracking-[0.1em] text-fg-3 uppercase transition-colors hover:text-iris"
+                      className="inline-flex items-center gap-2 font-mono text-[0.6875rem] tracking-[0.1em] text-fg-3 uppercase transition-all hover:brightness-150"
                     >
                       <svg
                         aria-hidden

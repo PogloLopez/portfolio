@@ -69,7 +69,7 @@ export default function AboutPage() {
         />
         <div className="mx-auto max-w-6xl px-5 pt-14 pb-16 sm:px-8 sm:pt-20 sm:pb-20">
           <Eyebrow>About</Eyebrow>
-          <h1 className="mt-6 max-w-3xl text-3xl leading-[1.1] font-bold tracking-[-0.03em] text-fg sm:text-5xl">
+          <h1 className="text-gradient mt-6 max-w-3xl text-3xl leading-[1.1] font-bold tracking-[-0.03em] sm:text-5xl">
             I build data systems for a retail chain, and I am the person who operates them
             afterwards.
           </h1>
@@ -88,12 +88,9 @@ export default function AboutPage() {
           are what the five case studies have in common, and the part I want to be pressed on.
         </p>
         <ul className="grid gap-8 md:grid-cols-2 lg:gap-x-14">
-          {principles.map((p) => (
-            <li key={p.title} className="relative pt-5">
-              <span
-                aria-hidden
-                className="absolute top-0 left-0 h-px w-9 bg-linear-to-r from-iris to-transparent"
-              />
+          {principles.map((p, i) => (
+            <li key={p.title} className="relative pt-5" data-accent={`a${i + 1}`}>
+              <span aria-hidden className="rule-accent absolute top-0 left-0 w-9" />
               <h3 className="text-lg font-semibold tracking-[-0.015em] text-fg">{p.title}</h3>
               <p className="mt-3 text-[0.9375rem] leading-relaxed text-fg-2">{p.body}</p>
             </li>
@@ -109,31 +106,39 @@ export default function AboutPage() {
             sector to do the translation, here it is.
           </p>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border-b border-line-strong py-3 pr-8 text-left font-semibold text-fg">
-                    What I built in retail
-                  </th>
-                  <th className="border-b border-line-strong py-3 text-left font-semibold text-fg">
-                    What it is called in energy
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {transfers.map((row) => (
-                  <tr key={row.to}>
-                    <td className="border-b border-line py-4 pr-8 align-top leading-relaxed text-fg-3">
-                      {row.from}
-                    </td>
-                    <td className="border-b border-line py-4 align-top leading-relaxed text-fg-2">
-                      {row.to}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/*
+            * This was a two-column <table> in an `overflow-x-auto` wrapper with a
+            * 36rem minimum. On a 390px phone that scrolled the entire right-hand
+            * column off screen with no scrollbar and no edge fade, so the reader
+            * saw the retail description and never the energy term it maps to,
+            * which is the only reason the section exists. It is a grid now:
+            * stacked pairs on a phone, two columns from `sm` up.
+            */}
+          <div className="border-t border-line-strong">
+            <div className="hidden text-sm font-semibold sm:grid sm:grid-cols-2 sm:gap-8">
+              <p className="py-3 text-fg">What I built in retail</p>
+              <p className="py-3" style={{ color: "var(--color-a5)" }}>
+                What it is called in energy
+              </p>
+            </div>
+
+            {transfers.map((row) => (
+              <div
+                key={row.to}
+                className="grid gap-1.5 border-b border-line py-4 text-sm leading-relaxed sm:grid-cols-2 sm:gap-8 sm:py-4"
+              >
+                <p className="text-fg-3">{row.from}</p>
+                <p className="text-fg">
+                  <span
+                    className="mr-2 font-mono text-[0.6875rem] tracking-[0.14em] uppercase sm:hidden"
+                    style={{ color: "var(--color-a5)" }}
+                  >
+                    In energy
+                  </span>
+                  {row.to}
+                </p>
+              </div>
+            ))}
           </div>
 
           <p className="mt-10 max-w-2xl text-base leading-relaxed text-fg-2">
@@ -147,7 +152,10 @@ export default function AboutPage() {
       <section id="contact" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20">
         <SectionLabel>Contact</SectionLabel>
         <div className="flex flex-wrap gap-3">
-          <CopyEmail className="inline-flex items-center gap-2 rounded-lg bg-iris px-5 py-2.5 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet" />
+          <CopyEmail
+            className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90"
+            style={{ background: "var(--color-a1)", color: "var(--color-ground)" }}
+          />
           <a
             href={site.contact.linkedin}
             className="rounded-lg border border-line-strong px-5 py-2.5 text-sm font-medium text-fg-2 transition-colors hover:border-iris hover:text-fg"

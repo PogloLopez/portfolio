@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { SiteBackground } from "@/components/SiteBackground";
 import { BackgroundParallax } from "@/components/BackgroundParallax";
+import { NeuralField } from "@/components/NeuralField";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${inter.variable} ${mono.variable} h-full`}>
       <body className="flex min-h-full flex-col">
         <SiteBackground />
+        <NeuralField />
         <BackgroundParallax />
         <a
           href="#main"

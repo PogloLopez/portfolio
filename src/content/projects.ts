@@ -28,6 +28,8 @@ export type CardVisual =
 
 export type Project = {
   slug: string;
+  /** Accent token, a1 through a5. Drives the card, the page and the demo. */
+  accent: "a1" | "a2" | "a3" | "a4" | "a5";
   repo: string;
   title: string;
   kicker: string;
@@ -51,6 +53,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     slug: "forecast",
+    accent: "a1",
     repo: "mercaldas-forecast",
     title: "ML demand forecasting in production",
     kicker: "MLOps · Time series",
@@ -72,16 +75,16 @@ export const projects: Project[] = [
     },
     achievements: [
       {
-        value: "70-82% accuracy",
-        label: "Depending on the cluster, against roughly 30% from the ERP module it replaced",
+        value: "19% less error",
+        label: "WMAPE 0.489 to 0.394 against the previous pipeline, scored on the same folds",
       },
       {
         value: "100,000+",
         label: "Product and store combinations forecast every week across 14 stores",
       },
       {
-        value: "19% less error",
-        label: "WMAPE 0.489 to 0.394 against the previous pipeline, scored on the same fold",
+        value: "70-82%",
+        label: "Accuracy band by demand cluster, best on smooth series and weakest on intermittent",
       },
       { value: "Feeds reordering", label: "Output drives replenishment directly, not a report" },
       {
@@ -110,6 +113,7 @@ export const projects: Project[] = [
 
   {
     slug: "market-prices",
+    accent: "a2",
     repo: "mercaldas-precios-mercado",
     title: "Market price intelligence platform",
     kicker: "Data platform · Generative AI",
@@ -159,6 +163,7 @@ export const projects: Project[] = [
 
   {
     slug: "rag",
+    accent: "a3",
     repo: "mercaldas-rag",
     title: "AI assistant for business data",
     kicker: "Applied AI · Guardrails",
@@ -204,6 +209,7 @@ export const projects: Project[] = [
 
   {
     slug: "operations-platform",
+    accent: "a4",
     repo: "mercaldas-data",
     title: "Internal operations platform",
     kicker: "Backend · Internal tooling",
@@ -244,6 +250,7 @@ export const projects: Project[] = [
 
   {
     slug: "cortana",
+    accent: "a5",
     repo: "cortana + cortana-app",
     title: "Personal AI operating system",
     kicker: "Multi-agent · Local-first",

@@ -4,30 +4,36 @@ import { Arrow, Chip } from "@/components/ui";
 import { CardVisual } from "@/components/CardVisual";
 
 /**
- * A home-page card. Ordered for a three-second scan: what it is, the two
- * numbers that matter, a picture of the output, then the one interesting line.
+ * A home-page card, themed by its project's accent.
  *
- * The whole card is the link, and it carries a visible button-shaped call to
- * action, because a card that only turns a slightly different colour on hover
- * does not read as clickable.
+ * `data-accent` sets `--accent` for the whole subtree, so the kicker, the
+ * visual, the border glow and the call to action all pick up one hue without
+ * threading a colour prop through each of them.
+ *
+ * Ordered for a three-second scan: what it is, the two numbers that matter, a
+ * picture of the output, then the one interesting line.
  */
 export function ProjectCard({ project, index }: { project: Project; index: number }) {
   return (
-    <li>
+    <li data-accent={project.accent}>
       <Link
         href={`/projects/${project.slug}`}
-        className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line-strong bg-surface/80 p-6 transition-all hover:-translate-y-0.5 hover:border-iris/60 hover:bg-surface sm:p-7"
+        className="card-accent group relative flex h-full flex-col overflow-hidden rounded-xl border border-line-strong bg-surface/80 p-6 sm:p-7"
       >
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-24 -right-16 h-48 w-48 rounded-full bg-glow/0 blur-3xl transition-colors duration-500 group-hover:bg-glow/25"
+          className="pointer-events-none absolute -top-28 -right-20 h-56 w-56 rounded-full opacity-0 blur-[70px] transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: "var(--accent)" }}
         />
 
         <div className="flex items-center justify-between gap-4">
           <span className="font-mono text-xs text-fg-3">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="truncate font-mono text-[0.6875rem] tracking-[0.08em] text-iris uppercase">
+          <span
+            className="truncate font-mono text-[0.6875rem] tracking-[0.08em] uppercase"
+            style={{ color: "var(--accent)" }}
+          >
             {project.kicker}
           </span>
         </div>
@@ -41,7 +47,10 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
             <div key={s.label}>
               <dt className="sr-only">{s.label}</dt>
               <dd>
-                <span className="block text-2xl leading-none font-semibold text-fg">
+                <span
+                  className="block text-2xl leading-none font-semibold"
+                  style={{ color: "var(--accent)" }}
+                >
                   {s.value}
                 </span>
                 <span className="mt-1.5 block text-xs text-fg-3">{s.label}</span>
@@ -69,7 +78,14 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
           )}
         </ul>
 
-        <span className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg border border-iris/55 bg-iris/12 px-4 py-2 text-sm font-semibold text-iris transition-colors group-hover:border-iris group-hover:bg-iris group-hover:text-ground">
+        <span
+          className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors"
+          style={{
+            color: "var(--accent)",
+            borderColor: "color-mix(in srgb, var(--accent) 55%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+          }}
+        >
           Open case study
           <Arrow className="transition-transform group-hover:translate-x-0.5" />
         </span>

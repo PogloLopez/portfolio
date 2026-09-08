@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DemoFrame } from "./DemoFrame";
-import { status } from "./palette";
+import { accent, status } from "./palette";
 
 /**
  * The human-in-the-loop gate, and what sits behind it.
@@ -37,14 +37,14 @@ const REQUESTS: Request[] = [
     lane: "finance",
     reversible: false,
     intent: "Append a transaction and update the running balance",
-    target: "09-FINANCE/2026-09-movimientos.md",
+    target: "09-FINANCE/2026-09-transactions.md",
     diff: [
-      { kind: "context", text: "| 2026-09-02 | Arriendo          | -1,850,000 |" },
-      { kind: "context", text: "| 2026-09-04 | Mercado           |   -186,400 |" },
-      { kind: "add", text: "| 2026-09-06 | Energía (CHEC)    |   -214,300 |" },
+      { kind: "context", text: "| 2026-09-02 | Rent              | -1,850,000 |" },
+      { kind: "context", text: "| 2026-09-04 | Groceries         |   -186,400 |" },
+      { kind: "add", text: "| 2026-09-06 | Electricity (CHEC) |  -214,300 |" },
       { kind: "context", text: "" },
-      { kind: "remove", text: "**Saldo del mes:** -2,036,400" },
-      { kind: "add", text: "**Saldo del mes:** -2,250,700" },
+      { kind: "remove", text: "**Month balance:** -2,036,400" },
+      { kind: "add", text: "**Month balance:** -2,250,700" },
     ],
     commit: "a7f3c91",
   },
@@ -57,14 +57,14 @@ const REQUESTS: Request[] = [
     target: "07-KNOWLEDGE/vercel-hobby-limits.md",
     diff: [
       { kind: "add", text: "---" },
-      { kind: "add", text: "title: Vercel Hobby, sin tarjeta y sin cobro posible" },
-      { kind: "add", text: "status: vivo" },
+      { kind: "add", text: "title: Vercel Hobby, no card and no possible charge" },
+      { kind: "add", text: "status: live" },
       { kind: "add", text: "updated: 2026-09-06" },
-      { kind: "add", text: "type: referencia" },
+      { kind: "add", text: "type: reference" },
       { kind: "add", text: "---" },
       { kind: "add", text: "" },
-      { kind: "add", text: "Sin método de pago la cuenta no puede facturar: al tocar" },
-      { kind: "add", text: "un límite el plan frena, no cobra. Ver [[portafolio]]." },
+      { kind: "add", text: "With no payment method the account cannot be billed: on hitting" },
+      { kind: "add", text: "a limit the plan stops, it does not charge. See [[portfolio]]." },
     ],
     commit: "1c04ee8",
   },
@@ -91,8 +91,10 @@ const laneColor = {
 type Phase = "idle" | "thinking" | "awaiting" | "approved" | "rejected" | "answered";
 
 export function CortanaDemo() {
-  const [request, setRequest] = useState<Request | null>(null);
-  const [phase, setPhase] = useState<Phase>("idle");
+  // Opens on the gated request, already waiting for approval: the gate is the
+  // point of the project and an empty pane does not make it.
+  const [request, setRequest] = useState<Request | null>(REQUESTS[0]);
+  const [phase, setPhase] = useState<Phase>("awaiting");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -122,7 +124,10 @@ export function CortanaDemo() {
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
         <div className="min-w-0">
-          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-iris uppercase">
+          <p
+            className="font-mono text-[0.6875rem] tracking-[0.14em] uppercase"
+            style={accent.fg}
+          >
             Say something to it
           </p>
           <ul className="mt-3 space-y-2">
@@ -131,11 +136,8 @@ export function CortanaDemo() {
                 <button
                   type="button"
                   onClick={() => send(r)}
-                  className={`w-full rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all ${
-                    request?.id === r.id
-                      ? "border-iris bg-iris/18 text-fg"
-                      : "border-iris/40 bg-iris/6 text-fg-2 hover:-translate-y-px hover:border-iris hover:bg-iris/14 hover:text-fg"
-                  }`}
+                  style={accent.chip(request?.id === r.id ? 18 : 6, request?.id === r.id ? 100 : 40)}
+                  className="w-full rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all hover:-translate-y-px hover:brightness-125"
                 >
                   {r.prompt}
                   <span className="mt-1 block font-mono text-[0.625rem] text-fg-3">
@@ -236,7 +238,8 @@ export function CortanaDemo() {
                       <button
                         type="button"
                         onClick={() => setPhase("approved")}
-                        className="rounded-lg bg-iris px-4 py-2 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet"
+                        style={accent.solid}
+                        className="rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90"
                       >
                         Approve
                       </button>

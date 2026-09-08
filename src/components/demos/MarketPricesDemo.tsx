@@ -41,6 +41,14 @@ type Product = {
   volatility: number;
   seasonality: number;
   drift: number;
+  /**
+   * Rate and size of the shocks that hit this series on top of its ordinary
+   * week-to-week noise: a harvest glut, a road closure, a supplier moving
+   * first. A fresh-produce series in a real DANE panel is jagged, and the
+   * previous generator's smooth curves undersold that.
+   */
+  spikeRate: number;
+  spikeSize: number;
   seed: number;
   reading: (f: Facts) => string[];
 };
@@ -51,12 +59,14 @@ const dir = (n: number) => (n >= 0 ? "up" : "down");
 const PRODUCTS: Product[] = [
   {
     id: "potato",
-    name: "Papa parda pastusa",
+    name: "Brown potatoes",
     unit: "COP / kg",
     base: 2180,
     volatility: 0.085,
     seasonality: 0.16,
     drift: 0.0012,
+    spikeRate: 0.16,
+    spikeSize: 0.11,
     seed: 20260906,
     reading: (f) => [
       `The series is ${dir(f.changeSemester)} ${pct(f.changeSemester)} over six months and ${dir(
@@ -77,12 +87,14 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "rice",
-    name: "Arroz de molino",
+    name: "Milled white rice",
     unit: "COP / kg",
     base: 3620,
     volatility: 0.022,
     seasonality: 0.03,
     drift: 0.0018,
+    spikeRate: 0.04,
+    spikeSize: 0.02,
     seed: 771402,
     reading: (f) => [
       `One of the calmest series in the catalogue. The largest weekly move in the whole period is ${pct(
@@ -97,12 +109,14 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "onion",
-    name: "Cebolla junca",
+    name: "Spring onions",
     unit: "COP / kg",
     base: 2760,
     volatility: 0.15,
     seasonality: 0.24,
     drift: -0.0004,
+    spikeRate: 0.26,
+    spikeSize: 0.19,
     seed: 33915,
     reading: (f) => [
       `The most volatile series shown here. The largest single weekly move is ${pct(
@@ -138,15 +152,38 @@ function buildSeries(p: Product) {
   const market: number[] = [];
   let level = p.base;
 
+  /*
+   * A shock does not clear the week it lands. It decays, which is what makes a
+   * produce series look like a series of ramps and drops rather than white
+   * noise around a curve.
+   */
+  let shockLevel = 0;
+
   for (let i = 0; i < HISTORY; i++) {
     const season = Math.sin((i / 52) * Math.PI * 2 - 0.8) * p.seasonality;
     const shock = (rand() - 0.5) * 2 * p.volatility;
     level = level * (1 + p.drift) + p.base * (shock * 0.35);
-    market.push(Math.round(p.base * (1 + season) * 0.55 + level * 0.45));
+
+    shockLevel *= 0.62;
+    if (rand() < p.spikeRate) shockLevel += (rand() - 0.42) * 2 * p.spikeSize;
+
+    // Ordinary week-to-week jitter, on top of the slow level. Applied to the
+    // final value rather than to `level` so it does not compound into drift.
+    const jitter = (rand() - 0.5) * 2 * p.volatility * 0.55;
+
+    const smooth = p.base * (1 + season) * 0.55 + level * 0.45;
+    market.push(Math.max(1, Math.round(smooth * (1 + shockLevel + jitter))));
   }
 
   const last = market[HISTORY - 1];
-  const slope = (market[HISTORY - 1] - market[HISTORY - 9]) / 8;
+  /*
+   * Slope from four-week means rather than two single weeks: on a jagged
+   * series one endpoint landing on a spike used to swing the whole 26-week
+   * projection, which is a property of the sampling and not of the trend.
+   */
+  const mean4 = (from: number) =>
+    market.slice(from, from + 4).reduce((n, v) => n + v, 0) / 4;
+  const slope = (mean4(HISTORY - 4) - mean4(HISTORY - 12)) / 8;
   const forecast: number[] = [];
   for (let i = 1; i <= HORIZON; i++) {
     const damp = Math.exp(-i / 14);
@@ -294,7 +331,7 @@ export function MarketPricesDemo() {
     <DemoFrame
       title="Market price intelligence"
       subtitle="mercaldas-precios-mercado · demo build"
-      note="The real platform covers hundreds of products with several years of history, and each written reading is generated once into the Gold layer rather than on every page view. This miniature carries three invented series; nothing here comes from DANE or from Mercaldas."
+      note="The real platform covers hundreds of products with several years of history, and each AI insight is written by a language model once into the Gold layer rather than on every page view. This miniature carries three invented series; nothing here comes from DANE or from Mercaldas."
     >
       <ControlRow>
         <Field label="Product">
@@ -362,26 +399,26 @@ export function MarketPricesDemo() {
       <div className="mt-8 rounded-lg border border-line bg-surface-2/50 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-fg-3 uppercase">
-            Written reading
+            AI insight
           </p>
           <Button onClick={generate} disabled={generating}>
-            {generating ? "Writing…" : revealed ? "Regenerate" : "Generate reading"}
+            {generating ? "Calling the model…" : revealed ? "Generate it again" : "Generate AI insight"}
           </Button>
         </div>
 
         <div className="mt-4 min-h-28" aria-live="polite">
           {revealed === 0 && !generating && (
             <p className="text-sm leading-relaxed text-fg-3">
-              In the real platform a model reads the series and writes this paragraph once,
-              into the Gold layer, so it is never regenerated on a page view. Here the wording is
-              fixed and the figures inside it are computed from the series above, which is why
-              the prose and the chart never disagree.
+              In the real platform a language model reads the series through an API call and
+              writes this paragraph once, into the Gold layer, so it is never regenerated on a
+              page view. Here the wording is fixed and the figures inside it are computed from
+              the series above, which is why the prose and the chart never disagree.
             </p>
           )}
           {generating && revealed === 0 && (
             <p className="flex items-center gap-2 text-sm text-fg-3">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet" />
-              Reading 52 weeks of series data…
+              Model reading 52 weeks of series data…
             </p>
           )}
           <div className="space-y-3">

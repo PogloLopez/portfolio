@@ -13,13 +13,19 @@
  * changed the series count.
  */
 export const seriesColor = {
-  primary: "#6480F0",
+  /**
+   * Slot 1 follows the case study's own accent, so a demo reads as part of its
+   * page rather than as a widget dropped into it. Slots 2 and 3 stay fixed:
+   * they carry comparison and status, jobs that must not change meaning from
+   * one project to the next.
+   */
+  primary: "var(--accent, #6480F0)",
   compare: "#D95926",
   third: "#199E70",
 } as const;
 
 /** Fill for a forecast interval — the primary hue at low alpha, never a new hue. */
-export const bandFill = "rgba(100, 128, 240, 0.16)";
+export const bandFill = "color-mix(in srgb, var(--accent, #6480F0) 16%, transparent)";
 
 /**
  * Status colours, reserved. These mean good / warning / bad and are never
@@ -29,4 +35,28 @@ export const status = {
   good: "#199E70",
   warn: "#C87A2F",
   bad: "#D95926",
+} as const;
+
+
+/**
+ * Accent-derived colours as inline styles.
+ *
+ * Tailwind utilities cannot express `color-mix()` over a custom property, and
+ * these values must resolve against whatever `--accent` the surrounding case
+ * study set, so they are computed here rather than baked into classes.
+ */
+export const accent = {
+  fg: { color: "var(--accent, var(--color-iris))" },
+  bg: (pct: number) => ({
+    backgroundColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${pct}%, transparent)`,
+  }),
+  chip: (bgPct: number, borderPct: number) => ({
+    color: "var(--accent, var(--color-iris))",
+    backgroundColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${bgPct}%, transparent)`,
+    borderColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${borderPct}%, transparent)`,
+  }),
+  solid: {
+    background: "var(--accent, var(--color-iris))",
+    color: "var(--color-ground)",
+  },
 } as const;
