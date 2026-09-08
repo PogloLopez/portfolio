@@ -42,3 +42,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Scratch scripts: verification and review helpers, not part of the site.
+scripts/_*.mjs
