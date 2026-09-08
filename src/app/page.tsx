@@ -121,7 +121,10 @@ export default function Home() {
               Get in touch
             </p>
             <div className="mt-5 space-y-2.5">
-              <CopyEmail className="flex w-full items-center justify-center gap-2 rounded-lg bg-iris px-4 py-3 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet" />
+              <CopyEmail
+                className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90"
+                style={{ background: "var(--color-a1)", color: "var(--color-ground)" }}
+              />
               <div className="grid grid-cols-2 gap-2.5">
                 <a
                   href={site.contact.linkedin}

@@ -49,10 +49,13 @@ export function SectionLink({
  */
 export function CopyEmail({
   className = "",
+  style,
   children,
   label = site.contact.email,
 }: {
   className?: string;
+  /** For accent-derived colours, which cannot be expressed as utilities. */
+  style?: React.CSSProperties;
   children?: React.ReactNode;
   label?: string;
 }) {
@@ -88,7 +91,7 @@ export function CopyEmail({
   };
 
   return (
-    <button type="button" onClick={copy} className={className} aria-live="polite">
+    <button type="button" onClick={copy} className={className} style={style} aria-live="polite">
       {children ?? (
         <>
           <CopyGlyph copied={copied} />
