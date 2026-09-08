@@ -36,3 +36,27 @@ export const status = {
   warn: "#C87A2F",
   bad: "#D95926",
 } as const;
+
+
+/**
+ * Accent-derived colours as inline styles.
+ *
+ * Tailwind utilities cannot express `color-mix()` over a custom property, and
+ * these values must resolve against whatever `--accent` the surrounding case
+ * study set, so they are computed here rather than baked into classes.
+ */
+export const accent = {
+  fg: { color: "var(--accent, var(--color-iris))" },
+  bg: (pct: number) => ({
+    backgroundColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${pct}%, transparent)`,
+  }),
+  chip: (bgPct: number, borderPct: number) => ({
+    color: "var(--accent, var(--color-iris))",
+    backgroundColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${bgPct}%, transparent)`,
+    borderColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${borderPct}%, transparent)`,
+  }),
+  solid: {
+    background: "var(--accent, var(--color-iris))",
+    color: "var(--color-ground)",
+  },
+} as const;

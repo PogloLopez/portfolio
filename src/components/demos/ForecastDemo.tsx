@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { DemoFrame } from "./DemoFrame";
 import { LineChart, type Series } from "./LineChart";
 import { Segmented } from "./controls";
-import { bandFill, seriesColor, status } from "./palette";
+import { accent, bandFill, seriesColor, status } from "./palette";
 
 /**
  * The forecasting system itself: pick a demand pattern, see the forecast against
@@ -329,10 +329,9 @@ export function ForecastDemo() {
                     type="button"
                     onClick={() => setSelected(m.id)}
                     aria-pressed={isShown}
-                    className={`w-full rounded-lg border px-3.5 py-3 text-left transition-colors ${
-                      isShown
-                        ? "border-iris bg-iris/14"
-                        : "border-line-strong bg-surface-2/50 hover:border-iris/60 hover:bg-iris/6"
+                    style={isShown ? accent.chip(14, 100) : undefined}
+                    className={`w-full rounded-lg border px-3.5 py-3 text-left transition-all ${
+                      isShown ? "" : "border-line-strong bg-surface-2/50 hover:brightness-125"
                     }`}
                   >
                     <span className="flex items-baseline justify-between gap-3">
@@ -375,7 +374,10 @@ export function ForecastDemo() {
             })}
           </ul>
 
-          <div className="mt-4 rounded-lg border-l-2 border-iris bg-surface-2/40 py-3 pr-3 pl-4">
+          <div
+            className="mt-4 rounded-lg border-l-2 bg-surface-2/40 py-3 pr-3 pl-4"
+            style={{ borderColor: "var(--accent, var(--color-iris))" }}
+          >
             <p className="text-xs leading-relaxed text-fg-2">
               <span className="font-semibold text-fg">Why {data.scores[0].name} wins here. </span>
               {pattern.why}

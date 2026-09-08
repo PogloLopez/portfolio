@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DemoFrame } from "./DemoFrame";
-import { status } from "./palette";
+import { accent, status } from "./palette";
 
 /**
  * The human-in-the-loop gate, and what sits behind it.
@@ -122,7 +122,10 @@ export function CortanaDemo() {
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
         <div className="min-w-0">
-          <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-iris uppercase">
+          <p
+            className="font-mono text-[0.6875rem] tracking-[0.14em] uppercase"
+            style={accent.fg}
+          >
             Say something to it
           </p>
           <ul className="mt-3 space-y-2">
@@ -131,11 +134,8 @@ export function CortanaDemo() {
                 <button
                   type="button"
                   onClick={() => send(r)}
-                  className={`w-full rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all ${
-                    request?.id === r.id
-                      ? "border-iris bg-iris/18 text-fg"
-                      : "border-iris/40 bg-iris/6 text-fg-2 hover:-translate-y-px hover:border-iris hover:bg-iris/14 hover:text-fg"
-                  }`}
+                  style={accent.chip(request?.id === r.id ? 18 : 6, request?.id === r.id ? 100 : 40)}
+                  className="w-full rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all hover:-translate-y-px hover:brightness-125"
                 >
                   {r.prompt}
                   <span className="mt-1 block font-mono text-[0.625rem] text-fg-3">
@@ -236,7 +236,8 @@ export function CortanaDemo() {
                       <button
                         type="button"
                         onClick={() => setPhase("approved")}
-                        className="rounded-lg bg-iris px-4 py-2 text-sm font-semibold text-ground shadow-sm shadow-iris/25 transition-colors hover:bg-violet"
+                        style={accent.solid}
+                        className="rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90"
                       >
                         Approve
                       </button>

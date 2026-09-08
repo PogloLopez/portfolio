@@ -32,7 +32,11 @@ export function Select<T extends string>({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="w-full appearance-none rounded-lg border border-iris/45 bg-iris/8 py-2.5 pr-9 pl-3 text-sm font-medium text-fg transition-colors hover:border-iris hover:bg-iris/16 focus:border-iris focus:outline-none"
+        style={{
+          borderColor: "color-mix(in srgb, var(--accent, var(--color-iris)) 45%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--accent, var(--color-iris)) 8%, transparent)",
+        }}
+        className="w-full appearance-none rounded-lg border py-2.5 pr-9 pl-3 text-sm font-medium text-fg transition-all hover:brightness-125 focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-surface-2 text-fg">
@@ -43,7 +47,8 @@ export function Select<T extends string>({
       <svg
         aria-hidden
         viewBox="0 0 12 12"
-        className="pointer-events-none absolute top-1/2 right-3 h-3 w-3 -translate-y-1/2 text-iris"
+        style={{ color: "var(--accent, var(--color-iris))" }}
+        className="pointer-events-none absolute top-1/2 right-3 h-3 w-3 -translate-y-1/2"
         fill="none"
         stroke="currentColor"
         strokeWidth={1.6}
@@ -71,17 +76,20 @@ export function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`inline-flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-        checked
-          ? "border-iris bg-iris/18 text-fg"
-          : "border-iris/45 bg-iris/8 text-fg-2 hover:border-iris hover:bg-iris/16 hover:text-fg"
+      style={{
+        borderColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${checked ? 100 : 45}%, transparent)`,
+        backgroundColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${checked ? 18 : 8}%, transparent)`,
+      }}
+      className={`inline-flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all hover:brightness-125 ${
+        checked ? "text-fg" : "text-fg-2"
       }`}
     >
       <span
         aria-hidden
         className={`relative block h-4.5 w-8 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-iris" : "bg-white/25"
+          checked ? "" : "bg-white/25"
         }`}
+        style={checked ? { background: "var(--accent, var(--color-iris))" } : undefined}
       >
         <span
           className={`absolute top-[3px] left-[3px] h-2.5 w-2.5 rounded-full bg-white transition-transform ${
@@ -217,8 +225,9 @@ export function Timeline({
             type="button"
             disabled={disabled}
             onClick={() => onChange(i)}
+            style={i === value ? { color: "var(--accent, var(--color-iris))" } : undefined}
             className={`min-w-8 rounded px-1 py-1 font-mono text-[0.6875rem] transition-colors ${
-              i === value ? "font-semibold text-iris" : "text-fg-3 hover:text-fg-2"
+              i === value ? "font-semibold" : "text-fg-3 hover:text-fg-2"
             }`}
           >
             {tickLabel(i)}

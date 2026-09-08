@@ -259,7 +259,8 @@ export function OperationsDemo() {
                         }));
                         setSubmitted(false);
                       }}
-                      className="w-24 rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-right text-sm text-fg tabular-nums focus:border-iris focus:outline-none"
+                      style={{ outlineColor: "var(--accent, var(--color-iris))" }}
+                      className="w-24 rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-right text-sm text-fg tabular-nums focus:outline-2"
                     />
                     <span className="font-mono text-[0.625rem] text-fg-3">u</span>
                   </label>
