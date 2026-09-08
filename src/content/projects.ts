@@ -55,15 +55,15 @@ export const projects: Project[] = [
     title: "ML demand forecasting in production",
     kicker: "MLOps · Time series",
     oneLiner:
-      "A weekly forecasting system covering thousands of product and store series, feeding replenishment directly.",
-    hook: "Replaced the ERP's black box, then caught a silent production failure with an audit I designed myself.",
+      "A weekly forecasting system covering over 100,000 product and store combinations across 14 stores, feeding replenishment directly.",
+    hook: "Over 100,000 product and store combinations, forecast weekly by a routing policy that picks a model per series.",
     org: "Mercaldas",
     confidential: true,
     problem:
-      "Mercaldas forecast demand with the black box bundled into its ERP. Nobody could see why a forecast missed, and there was no lever to make it better. Replenishment for every store ran on it anyway.",
+      "Mercaldas forecast demand with the black box bundled into its ERP. Nobody could see why a forecast missed and there was no lever to make it better, yet replenishment for every store ran on it. Replacing it was the easy part. Getting a single model to behave across a catalogue where most series barely move was not.",
     cardStats: [
-      { value: "1,000s", label: "Series, weekly" },
-      { value: "Double digit", label: "% WMAPE cut" },
+      { value: "100k+", label: "Series, weekly" },
+      { value: "~70%", label: "Forecast accuracy" },
     ],
     visual: {
       kind: "line",
@@ -72,10 +72,13 @@ export const projects: Project[] = [
     },
     achievements: [
       {
-        value: "Double-digit %",
-        label: "WMAPE cut against the previous baseline, largest gains in fast-moving lines",
+        value: "~70% accuracy",
+        label: "WMAPE 0.296 on the operational universe, against 0.489 for the pipeline it replaced",
       },
-      { value: "Thousands", label: "Product and store series forecast weekly, across 12+ stores" },
+      {
+        value: "100,000+",
+        label: "Product and store combinations forecast every week across 14 stores",
+      },
       { value: "Feeds reordering", label: "Output drives replenishment directly, not a report" },
       {
         value: "Caught in production",
@@ -92,12 +95,12 @@ export const projects: Project[] = [
       "MLflow",
       "SQL Server",
     ],
-    role: "Sole engineer, design to operation",
+    role: "Data engineering and productionisation; modelling with the team's data scientist",
     duration: "In production since 2025",
     technical: [
-      { value: "350+", label: "Automated tests, green before every deploy" },
-      { value: "Medallion", label: "Bronze, Silver and Gold layers on a local data lake" },
-      { value: "Tournament", label: "Multi-model selection with measurable switching criteria" },
+      { value: "370+", label: "Automated tests, green before every deploy" },
+      { value: "8 models", label: "LightGBM Tweedie, one per taxonomic category" },
+      { value: "Routing policy", label: "Syntetos-Boylan class decides model or moving average" },
     ],
   },
 
@@ -190,7 +193,7 @@ export const projects: Project[] = [
     duration: "In active development",
     technical: [
       { value: "Standard library", label: "Core carries no external dependencies by design" },
-      { value: "Dozens", label: "Automated tests, from SQL validation to the guardrails" },
+      { value: "120", label: "Automated tests, from SQL validation to the guardrails" },
       { value: "Pre-committed", label: "Model switching thresholds set before measuring" },
     ],
   },

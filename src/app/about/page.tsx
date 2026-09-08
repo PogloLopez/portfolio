@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  */
 const transfers: { from: string; to: string }[] = [
   {
-    from: "Weekly forecast of thousands of product×store series with LightGBM and Dagster",
+    from: "Weekly forecast of 100,000+ product×store series, routed per series between a gradient-boosted model and a moving average",
     to: "Multi-series load and demand forecasting at scale",
   },
   {

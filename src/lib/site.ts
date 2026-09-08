@@ -11,7 +11,7 @@ export const site = {
   /** The longer version, for /about and for meta descriptions. */
   intro: [
     "I'm a data and automation engineer at Mercaldas, a retail grocery chain in Colombia, where I build the systems behind forecasting, pricing and internal operations.",
-    "I built the weekly demand forecast for thousands of product and store combinations, a market price platform the commercial team takes into supplier negotiations, and an assistant that answers business questions with verified numbers instead of invented ones.",
+    "I build the data platform behind the weekly demand forecast for over 100,000 product and store combinations, a market price platform the commercial team takes into supplier negotiations, and an assistant that answers business questions with verified numbers instead of invented ones.",
     "Outside work I build my own infrastructure, and I'm interested in how these same methods apply to energy data: load forecasting, distributed generation, and the reliability problems that come with both.",
   ],
 
@@ -39,12 +39,12 @@ export const site = {
  */
 export const headlineStats = [
   {
-    value: "12+ stores",
-    label: "Reorder their stock from my forecast every week",
+    value: "100,000+",
+    label: "Product and store combinations forecast every week, across 14 stores",
   },
   {
-    value: "Double digit",
-    label: "Percent of forecast error removed from the system it replaced",
+    value: "~70%",
+    label: "Forecast accuracy on the operational universe, up from 51% a pipeline ago",
   },
   {
     value: "5 systems",

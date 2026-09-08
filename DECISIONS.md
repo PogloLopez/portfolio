@@ -95,6 +95,38 @@ The identity this site inherits — the GitHub header, the LinkedIn banner — i
 mode would be a second design with none of the same character. The palette is committed to once
 and defined explicitly, so nothing borrows a colour from the browser's default.
 
+## Every figure traces to a document
+
+Audited on 2026-09-06, after the first version shipped with numbers that did not
+survive checking. The rule now: **a figure appears on this site only if it is recorded in the
+project's own evaluation documents**, and the document is the arbiter, not memory and not the
+vault's narrative copy.
+
+What the audit changed in the forecast case study:
+
+- **Scale** was "thousands of series". The operational universe is over 100,000 product and
+  store combinations, out of a wider universe above half a million. Understated by two orders
+  of magnitude.
+- **Accuracy** was published as a 70–82% band. Only the ~70% is recorded (WMAPE 0.296 on the
+  operational universe, run 2026-07-15). The 82% had no source and is gone.
+- **The baseline** claimed a reduction "against the ERP". The documents only compare against
+  the previous production pipeline: 0.489 → 0.296. The ERP number Pablo recalls (~30%) is not
+  written down anywhere and, in his own judgment, beating it is not an achievement worth
+  citing. So the ERP is context now, never a metric.
+- **The architecture was simply wrong.** The site described K-Means clustering with
+  Croston/SBA. The repo explicitly marks the K-Means path legacy and not for production. The
+  real champion is eight LightGBM Tweedie models by taxonomic category, a Syntetos-Boylan
+  routing policy that sends intermittent, lumpy and new series to a four-week moving average
+  instead, and a G1 cap on the daily prediction.
+- **Attribution.** Model selection and evaluation belong to the team's data scientist, not to
+  Pablo. The role line says so.
+- **Test counts** were verified by counting test functions: 374 in forecast, 582 in prices, 120
+  in the assistant, 0 in the operations platform (which the case study already called debt).
+
+Figures that come from the vault's narrative rather than a repo document — "hours to minutes per
+transfer plan", "several reports per week" — are kept because nothing contradicts them, and they
+are the kind of claim a reference check settles in conversation rather than on paper.
+
 ## Where the deployment stands
 
 The Vercel project is **`pablo-lopez`** under the hobby team `poglolopezs-projects`, and the

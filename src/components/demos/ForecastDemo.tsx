@@ -23,7 +23,7 @@ import { bandFill, seriesColor, status } from "./palette";
  */
 
 type PatternId = "fast" | "seasonal" | "intermittent";
-type ModelId = "lgbm" | "croston" | "snaive" | "ets";
+type ModelId = "champion" | "lgbm" | "sma4" | "prev";
 
 type Pattern = {
   id: PatternId;
@@ -38,20 +38,21 @@ type Pattern = {
   sparsity: number;
   seed: number;
   /**
-   * Target WMAPE per model, in percent. These are set to the band the real
-   * pipeline actually reaches (champions land between 18% and 30% WMAPE, so
-   * 70% to 82% accuracy depending on the cluster) rather than to whatever a
-   * synthetic series would produce on its own.
+   * Target WMAPE per candidate, in percent, tuned so the promoted policy lands
+   * on the per-class figures the evaluation documents record: roughly 69%
+   * accuracy on smooth demand, 61% on erratic, and around half on intermittent.
+   * The champion has no target of its own because it is derived from whichever
+   * branch the routing picked.
    */
-  target: Record<ModelId, number>;
+  target: Record<Exclude<ModelId, "champion">, number>;
   why: string;
 };
 
 const MODELS: { id: ModelId; name: string; note: string }[] = [
-  { id: "lgbm", name: "LightGBM", note: "gradient boosting, per cluster" },
-  { id: "croston", name: "Croston / SBA", note: "built for intermittent demand" },
-  { id: "snaive", name: "Seasonal naive", note: "the baseline everything must beat" },
-  { id: "ets", name: "ETS", note: "exponential smoothing" },
+  { id: "champion", name: "Routing + guardrail", note: "the policy in production" },
+  { id: "lgbm", name: "LightGBM Tweedie", note: "one model per category" },
+  { id: "sma4", name: "SMA-4", note: "four-week moving average" },
+  { id: "prev", name: "Previous pipeline", note: "what this replaced" },
 ];
 
 const PATTERNS: Pattern[] = [
@@ -66,8 +67,8 @@ const PATTERNS: Pattern[] = [
     noise: 0.1,
     sparsity: 0,
     seed: 4021,
-    target: { lgbm: 21, croston: 48, snaive: 31, ets: 26 },
-    why: "Dense history and a stable rhythm is where gradient boosting is strongest. It picks up price, promotion and calendar effects that the smoothing models cannot see.",
+    target: { lgbm: 26, sma4: 47, prev: 45 },
+    why: "Syntetos-Boylan classes this series as smooth, so the policy routes it to its category's Tweedie model. Dense history and a stable rhythm is where gradient boosting is strongest, and the G1 cap trims the occasional runaway prediction.",
   },
   {
     id: "seasonal",
@@ -80,8 +81,8 @@ const PATTERNS: Pattern[] = [
     noise: 0.13,
     sparsity: 0,
     seed: 9134,
-    target: { lgbm: 24, croston: 55, snaive: 30, ets: 28 },
-    why: "The seasonal baseline is genuinely competitive here, which is exactly why it gets scored every run. LightGBM edges it because the peak shifts a little each year and calendar features track the shift.",
+    target: { lgbm: 52, sma4: 60, prev: 58 },
+    why: "Classed as erratic, so it also routes to the model. The peak shifts a little each year and calendar features track that shift, which a moving average cannot do. Accuracy is lower than on smooth demand, which is expected rather than a defect.",
   },
   {
     id: "intermittent",
@@ -94,8 +95,8 @@ const PATTERNS: Pattern[] = [
     noise: 0.55,
     sparsity: 0.62,
     seed: 5577,
-    target: { lgbm: 78, croston: 30, snaive: 52, ets: 44 },
-    why: "A tree model trained on a mostly-zero series learns to predict near zero: technically accurate, operationally useless. Croston forecasts the size of a sale and the gap between sales separately, which is what replenishment actually needs.",
+    target: { lgbm: 80, sma4: 72, prev: 88 },
+    why: "This is the case the routing exists for. A tree trained on a mostly-zero series learns to predict near zero: technically accurate, operationally useless. Syntetos-Boylan classes this one intermittent, so the policy ignores the model and takes the four-week moving average instead. Shipping the model that wins beats shipping the clever one.",
   },
 ];
 
@@ -128,30 +129,45 @@ function build(p: Pattern) {
   const meanActual = truthWindow.reduce((n, v) => n + v, 0) / truthWindow.length || 1;
 
   /*
-   * Each model forecasts the horizon with an absolute error calibrated to its
-   * target WMAPE. Drawing the error as `2 * rand() * target * meanActual` gives
-   * a mean absolute error of `target * meanActual`, and WMAPE is mean absolute
-   * error over mean actual, so the measured score lands on the target within a
-   * point or two of sampling noise. The displayed figure is always the measured
-   * one, never the target.
+   * Each candidate forecasts the horizon with an absolute error calibrated to
+   * its target WMAPE. Errors are drawn symmetrically and then centred, because
+   * over a 12-week horizon the sampling noise alone produced a 15% bias that
+   * looked like a property of the model rather than an artefact of the draw.
+   *
+   * The champion is NOT drawn independently. It is what the policy actually
+   * does: take the routed branch's forecast and apply the G1 cap. So it ties
+   * with whichever branch it routed to and can never lose to it, which is the
+   * real relationship and also stops the leaderboard from flipping on noise.
    */
+  const draw = (id: Exclude<ModelId, "champion">) => {
+    const r = mulberry32(p.seed + id.length * 977 + id.charCodeAt(0) * 31);
+    const scale = (p.target[id] / 100) * meanActual;
+    const raw: number[] = [];
+    for (let i = 0; i < HORIZON; i++) raw.push(2 * scale * (r() * 2 - 1));
+    const mean = raw.reduce((n, v) => n + v, 0) / raw.length;
+    return raw.map((e, i) => Math.max(0, Math.round(actual[HISTORY + i] + e - mean)));
+  };
+
   const forecasts = {} as Record<ModelId, number[]>;
-  for (const m of MODELS) {
-    const r = mulberry32(p.seed + m.id.length * 977);
-    const scale = (p.target[m.id] / 100) * meanActual;
-    const out: number[] = [];
-    for (let i = HISTORY; i < total; i++) {
-      // A tree model on a mostly-zero series collapses toward the mean, which
-      // is the failure the intermittent cluster exists to show.
-      if (m.id === "lgbm" && p.sparsity > 0.4) {
-        out.push(Math.round(meanActual * (0.9 + r() * 0.35)));
-        continue;
-      }
-      const err = (r() < 0.5 ? -1 : 1) * 2 * r() * scale;
-      out.push(Math.max(0, Math.round(actual[i] + err)));
-    }
-    forecasts[m.id] = out;
+
+  // A tree on a mostly-zero series collapses toward the mean. That is the
+  // exact failure the routing policy exists to avoid, so it is reproduced
+  // rather than smoothed over, and it carries the positive bias it should.
+  if (p.sparsity > 0.4) {
+    const r = mulberry32(p.seed + 4242);
+    forecasts.lgbm = Array.from({ length: HORIZON }, () =>
+      Math.round(meanActual * (0.95 + r() * 0.3)),
+    );
+  } else {
+    forecasts.lgbm = draw("lgbm");
   }
+  forecasts.sma4 = draw("sma4");
+  forecasts.prev = draw("prev");
+
+  // G1: cap the prediction at twice the highest of the previous eight weeks.
+  const cap = Math.max(...actual.slice(HISTORY - 8, HISTORY)) * 2;
+  const routed = p.sparsity > 0.4 ? forecasts.sma4 : forecasts.lgbm;
+  forecasts.champion = routed.map((v) => Math.min(v, cap));
 
   const denom = truthWindow.reduce((n, v) => n + Math.abs(v), 0) || 1;
   const scores = MODELS.map((m) => ({
@@ -231,7 +247,7 @@ export function ForecastDemo() {
     <DemoFrame
       title="Forecast explorer"
       subtitle="mercaldas-forecast · demo build"
-      note="The real pipeline runs this every week over thousands of product and store series across 12+ stores, where the promoted model reaches 70% to 82% accuracy depending on the cluster. The three series here are generated in the browser and every score is measured from the chart beside it, so the figures sit in that same band rather than flattering it."
+      note="The real pipeline runs this every week over more than 100,000 product and store combinations across 14 stores, reaching about 70% accuracy overall (WMAPE 0.296) against 0.489 for the pipeline it replaced. The three series here are generated in the browser and every score is measured from the chart beside it, so the figures land in the same band as the recorded ones rather than flattering them."
     >
       <div className="mb-6">
         <p className="mb-3 text-sm font-medium text-fg-2">Pick a demand pattern</p>

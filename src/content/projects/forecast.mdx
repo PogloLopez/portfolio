@@ -3,72 +3,95 @@ import { diagrams } from "@/content/diagrams";
 
 ## Context
 
-A grocery chain: 12+ stores, tens of thousands of active items, one replenishment
-decision per combination every week. That decision came from the ERP's forecasting
-module, a black box that produced a number but never a reason.
+A grocery chain: 14 stores, tens of thousands of active items, and a replenishment decision
+every week for each combination of the two. Over 100,000 product and store series reach the
+operational forecast, out of a wider universe above half a million.
 
-Two constraints shaped the replacement. **No cloud budget and no GPU**, so it runs on a
-shared Windows server. **No data team**, just me. The second one matters more: it rules
-out any design whose failure mode is "someone notices". Whatever I built had to fail
-loudly on its own.
+That decision used to come from the ERP's forecasting module, a black box that produced a
+number but never a reason. Replacing it was not the hard part. **Most of a grocery catalogue
+barely moves**, and a single model that looks excellent on fast-moving lines quietly destroys
+the long tail.
+
+Two constraints shaped everything. **No cloud budget and no GPU**, so it runs on a shared
+Windows server. **A team of two**: I own the data platform and productionisation, the team's
+data scientist owns model selection and evaluation.
 
 ## Architecture
 
 <Diagram spec={diagrams.forecast} />
 
-**Medallion layout on Delta Lake, local filesystem.** Bronze is raw and append-only, so a
-bad transform is always recoverable. Silver holds cleaned series with calendar and
-promotional features. Gold holds training frames. The boundaries exist because that is
-where the assertions go.
+**Medallion layout on Delta Lake, local filesystem.** Bronze is raw and append-only, so a bad
+transform is always recoverable. Silver holds cleaned series with calendar and promotional
+features. Gold holds the training frames. The boundaries exist because that is where the
+assertions go.
 
-**A tournament, not a model.** Series in a grocery catalogue do not behave alike. K-Means
-segments them, LightGBM handles the bulk per cluster, and intermittent demand goes to
-Croston and SBA. A tree model on a mostly-zero series learns to predict zero: technically
-right, operationally useless.
+**Eight models, not one.** Series are split into eight taxonomic categories and a LightGBM
+model with a **Tweedie objective** is trained per category. Tweedie because retail demand is
+non-negative, zero-inflated and right-skewed, which is exactly the distribution it assumes, and
+squared error is not.
 
-**The switching rule is code.** A champion/challenger setup where challengers get promoted
-because they "looked better" becomes the engineer's taste within two quarters. The
-criterion is defined in the pipeline, measured on held-out horizons, applied by the job.
-MLflow keeps the evidence.
+**A routing policy on top.** Every series is classified by **Syntetos-Boylan** into smooth,
+erratic, intermittent, lumpy or new. Smooth and erratic series use their category's model.
+Intermittent, lumpy and new series use a **four-week moving average** instead. That is not a
+compromise: a boosted tree trained on a mostly-zero series learns to predict near zero, which
+is technically accurate and operationally useless. The moving average is simply better there,
+and the honest thing is to ship the model that wins.
+
+**A guardrail on the output.** Daily predictions are capped at `2 × max_8w / 7`, where `max_8w`
+is the highest weekly sale in the previous eight complete weeks. It costs almost nothing and it
+stops a single bad prediction from ordering a pallet of something nobody buys.
+
+The composite of routing plus guardrail is what runs in production. It is a policy, not a
+trained model, which means it can be reasoned about and changed without retraining anything.
+
+**Selection is measured, not argued.** Candidates are scored on three held-out folds before
+anything is promoted, and MLflow keeps the runs so a promotion can be defended afterwards with
+the evidence still attached.
 
 ## The hard part
 
-Months in, I audited the pipeline. Nothing was on fire. That was the point: "everything
-reports success" is exactly the state where a silent failure hides.
+Months in, I audited the pipeline. Nothing was on fire. That was the point: "everything reports
+success" is exactly the state where a silent failure hides.
 
-The audit measured **usable horizon**, how many weeks ahead the system could still forecast
-from the data it actually had. That number had been shrinking for weeks.
+The audit measured **usable horizon**, how many weeks ahead the system could still forecast from
+the data it actually had. That number had been shrinking for weeks.
 
-The cause was structural. The daily ingest had stopped running. The weekly forecast
-*declared* a dependency on it but did not *enforce* one, so Dagster happily materialised a
-forecast from whatever was already in the lake. The job ran, succeeded, and produced a
-forecast from data that got staler every week.
+The cause was structural. The daily ingest had stopped running. The weekly forecast *declared* a
+dependency on it but did not *enforce* one, so the orchestrator happily materialised a forecast
+from whatever was already in the lake. The job ran, succeeded, and produced a forecast from data
+that got staler every week.
 
 Every green checkmark was accurate. The system was still wrong.
 
-The immediate fix made the dependency real. The durable fix was the audit itself: horizon
-health is now measured independently, never inferred from job status. **A pipeline's own
-success reporting cannot be the evidence that it works.** The failure modes that survive
-longest are precisely the ones the reporting does not cover.
+The immediate fix made the dependency real. The durable fix was the audit itself: horizon health
+is now measured independently, never inferred from job status. **A pipeline's own success
+reporting cannot be the evidence that it works.** The failure modes that survive longest are
+precisely the ones the reporting does not cover.
 
 ## Trade-offs
 
-**Reliability before sophistication.** Hierarchical reconciliation is not implemented. It
-is a real gap and the wrong next investment while the base pipeline's failure modes are
-not fully instrumented.
+**A policy instead of one clever model.** Routing between a boosted tree and a moving average is
+less impressive on paper than a single architecture that handles everything. It also beats it,
+and it can be explained to a buyer in one sentence.
 
-**Local filesystem over cloud storage.** Zero infrastructure cost and no vendor lock-in,
-against horizontal scale and an easy disaster-recovery story. Right at this volume, and
-the first decision I would revisit.
+**Reliability before sophistication.** Hierarchical reconciliation is not implemented. It is a
+real gap and the wrong next investment while the base pipeline's failure modes are not fully
+instrumented.
+
+**Local filesystem over cloud storage.** Zero infrastructure cost and no vendor lock-in, against
+horizontal scale and an easy disaster-recovery story. Right at this volume, and the first
+decision I would revisit.
 
 **Weekly, not daily.** Replenishment operates weekly. Matching the model's cadence to the
 decision's cadence also keeps compute inside the window a shared server can give it.
 
 ## Results
 
-Double-digit percentage WMAPE reduction against the ERP baseline across several
-categories, largest in fast-moving lines. Thousands of series forecast weekly across 12+
-stores, feeding merchandise reordering directly. Over 350 tests, green before deploy.
+**WMAPE 0.296 on the operational universe, roughly 70% accuracy**, against 0.489 for the
+production pipeline it replaced. Accuracy varies by series class exactly as you would expect:
+around 69% on smooth demand, falling into the fifties on lumpy and intermittent series. Over
+100,000 product and store combinations forecast weekly across 14 stores, feeding merchandise
+reordering directly. Over 370 tests, green before deploy.
 
-*Business figures are published as ranges. The company is named, the exact numbers are not
-mine to publish.*
+*Figures are the ones recorded in the project's own evaluation documents. The company is named;
+sales, margin and cost figures are not published.*
