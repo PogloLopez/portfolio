@@ -87,11 +87,19 @@ decision's cadence also keeps compute inside the window a shared server can give
 
 ## Results
 
-**WMAPE 0.296 on the operational universe, roughly 70% accuracy**, against 0.489 for the
-production pipeline it replaced. Accuracy varies by series class exactly as you would expect:
-around 69% on smooth demand, falling into the fifties on lumpy and intermittent series. Over
-100,000 product and store combinations forecast weekly across 14 stores, feeding merchandise
-reordering directly. Over 370 tests, green before deploy.
+**19% less forecast error than the pipeline it replaced.** Scored on the same fold under the
+same protocol, WMAPE went from 0.489 to 0.394. On the operational universe the current champion
+records **WMAPE 0.296, roughly 70% accuracy**.
+
+Seventy percent deserves context, because out of context it reads like a C grade. This is a
+grocery catalogue: most series sell in single digits, many sell nothing most weeks, and accuracy
+tracks that exactly. Around **69% on smooth demand**, into the fifties on lumpy and intermittent
+series. A forecast that scored 95% here would mean the catalogue had been quietly filtered down
+to the easy tenth of it, which is the usual way this number gets inflated. The routing policy is
+what stops the long tail dragging the whole thing down.
+
+Over 100,000 product and store combinations forecast weekly across 14 stores, feeding
+merchandise reordering directly. Over 370 tests, green before deploy.
 
 *Figures are the ones recorded in the project's own evaluation documents. The company is named;
 sales, margin and cost figures are not published.*

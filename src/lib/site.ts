@@ -43,8 +43,8 @@ export const headlineStats = [
     label: "Product and store combinations forecast every week, across 14 stores",
   },
   {
-    value: "~70%",
-    label: "Forecast accuracy on the operational universe, up from 51% a pipeline ago",
+    value: "19% less",
+    label: "Forecast error than the production pipeline it replaced, same fold and protocol",
   },
   {
     value: "5 systems",

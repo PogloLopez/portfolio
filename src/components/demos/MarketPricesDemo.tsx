@@ -294,7 +294,7 @@ export function MarketPricesDemo() {
     <DemoFrame
       title="Market price intelligence"
       subtitle="mercaldas-precios-mercado · demo build"
-      note="The real platform covers hundreds of products with several years of history and caches each written reading by payload hash. This miniature carries three invented series; nothing here comes from DANE or from Mercaldas."
+      note="The real platform covers hundreds of products with several years of history, and each written reading is generated once into the Gold layer rather than on every page view. This miniature carries three invented series; nothing here comes from DANE or from Mercaldas."
     >
       <ControlRow>
         <Field label="Product">
@@ -372,11 +372,10 @@ export function MarketPricesDemo() {
         <div className="mt-4 min-h-28" aria-live="polite">
           {revealed === 0 && !generating && (
             <p className="text-sm leading-relaxed text-fg-3">
-              In the real platform a model reads the series and writes this paragraph once; the
-              result is cached against a hash of the data it was given, so the same series is
-              never paid for twice. Here the wording is fixed and the figures inside it are
-              computed from the series above, which is why the prose and the chart never
-              disagree.
+              In the real platform a model reads the series and writes this paragraph once,
+              into the Gold layer, so it is never regenerated on a page view. Here the wording is
+              fixed and the figures inside it are computed from the series above, which is why
+              the prose and the chart never disagree.
             </p>
           )}
           {generating && revealed === 0 && (

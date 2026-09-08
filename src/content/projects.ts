@@ -63,7 +63,7 @@ export const projects: Project[] = [
       "Mercaldas forecast demand with the black box bundled into its ERP. Nobody could see why a forecast missed and there was no lever to make it better, yet replenishment for every store ran on it. Replacing it was the easy part. Getting a single model to behave across a catalogue where most series barely move was not.",
     cardStats: [
       { value: "100k+", label: "Series, weekly" },
-      { value: "~70%", label: "Forecast accuracy" },
+      { value: "19% less", label: "Error vs. previous" },
     ],
     visual: {
       kind: "line",
@@ -72,8 +72,8 @@ export const projects: Project[] = [
     },
     achievements: [
       {
-        value: "~70% accuracy",
-        label: "WMAPE 0.296 on the operational universe, against 0.489 for the pipeline it replaced",
+        value: "19% less error",
+        label: "WMAPE 0.489 to 0.394 against the pipeline it replaced, scored on the same fold",
       },
       {
         value: "100,000+",
@@ -132,7 +132,7 @@ export const projects: Project[] = [
         value: "Internal tool to product",
         label: "Now authenticated and internet-facing, used in supplier negotiation",
       },
-      { value: "Cached by hash", label: "An AI reading is never paid for twice on unchanged data" },
+      { value: "Written once", label: "Each AI reading is generated into the Gold layer, not per page view" },
     ],
     stack: [
       "Python",
@@ -211,7 +211,7 @@ export const projects: Project[] = [
     problem:
       "Recurring operational work lived in individual scripts with no shared API and no interface. Planning a stock transfer meant asking the data person and waiting. Every task was a standing interruption.",
     cardStats: [
-      { value: "Minutes", label: "Per plan, was hours" },
+      { value: "4h to 5min", label: "Per transfer plan" },
       { value: "Self-serve", label: "Run by operations" },
     ],
     visual: {
@@ -224,8 +224,8 @@ export const projects: Project[] = [
         value: "Self-service",
         label: "Operations plans transfers in a web tool instead of queuing behind one engineer",
       },
-      { value: "Hours to minutes", label: "Time to produce a transfer plan" },
-      { value: "Several per week", label: "Recurring reports generated and delivered unattended" },
+      { value: "4 hours to 2-5 min", label: "Time to produce a transfer plan" },
+      { value: "3 runs a week", label: "Two scheduled report jobs, generated and delivered unattended" },
       { value: "One API", label: "Scripts consolidated without stopping the operation" },
     ],
     stack: ["Python", "FastAPI", "pandas", "SQL Server", "Dagster", "Docker", "Gmail API"],

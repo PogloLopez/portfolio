@@ -72,7 +72,7 @@ export const diagrams: Record<string, DiagramSpec> = {
   "market-prices": {
     title: "From a weekly PDF bulletin to a price reading the buyers act on",
     description:
-      "DANE bulletins are scraped and unit-normalised into a medallion lake. A 52-week forecast runs per product with model selection by multi-horizon MAPE. A language model writes the reading of each series, cached by payload hash, and the authenticated FastAPI application serves it to the commercial team.",
+      "DANE bulletins are scraped and unit-normalised into a medallion lake. A 52-week forecast runs per product with model selection by multi-horizon MAPE. A language model writes the reading of each series once into the Gold layer, and the authenticated FastAPI application serves it to the commercial team from memory.",
     lanes: ["source", "ingest", "lake", "intelligence", "delivery"],
     nodes: [
       {
@@ -105,7 +105,7 @@ export const diagrams: Record<string, DiagramSpec> = {
       { id: "llm", col: 3, row: 2, label: "LLM reading", sub: "one paragraph per series", tone: "accent" },
       { id: "team", col: 4, row: 0, label: "Commercial team", sub: "supplier negotiation", tone: "accent" },
       { id: "api", col: 4, row: 1, label: "FastAPI + HTMX", sub: "authenticated, on the internet" },
-      { id: "cache", col: 4, row: 2, label: "Insight cache", sub: "keyed by payload hash", tone: "store" },
+      { id: "cache", col: 4, row: 2, label: "Insight store", sub: "Gold table, read once", tone: "store" },
     ],
     edges: [
       { from: "dane", to: "scrape" },
@@ -116,7 +116,7 @@ export const diagrams: Record<string, DiagramSpec> = {
       { from: "sel", to: "fc", route: "v" },
       { from: "fc", to: "llm", route: "v" },
       { from: "llm", to: "cache" },
-      { from: "cache", to: "api", route: "v", label: "hit → no call" },
+      { from: "cache", to: "api", route: "v", label: "no re-run" },
       { from: "fc", to: "api" },
       { from: "api", to: "team", route: "v" },
     ],
