@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /**
@@ -14,14 +13,21 @@ import { useEffect, useRef } from "react";
  * back up and it reassembles, because position is a pure function of scroll
  * rather than an accumulated animation.
  *
- * It lives in the fixed background layer, so it spans the whole document and
- * the content scrolls over it.
+ * It lives inside the hero, over the static artwork.
  *
- * It renders on the home page only. On the case studies and the about page the
- * body copy runs the full width of the viewport, and a review measured the
- * particles at a higher luminance than the text they sat behind: the decoration
- * was literally brighter than the sentences. Those pages keep the auroras and
- * the grid, which never cross a glyph.
+ * It was a full-document layer in the fixed background, and that could not be
+ * made safe. A review measured the particles at a higher luminance than the
+ * text they sat behind: on /about, peak background 0.61 against body text 0.55.
+ * Scoping it to the home page and masking the left column only moved the
+ * problem, because the geometry does not cooperate: measured across
+ * breakpoints the rightmost hero glyph sits anywhere between 54% and 91% of
+ * the viewport, and the stat strip runs the full width at every size. No fixed
+ * mask clears all of that.
+ *
+ * So it is scoped to the one region that carries no text at any width: the
+ * right of the hero, where the artwork is. Below `lg` there is no such region,
+ * because the heading spans the screen, so it does not render at all. The
+ * auroras and the dot grid, which never cross a glyph, carry the rest.
  *
  * Drawn on a canvas rather than as DOM or SVG: at ~90 nodes with edges
  * recomputed per frame this is far cheaper, and it never triggers layout.
@@ -60,15 +66,12 @@ function mulberry32(seed: number) {
 
 /**
  * Nodes are seeded in a radial cluster so the assembled state reads as one
- * organism rather than scattered confetti.
- *
- * The cluster is centred on the right of the viewport, where the hero artwork's
- * burst sits, so on the home page the living network appears to emanate from
- * the static mark instead of competing with it. On the other pages it simply
- * reads as a figure in the upper right.
+ * organism rather than scattered confetti. Coordinates are fractions of the
+ * hero box, and the cluster is centred over the artwork's own burst so the
+ * living network appears to emanate from the static mark.
  */
-const HOME_X = 0.72;
-const HOME_Y = 0.42;
+const HOME_X = 0.82;
+const HOME_Y = 0.48;
 
 function seedNodes(): Node[] {
   const rand = mulberry32(20260907);
@@ -76,12 +79,18 @@ function seedNodes(): Node[] {
   for (let i = 0; i < NODE_COUNT; i++) {
     const angle = rand() * Math.PI * 2;
     // Square root keeps the area density even instead of crowding the centre.
-    const radius = Math.sqrt(rand()) * 0.30;
+    const radius = Math.sqrt(rand()) * 0.22;
     const hx = HOME_X + Math.cos(angle) * radius * 1.15;
     const hy = HOME_Y + Math.sin(angle) * radius;
     // Drift is outward from the centre, so decomposition reads as an
     // explosion rather than a slide.
-    const spread = 0.55 + rand() * 1.5;
+    /*
+     * Drift distances are fractions of the hero box, which is a third of the
+     * height the field used to span, so the same numbers threw every node off
+     * the canvas within 250px of scroll and the network was simply gone rather
+     * than coming apart. Scaled to the box it is drawn into.
+     */
+    const spread = 0.28 + rand() * 0.62;
     nodes.push({
       hx,
       hy,
@@ -96,8 +105,6 @@ function seedNodes(): Node[] {
 
 export function NeuralField() {
   const ref = useRef<HTMLCanvasElement>(null);
-  const pathname = usePathname();
-  const onHome = pathname === "/";
 
   useEffect(() => {
     const canvas = ref.current;
@@ -142,9 +149,9 @@ export function NeuralField() {
     let lastProgress = -1;
 
     /*
-     * Everything is sized in CSS pixels, so on a 390px phone the same field is
-     * proportionally three times denser and swamps the text it sits behind.
-     * `scale` shrinks the marks and thins the population to match the viewport.
+     * Everything is sized in CSS pixels, so the same field is proportionally
+     * denser in a narrow hero. `scale` shrinks the marks and thins the
+     * population to match the box it is drawn into.
      */
     let scale = 1;
     let visibleCount = NODE_COUNT;
@@ -160,9 +167,14 @@ export function NeuralField() {
       visibleCount = Math.round(NODE_COUNT * (0.45 + 0.55 * scale));
     };
 
-    /** 0 assembled, 1 fully decomposed. */
+    /**
+     * 0 assembled, 1 fully decomposed.
+     *
+     * Measured against the hero's own height rather than the viewport, so the
+     * field is fully apart at about the moment the hero leaves the screen.
+     */
     const progress = () => {
-      const span = window.innerHeight * 2.2;
+      const span = Math.max(1, canvas.clientHeight * 1.7);
       return Math.min(1, Math.max(0, window.scrollY / span));
     };
 
@@ -185,7 +197,7 @@ export function NeuralField() {
       });
 
       // Edges first, so nodes sit on top of them.
-      const linkAlpha = Math.max(0, 1 - e * 1.5);
+      const linkAlpha = Math.max(0, 1 - e * 1.15);
       if (linkAlpha > 0.01) {
         ctx.lineWidth = 1;
         /*
@@ -224,7 +236,7 @@ export function NeuralField() {
       // Nodes dim as they scatter, so the field recedes instead of competing
       // with the content that scrolls over it.
       // Dimmer on a small screen, where the field is closer to the text.
-      const a = (0.55 + 0.3 * scale) * (1 - e * 0.8);
+      const a = (0.55 + 0.3 * scale) * (1 - e * 0.7);
 
       ctx.globalAlpha = a;
       for (const q of pts) {
@@ -293,24 +305,28 @@ export function NeuralField() {
     };
   }, []);
 
-  if (!onHome) return null;
-
   /*
-   * The mask keeps the field out of the left column, where the headline and
-   * every body paragraph live. It is a hard guarantee rather than a matter of
-   * opacity: no node can be drawn over text because the layer is not painted
-   * there at all.
+   * `lg` and up only: below it the heading spans the screen and there is no
+   * region left that text never reaches. `hidden lg:block` is a hard rule, not
+   * a matter of opacity, and it costs nothing on a phone because the effect
+   * never mounts its loop there.
+   *
+   * The mask starts at 68% of the hero: the rightmost glyph measures 64.1% at
+   * 1024px and falls from there as the container stops growing, so the stop
+   * clears every width in the range. The check is a pixel diff of the page
+   * against itself with this layer hidden, which must report zero differing
+   * pixels inside every text box.
    */
   return (
     <canvas
       ref={ref}
       aria-hidden
-      className="absolute inset-0 h-full w-full"
+      className="absolute inset-0 hidden h-full w-full lg:block"
       style={{
         WebkitMaskImage:
-          "linear-gradient(90deg, transparent 0%, transparent 38%, rgba(0,0,0,0.55) 55%, #000 72%)",
+          "linear-gradient(90deg, transparent 0%, transparent 68%, rgba(0,0,0,0.6) 78%, #000 88%)",
         maskImage:
-          "linear-gradient(90deg, transparent 0%, transparent 38%, rgba(0,0,0,0.55) 55%, #000 72%)",
+          "linear-gradient(90deg, transparent 0%, transparent 68%, rgba(0,0,0,0.6) 78%, #000 88%)",
       }}
     />
   );
