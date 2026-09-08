@@ -43,8 +43,8 @@ export const headlineStats = [
     label: "Product and store combinations forecast every week, across 14 stores",
   },
   {
-    value: "19% less",
-    label: "Forecast error than the pipeline it replaced, scored on the same held-out folds",
+    value: "70-82%",
+    label: "Forecast accuracy across the whole company's catalogue, by demand cluster",
   },
   {
     value: "52 weeks",
@@ -52,6 +52,7 @@ export const headlineStats = [
   },
   {
     value: "Zero",
-    label: "Business figures a language model is allowed to invent",
+    label:
+      "Numbers invented by the AI assistant: every figure it answers with is read from the database",
   },
 ] as const;

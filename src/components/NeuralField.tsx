@@ -3,55 +3,83 @@
 import { useEffect, useRef } from "react";
 
 /**
- * The neural field behind the page.
+ * The neural field: the page's background, and a scroll indicator that happens
+ * to be pretty.
  *
- * It starts assembled: a dense network of nodes and edges gathered around the
- * centre of the first screen, which is the same gesture as the brand mark. As
- * the page scrolls it decomposes — nodes drift outward along their own
- * vectors, the edges that held them stretch and fade as they pass a distance
- * threshold, and the field thins to a scatter of points by the footer. Scroll
- * back up and it reassembles, because position is a pure function of scroll
- * rather than an accumulated animation.
+ * At the top of the page it is a brain, drawn as nodes and edges, in the top
+ * left corner clear of the headline. As the page scrolls it comes apart and
+ * spreads until, by the footer, the network spans the whole viewport. The edges
+ * follow: the link radius grows with the expansion, so the thing stays a
+ * connected network the whole way instead of coming apart into loose points.
  *
- * It lives inside the hero, over the static artwork.
+ * Nothing about the expanded state is regular. Nodes travel at their own speeds
+ * and their targets are a warped, heavily jittered grid, because the first
+ * version of this was legibly a rectangle of evenly spaced dots.
  *
- * It was a full-document layer in the fixed background, and that could not be
- * made safe. A review measured the particles at a higher luminance than the
- * text they sat behind: on /about, peak background 0.61 against body text 0.55.
- * Scoping it to the home page and masking the left column only moved the
- * problem, because the geometry does not cooperate: measured across
- * breakpoints the rightmost hero glyph sits anywhere between 54% and 91% of
- * the viewport, and the stat strip runs the full width at every size. No fixed
- * mask clears all of that.
+ * Position is a pure function of scroll, not an accumulated animation, so
+ * scrolling back up runs it backwards exactly.
  *
- * So it is scoped to the one region that carries no text at any width: the
- * right of the hero, where the artwork is. Below `lg` there is no such region,
- * because the heading spans the screen, so it does not render at all. The
- * auroras and the dot grid, which never cross a glyph, carry the rest.
- *
- * Drawn on a canvas rather than as DOM or SVG: at ~90 nodes with edges
- * recomputed per frame this is far cheaper, and it never triggers layout.
+ * It used to live inside the hero, scoped to the right of the artwork and
+ * masked off the text. That was a workaround for a legibility problem: measured
+ * across breakpoints, no fixed mask could keep a bright field off every glyph.
+ * The answer here is different in kind. The field is dim by construction — the
+ * alpha ceilings below sit near the dot grid's own contribution — so it never
+ * competes with text at any width, and it needs no mask at all.
  *
  * Behaviour it must respect:
- *   - `prefers-reduced-motion`: renders the assembled state once, no loop.
- *   - Off-screen: the loop parks itself, so a scrolled-past hero costs nothing.
- *   - No JavaScript: the component simply never mounts and the page is fine.
+ *   - `prefers-reduced-motion`: renders the current scroll state, no bob, no loop.
+ *   - Hidden tab: the loop stops and resumes with the tab.
+ *   - No JavaScript: the component never mounts and the page is fine.
  */
 
 type Node = {
-  /** Home position, in normalised hero space. */
+  /** Position inside the brain, in units of HOME_R from its centre. */
   hx: number;
   hy: number;
-  /** Direction and distance it drifts to as the page scrolls. */
-  dx: number;
-  dy: number;
+  /** Where it ends up once the field has expanded, in viewport fractions. */
+  tx: number;
+  ty: number;
   r: number;
+  /**
+   * How fast this node makes the journey, as a multiplier on the shared
+   * progress. Without it every node arrives at once and the expansion has a
+   * single visible front; with it the field comes apart raggedly.
+   */
+  lag: number;
   /** Phase offset so the drift does not look synchronised. */
   phase: number;
 };
 
-const NODE_COUNT = 110;
-const LINK_DIST = 0.14;
+/*
+ * Enough nodes that the silhouette survives a short link radius. At 110 the
+ * fold bands were far enough apart that the edges could not bridge them and
+ * the brain fell into two disconnected clumps.
+ */
+const NODE_COUNT = 150;
+
+/**
+ * The brain's centre, in viewport fractions, and its radius in CSS pixels.
+ *
+ * Top left, not centre left, and clear of the sticky header. HOME_R is the
+ * half-width: the shape spans twice this, so it reads as a mark rather than a
+ * speck, while still sitting left of where the headline starts at every width.
+ */
+const HOME_X = 0.082;
+const HOME_Y = 0.235;
+const HOME_R = 78;
+
+/**
+ * The link radius at both ends of the journey, as a fraction of the viewport's
+ * width. It grows with the expansion because a fixed threshold severs every
+ * edge in the first few hundred pixels of scroll, which is the opposite of the
+ * effect: the network is supposed to spread, not dissolve.
+ *
+ * The near value is deliberately short. A longer one connects nodes across the
+ * whole brain, and those chords fill the silhouette with straight lines until
+ * it reads as a blob; keeping edges local makes the folds visible as chains.
+ */
+const LINK_NEAR = 0.036;
+const LINK_FAR = 0.15;
 const MAX_LINKS = 3;
 
 function mulberry32(seed: number) {
@@ -65,38 +93,75 @@ function mulberry32(seed: number) {
 }
 
 /**
- * Nodes are seeded in a radial cluster so the assembled state reads as one
- * organism rather than scattered confetti. Coordinates are fractions of the
- * hero box, and the cluster is centred over the artwork's own burst so the
- * living network appears to emanate from the static mark.
+ * Is this point inside the brain?
+ *
+ * Coordinates are in units of HOME_R, x to the right and y down, so the shape
+ * spans roughly -1..1 on both axes. It is a side view, which is the reading
+ * that survives at this size: a lateral silhouette is recognisable as a brain
+ * from its outline alone, where a top view needs the fissure to be visible to
+ * be anything but an oval.
+ *
+ * Three parts, in the order a neuroanatomy diagram draws them: the cerebrum,
+ * the cerebellum tucked under its back, and the stem below that.
+ *
+ * The `fold` test is what makes it read as brain rather than blob. It keeps
+ * points near the crests of a sine ripple and rejects the troughs, which
+ * scatters the nodes along curved bands. Once the edges are drawn between
+ * them, those bands look like gyri.
  */
-const HOME_X = 0.82;
-const HOME_Y = 0.48;
+function inBrain(x: number, y: number, fold: boolean): boolean {
+  const cerebrum = (x / 1) ** 2 + ((y + 0.1) / 0.72) ** 2 <= 1 && y < 0.45;
+  const cerebellum = ((x + 0.52) / 0.36) ** 2 + ((y - 0.42) / 0.28) ** 2 <= 1;
+  const stem = x > -0.3 && x < -0.06 && y > 0.3 && y < 0.78;
+  if (!(cerebrum || cerebellum || stem)) return false;
+  if (!fold) return true;
+  // Ripples running front to back, tilted, so the bands curve with the shape.
+  return Math.abs(Math.sin(x * 4.6 + y * 2.9 + Math.cos(y * 3.1) * 1.4)) > 0.32;
+}
 
+/**
+ * Targets are jittered on a coarse grid rather than drawn uniformly. Uniform
+ * random points clump, and a background of clumps and bald patches reads as a
+ * mistake; a jittered grid covers the viewport evenly and still looks
+ * unplanned. Targets run well past the edges so the network bleeds off-screen
+ * instead of stopping at a visible boundary.
+ *
+ * The grid on its own is the problem it solves, though: it was legible AS a
+ * grid, a rectangle of evenly spaced points. So the jitter is a full cell
+ * rather than half, and every target is then pushed through a low-frequency
+ * warp that bunches some regions and opens voids in others. Combined with the
+ * per-node `lag`, nothing in the expanded state lines up with anything.
+ */
 function seedNodes(): Node[] {
-  const rand = mulberry32(20260907);
+  const rand = mulberry32(20260908);
+  const cols = 13;
+  const rows = Math.ceil(NODE_COUNT / cols);
   const nodes: Node[] = [];
+
   for (let i = 0; i < NODE_COUNT; i++) {
-    const angle = rand() * Math.PI * 2;
-    // Square root keeps the area density even instead of crowding the centre.
-    const radius = Math.sqrt(rand()) * 0.22;
-    const hx = HOME_X + Math.cos(angle) * radius * 1.15;
-    const hy = HOME_Y + Math.sin(angle) * radius;
-    // Drift is outward from the centre, so decomposition reads as an
-    // explosion rather than a slide.
-    /*
-     * Drift distances are fractions of the hero box, which is a third of the
-     * height the field used to span, so the same numbers threw every node off
-     * the canvas within 250px of scroll and the network was simply gone rather
-     * than coming apart. Scaled to the box it is drawn into.
-     */
-    const spread = 0.28 + rand() * 0.62;
+    // Rejection sampling into the silhouette. The attempt cap matters: the
+    // fold test rejects most of the box, and an unbounded loop here would
+    // hang the first paint rather than merely look wrong.
+    let hx = 0;
+    let hy = 0;
+    for (let attempt = 0; attempt < 200; attempt++) {
+      hx = rand() * 2.2 - 1.1;
+      hy = rand() * 2.2 - 1.1;
+      if (inBrain(hx, hy, attempt < 160)) break;
+    }
+
+    const gx = ((i % cols) + 0.5) / cols;
+    const gy = (Math.floor(i / cols) + 0.5) / rows;
+    const warpX = Math.sin(gy * 5.1 + i * 0.7) * 0.11;
+    const warpY = Math.cos(gx * 4.3 + i * 0.4) * 0.09;
+
     nodes.push({
       hx,
       hy,
-      dx: Math.cos(angle) * spread + (rand() - 0.5) * 0.35,
-      dy: Math.sin(angle) * spread * 0.6 + rand() * 0.5,
-      r: 1 + rand() * 2.2,
+      tx: gx * 1.26 - 0.13 + (rand() - 0.5) * 0.16 + warpX,
+      ty: gy * 1.26 - 0.13 + (rand() - 0.5) * 0.18 + warpY,
+      r: 0.9 + rand() * 1.5,
+      lag: 0.62 + rand() * 0.76,
       phase: rand() * Math.PI * 2,
     });
   }
@@ -146,13 +211,8 @@ export function NeuralField() {
     let dpr = 1;
     let raf = 0;
     let t = 0;
-    let lastProgress = -1;
 
-    /*
-     * Everything is sized in CSS pixels, so the same field is proportionally
-     * denser in a narrow hero. `scale` shrinks the marks and thins the
-     * population to match the box it is drawn into.
-     */
+    /** Thins the population on a small screen, where the field is denser. */
     let scale = 1;
     let visibleCount = NODE_COUNT;
 
@@ -163,91 +223,116 @@ export function NeuralField() {
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      scale = Math.min(1, Math.max(0.5, width / 1100));
-      visibleCount = Math.round(NODE_COUNT * (0.45 + 0.55 * scale));
+      scale = Math.min(1, Math.max(0.55, width / 1100));
+      visibleCount = Math.round(NODE_COUNT * (0.5 + 0.5 * scale));
     };
 
     /**
-     * 0 assembled, 1 fully decomposed.
+     * 0 is the knot, 1 is the field across the whole viewport.
      *
-     * Measured against the hero's own height rather than the viewport, so the
-     * field is fully apart at about the moment the hero leaves the screen.
+     * Measured against the scrollable length of the document rather than a
+     * fixed number of pixels, so the expansion finishes at the foot of the page
+     * whether that page is the home page or a 7,000px case study.
      */
     const progress = () => {
-      const span = Math.max(1, canvas.clientHeight * 1.7);
+      const span = document.documentElement.scrollHeight - window.innerHeight;
+      if (span <= 0) return 0;
       return Math.min(1, Math.max(0, window.scrollY / span));
     };
 
     const draw = () => {
       const p = progress();
-      // Ease out: most of the decomposition happens early, so the effect is
-      // legible in the first screen rather than needing the whole page.
-      const e = 1 - Math.pow(1 - p, 2);
+      // Very slightly front-loaded: the field has to visibly move within the
+      // first screen or the effect goes unnoticed, but it must still have
+      // somewhere left to go on the way down.
+      const e = Math.pow(p, 0.85);
 
       ctx.clearRect(0, 0, width, height);
 
+      const homeX = HOME_X * width;
+      const homeY = HOME_Y * height;
+      const knot = HOME_R * scale;
+
       const pts = nodes.slice(0, visibleCount).map((n) => {
-        // A slow bob keeps the assembled state alive rather than frozen.
-        const bob = reduced ? 0 : Math.sin(t * 0.0004 + n.phase) * 0.006;
+        // A slow bob keeps the brain alive rather than frozen, and grows with
+        // the field so the expanded state is not a static wallpaper either.
+        const bob = reduced ? 0 : Math.sin(t * 0.0004 + n.phase) * (2 + 5 * e);
+        // Each node runs its own clock. Clamped, so the fast ones settle at
+        // their target instead of sailing past it.
+        const ei = Math.min(1, e * n.lag);
+        const hx = homeX + n.hx * knot;
+        const hy = homeY + n.hy * knot;
         return {
-          x: (n.hx + n.dx * e) * width,
-          y: (n.hy + n.dy * e + bob) * height,
-          r: n.r * scale,
+          x: hx + (n.tx * width - hx) * ei,
+          y: hy + (n.ty * height - hy) * ei + bob,
+          // The points grow as they spread: small and tight in the brain, and
+          // half again as large by the time they are the whole background.
+          r: n.r * scale * (0.62 + 0.95 * ei),
         };
       });
 
       // Edges first, so nodes sit on top of them.
-      const linkAlpha = Math.max(0, 1 - e * 1.15);
-      if (linkAlpha > 0.01) {
-        ctx.lineWidth = 1;
-        /*
-         * Edges are bucketed by opacity and each bucket stroked as one path.
-         * Stroking every edge separately meant a style change and a draw call
-         * per edge, which is where the rest of the frame budget went.
-         */
-        const BUCKETS = 4;
-        const buckets: Path2D[] = [];
-        for (let b = 0; b < BUCKETS; b++) buckets.push(new Path2D());
+      const linkDist = (LINK_NEAR + (LINK_FAR - LINK_NEAR) * e) * width;
+      const limit = linkDist * linkDist;
 
-        const limit = LINK_DIST * LINK_DIST;
-        for (let i = 0; i < pts.length; i++) {
-          let made = 0;
-          for (let j = i + 1; j < pts.length && made < MAX_LINKS; j++) {
-            const dx = (pts[i].x - pts[j].x) / width;
-            const dy = (pts[i].y - pts[j].y) / height;
-            // Squared distance: the square root was per candidate pair.
-            const d2 = dx * dx + dy * dy;
-            if (d2 > limit) continue;
-            made++;
-            const closeness = 1 - Math.sqrt(d2) / LINK_DIST;
-            const b = Math.min(BUCKETS - 1, Math.floor(closeness * BUCKETS));
-            buckets[b].moveTo(pts[i].x, pts[i].y);
-            buckets[b].lineTo(pts[j].x, pts[j].y);
-          }
-        }
+      ctx.lineWidth = 1;
+      /*
+       * Edges are bucketed by opacity and each bucket stroked as one path.
+       * Stroking every edge separately meant a style change and a draw call
+       * per edge, which is where the rest of the frame budget went.
+       */
+      const BUCKETS = 4;
+      const buckets: Path2D[] = [];
+      for (let b = 0; b < BUCKETS; b++) buckets.push(new Path2D());
 
-        for (let b = 0; b < BUCKETS; b++) {
-          const a = ((b + 0.5) / BUCKETS) * linkAlpha * 0.72;
-          ctx.strokeStyle = `rgba(150, 165, 255, ${a.toFixed(3)})`;
-          ctx.stroke(buckets[b]);
+      for (let i = 0; i < pts.length; i++) {
+        let made = 0;
+        for (let j = i + 1; j < pts.length && made < MAX_LINKS; j++) {
+          const dx = pts[i].x - pts[j].x;
+          const dy = pts[i].y - pts[j].y;
+          // Squared distance: the square root was per candidate pair.
+          const d2 = dx * dx + dy * dy;
+          if (d2 > limit) continue;
+          made++;
+          const closeness = 1 - Math.sqrt(d2) / linkDist;
+          const b = Math.min(BUCKETS - 1, Math.floor(closeness * BUCKETS));
+          buckets[b].moveTo(pts[i].x, pts[i].y);
+          buckets[b].lineTo(pts[j].x, pts[j].y);
         }
       }
 
-      // Nodes dim as they scatter, so the field recedes instead of competing
-      // with the content that scrolls over it.
-      // Dimmer on a small screen, where the field is closer to the text.
-      const a = (0.55 + 0.3 * scale) * (1 - e * 0.7);
-
-      ctx.globalAlpha = a;
-      for (const q of pts) {
-        if (q.r <= 2.2 * scale) continue;
-        const d = q.r * 10;
-        ctx.drawImage(sprite, q.x - d / 2, q.y - d / 2, d, d);
+      /*
+       * These two alpha ceilings are the whole legibility argument, which is
+       * why they are constants and not something derived. The field now sits
+       * behind every paragraph on the site; raising either number is a contrast
+       * decision, not a styling one.
+       */
+      const dim = 0.72 + 0.28 * scale;
+      for (let b = 0; b < BUCKETS; b++) {
+        const a = ((b + 0.5) / BUCKETS) * 0.14 * dim;
+        ctx.strokeStyle = `rgba(150, 165, 255, ${a.toFixed(3)})`;
+        ctx.stroke(buckets[b]);
       }
-      ctx.globalAlpha = 1;
+
+      const nodeAlpha = 0.32 * dim;
+
+      /*
+       * The glow is what makes the knot read as a mark at the top of the page.
+       * It fades out as the field spreads, because a hundred glows behind body
+       * copy is exactly the contrast problem the old version had.
+       */
+      const glow = nodeAlpha * (1 - e) * 0.85;
+      if (glow > 0.01) {
+        ctx.globalAlpha = glow;
+        for (const q of pts) {
+          const d = q.r * 11;
+          ctx.drawImage(sprite, q.x - d / 2, q.y - d / 2, d, d);
+        }
+        ctx.globalAlpha = 1;
+      }
 
       // One path for every dot: a fill per node was a state change per node.
-      ctx.fillStyle = `rgba(190, 200, 255, ${a.toFixed(3)})`;
+      ctx.fillStyle = `rgba(190, 200, 255, ${nodeAlpha.toFixed(3)})`;
       ctx.beginPath();
       for (const q of pts) {
         ctx.moveTo(q.x + q.r, q.y);
@@ -256,32 +341,23 @@ export function NeuralField() {
       ctx.fill();
     };
 
-    /*
-     * Once the field is fully decomposed it is a static scatter, and the bob
-     * is invisible at that opacity, so the loop parks itself and only scroll
-     * wakes it. Scrolling the rest of a long page costs nothing.
-     */
     const loop = (now: number) => {
       t = now;
       draw();
-      if (progress() > 0.995) {
-        raf = 0;
-        return;
-      }
       raf = requestAnimationFrame(loop);
     };
 
-    const wake = () => {
+    const start = () => {
       if (!reduced && !raf) raf = requestAnimationFrame(loop);
+    };
+    const stop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
     };
 
     resize();
-
-    if (reduced) {
-      draw();
-    } else {
-      raf = requestAnimationFrame(loop);
-    }
+    if (reduced) draw();
+    else start();
 
     const onResize = () => {
       resize();
@@ -289,45 +365,40 @@ export function NeuralField() {
     };
     window.addEventListener("resize", onResize);
 
+    // Under reduced motion there is no loop, so scroll is what redraws.
     const onScroll = () => {
-      const p = progress();
-      if (p === lastProgress) return;
-      lastProgress = p;
       if (reduced) draw();
-      else wake();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
+    // A background animation nobody is looking at is pure battery cost.
+    const onVisibility = () => (document.hidden ? stop() : start());
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
-      if (raf) cancelAnimationFrame(raf);
+      stop();
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
   /*
-   * `lg` and up only: below it the heading spans the screen and there is no
-   * region left that text never reaches. `hidden lg:block` is a hard rule, not
-   * a matter of opacity, and it costs nothing on a phone because the effect
-   * never mounts its loop there.
+   * Its own fixed layer at z-index -5, not a child of `.site-bg`.
    *
-   * The mask starts at 68% of the hero: the rightmost glyph measures 64.1% at
-   * 1024px and falls from there as the container stops growing, so the stop
-   * clears every width in the range. The check is a pixel diff of the page
-   * against itself with this layer hidden, which must report zero differing
-   * pixels inside every text box.
+   * `.site-bg` sits at -10, and so does the hero's artwork stack on the home
+   * page — including the left-to-right gradient that buys the headline its
+   * contrast, which is opaque exactly where this field starts. Inside that
+   * layer the knot was painted over and invisible for the whole first screen.
+   * At -5 it clears the hero's own background and still sits behind every piece
+   * of content on the site, which is z-index auto.
    */
   return (
     <canvas
       ref={ref}
       aria-hidden
-      className="absolute inset-0 hidden h-full w-full lg:block"
-      style={{
-        WebkitMaskImage:
-          "linear-gradient(90deg, transparent 0%, transparent 68%, rgba(0,0,0,0.6) 78%, #000 88%)",
-        maskImage:
-          "linear-gradient(90deg, transparent 0%, transparent 68%, rgba(0,0,0,0.6) 78%, #000 88%)",
-      }}
+      className="pointer-events-none fixed inset-0 h-full w-full"
+      style={{ zIndex: -5 }}
     />
   );
 }

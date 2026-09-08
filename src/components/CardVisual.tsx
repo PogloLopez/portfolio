@@ -115,7 +115,7 @@ function GateMini() {
   return (
     <div className="flex h-full flex-col justify-center gap-1 px-3 font-mono text-[0.5625rem] leading-relaxed">
       <span className="text-fg-3">| 2026-09-04 | Mercado | -186,400 |</span>
-      <span style={{ color: "var(--accent, #6480f0)" }}>+ | 2026-09-06 | Energía | -214,300 |</span>
+      <span style={{ color: "var(--accent, #6480f0)" }}>+ | 2026-09-06 | Electricity | -214,300 |</span>
       <span className="mt-1 flex items-center gap-1.5">
         <span
           className="rounded-sm border px-1.5 py-0.5"

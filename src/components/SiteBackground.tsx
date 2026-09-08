@@ -6,11 +6,11 @@
  * home page is a header and belongs to that section; this is the room the rest
  * of the site sits in. It carries two slow auroras and a masked dot grid.
  *
- * The neural field is NOT here. It used to be, spanning the whole document, and
- * that is unfixable: measured across breakpoints the rightmost hero glyph moves
- * between 54% and 91% of the viewport, and the stat strip runs the full width at
- * every size, so no fixed mask can keep the field off every piece of text. It
- * lives inside the hero now, over the artwork, where nothing is ever written.
+ * The neural field is a sibling of this layer rather than a child of it, and
+ * sits one step in front. This layer is at z-index -10, and so is the hero's
+ * own artwork, which means anything inside here is painted over by the hero's
+ * gradient and simply invisible for the first screen of the home page. See
+ * components/NeuralField.tsx.
  */
 export function SiteBackground() {
   return (

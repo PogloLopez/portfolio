@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { projects, projectBySlug } from "@/content/projects";
 import { tocFor } from "@/lib/toc";
 import { Arrow, ChipRow, Eyebrow, SectionLabel, Stat } from "@/components/ui";
+import { HashLink } from "@/components/nav";
 import { DemoSlot } from "@/components/demos/DemoSlot";
 import { hasDemo } from "@/components/demos/registry";
 
@@ -190,12 +191,12 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
               <ul className="mt-4 space-y-2 border-l border-line pl-3 text-[0.8125rem]">
                 {toc.map((entry) => (
                   <li key={entry.id}>
-                    <a
-                      href={`#${entry.id}`}
+                    <HashLink
+                      id={entry.id}
                       className="block leading-snug text-fg-3 transition-colors hover:text-fg"
                     >
                       {entry.title}
-                    </a>
+                    </HashLink>
                   </li>
                 ))}
               </ul>

@@ -4,7 +4,6 @@ import { headlineStats, site } from "@/lib/site";
 import { projects } from "@/content/projects";
 import { ProjectCard } from "@/components/ProjectCard";
 import { CopyEmail, SectionLink } from "@/components/nav";
-import { NeuralField } from "@/components/NeuralField";
 import { Arrow, Eyebrow, SectionLabel, Stat } from "@/components/ui";
 
 export default function Home() {
@@ -16,10 +15,10 @@ export default function Home() {
           either one lands on something they recognise.
       --------------------------------------------------------------- */}
       {/*
-          The living field belongs to this section, not to the page background.
-          It sits with the static artwork, over the right of the hero, which is
-          the one region of the site that carries no text at any width. The left
-          gradient still buys the headline its contrast.
+          The living field is NOT here any more. It sits in the page background,
+          where it starts as a small mark on the left margin and expands as the
+          page scrolls. Inside this section it was competing with the flow-field
+          artwork for the same frame, and both lost.
       */}
       <section className="relative overflow-hidden border-b border-line">
         <div aria-hidden className="absolute inset-0 -z-10">
@@ -31,7 +30,6 @@ export default function Home() {
             sizes="100vw"
             className="object-cover object-[72%_center] opacity-35 mix-blend-screen sm:opacity-55"
           />
-          <NeuralField />
           <div className="absolute inset-0 bg-linear-to-r from-ground via-ground/90 to-transparent sm:via-ground/55" />
         </div>
 

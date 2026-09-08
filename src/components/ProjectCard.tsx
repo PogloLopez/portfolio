@@ -22,7 +22,7 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
       >
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-28 -right-20 h-56 w-56 rounded-full opacity-0 blur-[70px] transition-opacity duration-500 group-hover:opacity-100"
+          className="pointer-events-none absolute -top-28 -right-20 h-56 w-56 rounded-full opacity-0 blur-[70px] transition-opacity duration-300 group-hover:opacity-100"
           style={{ background: "var(--accent)" }}
         />
 
