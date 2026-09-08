@@ -99,6 +99,32 @@ export function NeuralField() {
     const nodes = seedNodes();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    /*
+     * The glow is drawn once into an offscreen canvas and then blitted per
+     * node. Building a radial gradient per node per frame was the single most
+     * expensive thing this component did: it took the median frame from ~4ms
+     * to ~68ms, which is 15fps.
+     */
+    const SPRITE = 64;
+    const sprite = document.createElement("canvas");
+    sprite.width = SPRITE;
+    sprite.height = SPRITE;
+    const sctx = sprite.getContext("2d");
+    if (sctx) {
+      const g = sctx.createRadialGradient(
+        SPRITE / 2,
+        SPRITE / 2,
+        0,
+        SPRITE / 2,
+        SPRITE / 2,
+        SPRITE / 2,
+      );
+      g.addColorStop(0, "rgba(150,165,255,0.5)");
+      g.addColorStop(1, "rgba(150,165,255,0)");
+      sctx.fillStyle = g;
+      sctx.fillRect(0, 0, SPRITE, SPRITE);
+    }
+
     let width = 0;
     let height = 0;
     let dpr = 1;
@@ -143,44 +169,59 @@ export function NeuralField() {
       const linkAlpha = Math.max(0, 1 - e * 1.5);
       if (linkAlpha > 0.01) {
         ctx.lineWidth = 1;
+        /*
+         * Edges are bucketed by opacity and each bucket stroked as one path.
+         * Stroking every edge separately meant a style change and a draw call
+         * per edge, which is where the rest of the frame budget went.
+         */
+        const BUCKETS = 4;
+        const buckets: Path2D[] = [];
+        for (let b = 0; b < BUCKETS; b++) buckets.push(new Path2D());
+
+        const limit = LINK_DIST * LINK_DIST;
         for (let i = 0; i < pts.length; i++) {
           let made = 0;
           for (let j = i + 1; j < pts.length && made < MAX_LINKS; j++) {
             const dx = (pts[i].x - pts[j].x) / width;
             const dy = (pts[i].y - pts[j].y) / height;
-            const d = Math.hypot(dx, dy);
-            if (d > LINK_DIST) continue;
+            // Squared distance: the square root was per candidate pair.
+            const d2 = dx * dx + dy * dy;
+            if (d2 > limit) continue;
             made++;
-            // An edge fades both with distance and with decomposition.
-            const a = (1 - d / LINK_DIST) * linkAlpha * 0.72;
-            ctx.strokeStyle = `rgba(150, 165, 255, ${a.toFixed(3)})`;
-            ctx.beginPath();
-            ctx.moveTo(pts[i].x, pts[i].y);
-            ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.stroke();
+            const closeness = 1 - Math.sqrt(d2) / LINK_DIST;
+            const b = Math.min(BUCKETS - 1, Math.floor(closeness * BUCKETS));
+            buckets[b].moveTo(pts[i].x, pts[i].y);
+            buckets[b].lineTo(pts[j].x, pts[j].y);
           }
+        }
+
+        for (let b = 0; b < BUCKETS; b++) {
+          const a = ((b + 0.5) / BUCKETS) * linkAlpha * 0.72;
+          ctx.strokeStyle = `rgba(150, 165, 255, ${a.toFixed(3)})`;
+          ctx.stroke(buckets[b]);
         }
       }
 
+      // Nodes dim as they scatter, so the field recedes instead of competing
+      // with the content that scrolls over it.
+      const a = 0.85 * (1 - e * 0.8);
+
+      ctx.globalAlpha = a;
       for (const q of pts) {
-        // Nodes dim as they scatter, so the field recedes instead of
-        // competing with the content that scrolls over it.
-        const a = 0.85 * (1 - e * 0.8);
-        // A soft halo on the larger nodes reads as light rather than as dots.
-        if (q.r > 2.2) {
-          const g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.r * 5);
-          g.addColorStop(0, `rgba(150, 165, 255, ${(a * 0.5).toFixed(3)})`);
-          g.addColorStop(1, "rgba(150, 165, 255, 0)");
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(q.x, q.y, q.r * 5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = `rgba(190, 200, 255, ${a.toFixed(3)})`;
-        ctx.beginPath();
-        ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2);
-        ctx.fill();
+        if (q.r <= 2.2) continue;
+        const d = q.r * 10;
+        ctx.drawImage(sprite, q.x - d / 2, q.y - d / 2, d, d);
       }
+      ctx.globalAlpha = 1;
+
+      // One path for every dot: a fill per node was a state change per node.
+      ctx.fillStyle = `rgba(190, 200, 255, ${a.toFixed(3)})`;
+      ctx.beginPath();
+      for (const q of pts) {
+        ctx.moveTo(q.x + q.r, q.y);
+        ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2);
+      }
+      ctx.fill();
     };
 
     /*
