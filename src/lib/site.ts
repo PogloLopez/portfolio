@@ -15,7 +15,14 @@ export const site = {
     "Outside work I build my own infrastructure, and I'm interested in how these same methods apply to energy data: load forecasting, distributed generation, and the reliability problems that come with both.",
   ],
 
-  url: "https://pablo-lopez.vercel.app",
+  /**
+   * The canonical address, which is the custom domain and not the
+   * `*.vercel.app` one. This feeds `metadataBase`, so it decides where every
+   * canonical link and social card URL points: with the Vercel address here,
+   * a page served from pablo.maieutik-data.com still told crawlers and link
+   * previews to fetch its card from pablo-lopez.vercel.app.
+   */
+  url: "https://pablo.maieutik-data.com",
 
   contact: {
     email: "poglolopez@gmail.com",
