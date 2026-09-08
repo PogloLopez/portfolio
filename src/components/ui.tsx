@@ -36,21 +36,22 @@ export function Stat({
   value,
   label,
   size = "md",
+  accent = false,
 }: {
   value: string;
   label: string;
   size?: "md" | "lg";
+  /** Colours the figure with the inherited accent instead of primary ink. */
+  accent?: boolean;
 }) {
   return (
     <div className="relative pt-5">
-      <span
-        aria-hidden
-        className="absolute top-0 left-0 h-px w-9 bg-linear-to-r from-iris to-transparent"
-      />
+      <span aria-hidden className="rule-accent absolute top-0 left-0 w-9" />
       <p
-        className={`font-semibold tracking-[-0.02em] text-fg ${
+        className={`font-semibold tracking-[-0.02em] ${accent ? "" : "text-fg"} ${
           size === "lg" ? "text-2xl sm:text-[1.75rem]" : "text-xl"
         }`}
+        style={accent ? { color: "var(--accent, var(--color-iris))" } : undefined}
       >
         {value}
       </p>
@@ -63,7 +64,7 @@ export function SectionLabel({ children, id }: { children: ReactNode; id?: strin
   return (
     <div className="mb-8 flex items-center gap-4" id={id}>
       <h2 className="text-sm font-semibold tracking-[0.02em] text-fg-2">{children}</h2>
-      <span aria-hidden className="h-px flex-1 bg-line" />
+      <span aria-hidden className="rule-accent h-px flex-1 opacity-70" />
     </div>
   );
 }

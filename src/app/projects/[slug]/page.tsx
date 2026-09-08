@@ -36,12 +36,13 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
   const next = projects[(index + 1) % projects.length];
 
   return (
-    <article>
+    <article data-accent={project.accent}>
       {/* ------------------------------------------------------------- */}
       <header className="relative isolate overflow-hidden border-b border-line">
         <div
           aria-hidden
-          className="absolute -top-40 -right-32 -z-10 h-[26rem] w-[26rem] rounded-full bg-glow/20 blur-[120px]"
+          className="absolute -top-44 -right-36 -z-10 h-[30rem] w-[30rem] rounded-full opacity-25 blur-[130px]"
+          style={{ background: "var(--accent)" }}
         />
         <div className="mx-auto max-w-6xl px-5 pt-10 pb-12 sm:px-8 sm:pt-14 sm:pb-14">
           <Link
@@ -54,7 +55,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
           <div className="mt-7">
             <Eyebrow>{project.kicker}</Eyebrow>
-            <h1 className="mt-4 max-w-3xl text-[2rem] leading-[1.06] font-bold tracking-[-0.03em] text-fg sm:text-5xl">
+            <h1 className="text-gradient mt-4 max-w-3xl text-[2rem] leading-[1.06] font-bold tracking-[-0.03em] sm:text-5xl">
               {project.title}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-fg-2 sm:text-lg">
@@ -67,7 +68,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
               <dt className="font-mono text-[0.6875rem] tracking-[0.16em] text-fg-3 uppercase">
                 Repo
               </dt>
-              <dd className="mt-2 font-mono text-sm text-iris">{project.repo}</dd>
+              <dd className="mt-2 font-mono text-sm" style={{ color: "var(--accent)" }}>
+                {project.repo}
+              </dd>
             </div>
             <div>
               <dt className="font-mono text-[0.6875rem] tracking-[0.16em] text-fg-3 uppercase">
@@ -118,7 +121,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
             <ul className="grid gap-8 sm:grid-cols-2">
               {project.achievements.map((a) => (
                 <li key={a.value}>
-                  <Stat value={a.value} label={a.label} />
+                  <Stat value={a.value} label={a.label} accent />
                 </li>
               ))}
             </ul>
@@ -131,12 +134,29 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           reader is interested, before they commit to a long read.
       ------------------------------------------------------------- */}
       {hasDemo(slug) && (
-        <section className="border-y border-iris/25 bg-iris/[0.04]">
+        <section
+          className="border-y"
+          style={{
+            borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--accent) 5%, transparent)",
+          }}
+        >
           <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
             <div className="mb-8 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <h2 className="text-2xl font-bold tracking-[-0.02em] text-fg">Try it yourself</h2>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-iris/50 bg-iris/12 px-3 py-1 font-mono text-[0.6875rem] tracking-[0.08em] text-iris uppercase">
-                <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-iris" />
+              <h2 className="text-gradient text-2xl font-bold tracking-[-0.02em]">Try it yourself</h2>
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[0.6875rem] tracking-[0.08em] uppercase"
+                style={{
+                  color: "var(--accent)",
+                  borderColor: "color-mix(in srgb, var(--accent) 50%, transparent)",
+                  backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                }}
+              >
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 animate-pulse rounded-full"
+                  style={{ background: "var(--accent)" }}
+                />
                 Interactive
               </span>
             </div>
@@ -191,7 +211,10 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
         </ul>
 
         {project.confidential && (
-          <p className="mt-10 max-w-2xl border-l-2 border-glow pl-4 text-sm leading-relaxed text-fg-3">
+          <p
+            className="mt-10 max-w-2xl border-l-2 pl-4 text-sm leading-relaxed text-fg-3"
+            style={{ borderColor: "var(--accent)" }}
+          >
             Mercaldas is named as the employer, but business figures on this page are published as
             ranges, orders of magnitude or relative percentages. Exact revenue, margin and volume
             figures, source code and screenshots of real operating data are not published.
@@ -200,16 +223,27 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       </section>
 
       {/* ------------------------------------------------------------- */}
-      <nav className="mx-auto max-w-6xl px-5 pb-8 sm:px-8" aria-label="Next case study">
+      <nav
+        className="mx-auto max-w-6xl px-5 pb-8 sm:px-8"
+        aria-label="Next case study"
+        data-accent={next.accent}
+      >
         <Link
           href={`/projects/${next.slug}`}
-          className="group flex flex-col gap-4 rounded-xl border border-line-strong bg-surface/80 p-6 transition-colors hover:border-iris/60 sm:flex-row sm:items-center sm:justify-between sm:p-7"
+          className="card-accent group flex flex-col gap-4 rounded-xl border border-line-strong bg-surface/80 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7"
         >
           <span>
             <span className="font-mono text-xs text-fg-3">Next case study</span>
             <span className="mt-1.5 block text-lg font-semibold text-fg">{next.title}</span>
           </span>
-          <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-iris/55 bg-iris/12 px-4 py-2 text-sm font-semibold text-iris transition-colors group-hover:border-iris group-hover:bg-iris group-hover:text-ground">
+          <span
+            className="inline-flex w-fit items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold"
+            style={{
+              color: "var(--accent)",
+              borderColor: "color-mix(in srgb, var(--accent) 55%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+            }}
+          >
             Read
             <Arrow className="transition-transform group-hover:translate-x-0.5" />
           </span>

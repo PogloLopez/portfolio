@@ -13,13 +13,19 @@
  * changed the series count.
  */
 export const seriesColor = {
-  primary: "#6480F0",
+  /**
+   * Slot 1 follows the case study's own accent, so a demo reads as part of its
+   * page rather than as a widget dropped into it. Slots 2 and 3 stay fixed:
+   * they carry comparison and status, jobs that must not change meaning from
+   * one project to the next.
+   */
+  primary: "var(--accent, #6480F0)",
   compare: "#D95926",
   third: "#199E70",
 } as const;
 
 /** Fill for a forecast interval — the primary hue at low alpha, never a new hue. */
-export const bandFill = "rgba(100, 128, 240, 0.16)";
+export const bandFill = "color-mix(in srgb, var(--accent, #6480F0) 16%, transparent)";
 
 /**
  * Status colours, reserved. These mean good / warning / bad and are never

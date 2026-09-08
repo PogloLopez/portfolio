@@ -105,10 +105,23 @@ export function Button({
   variant?: "primary" | "ghost" | "danger";
   disabled?: boolean;
 }) {
+  // Accent-driven rather than fixed, so a demo matches the case study it sits
+  // in. Inline styles because `color-mix` on a custom property cannot be
+  // expressed as a static utility class.
+  const style: React.CSSProperties =
+    variant === "primary"
+      ? { background: "var(--accent, var(--color-iris))", color: "var(--color-ground)" }
+      : variant === "ghost"
+        ? {
+            color: "var(--accent, var(--color-iris))",
+            borderColor: "color-mix(in srgb, var(--accent, var(--color-iris)) 45%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--accent, var(--color-iris)) 8%, transparent)",
+          }
+        : {};
+
   const styles = {
-    primary: "bg-iris text-ground shadow-sm shadow-iris/25 hover:bg-violet",
-    ghost:
-      "border border-iris/45 bg-iris/8 text-iris hover:border-iris hover:bg-iris/18",
+    primary: "shadow-sm hover:opacity-90",
+    ghost: "border hover:brightness-125",
     danger: "border border-line-strong text-fg-2 hover:border-white/45 hover:text-fg",
   }[variant];
 
@@ -117,6 +130,7 @@ export function Button({
       type="button"
       onClick={onClick}
       disabled={disabled}
+      style={style}
       className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 ${styles}`}
     >
       {children}

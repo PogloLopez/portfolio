@@ -44,14 +44,14 @@ export const headlineStats = [
   },
   {
     value: "70-82%",
-    label: "Forecast accuracy depending on the cluster, up from 30% under the old ERP module",
+    label: "Forecast accuracy, depending on the demand cluster",
   },
   {
-    value: "19% less",
-    label: "Forecast error than the pipeline before it, scored on the same fold",
+    value: "52 weeks",
+    label: "Price forecast horizon, read by the commercial team before they negotiate",
   },
   {
-    value: "5 systems",
-    label: "In production, each designed and built end to end",
+    value: "Zero",
+    label: "Business figures a language model is allowed to invent",
   },
 ] as const;

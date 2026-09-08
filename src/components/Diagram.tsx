@@ -87,12 +87,28 @@ function wrap(text: string, width: number, size: number, charW: number): string[
   return lines.slice(0, 3);
 }
 
+/**
+ * Node tones resolve against `--accent`, so every diagram is drawn in the hue
+ * its case study owns rather than in one shared blue.
+ */
+const ACCENT = "var(--accent, var(--color-iris))";
+
 const toneStyle: Record<NodeTone, { fill: string; stroke: string; dash?: string }> = {
   default: { fill: "var(--color-surface-2)", stroke: "rgba(255,255,255,0.18)" },
-  accent: { fill: "color-mix(in srgb, var(--color-glow) 20%, var(--color-surface))", stroke: "var(--color-iris)" },
-  gate: { fill: "color-mix(in srgb, var(--color-violet) 12%, var(--color-surface))", stroke: "var(--color-violet)", dash: "5 4" },
+  accent: {
+    fill: `color-mix(in srgb, ${ACCENT} 20%, var(--color-surface))`,
+    stroke: ACCENT,
+  },
+  gate: {
+    fill: `color-mix(in srgb, ${ACCENT} 10%, var(--color-surface))`,
+    stroke: `color-mix(in srgb, ${ACCENT} 70%, white)`,
+    dash: "5 4",
+  },
   ghost: { fill: "transparent", stroke: "rgba(255,255,255,0.16)", dash: "4 5" },
-  store: { fill: "var(--color-surface)", stroke: "rgba(167,139,250,0.42)" },
+  store: {
+    fill: "var(--color-surface)",
+    stroke: `color-mix(in srgb, ${ACCENT} 45%, transparent)`,
+  },
 };
 
 export function Diagram({ spec }: { spec: DiagramSpec }) {
@@ -170,7 +186,7 @@ export function Diagram({ spec }: { spec: DiagramSpec }) {
         key={`e${i}`}
         d={d}
         fill="none"
-        stroke="rgba(167,139,250,0.55)"
+        stroke={`color-mix(in srgb, ${ACCENT} 60%, transparent)`}
         strokeWidth={1.5}
         strokeDasharray={e.dashed ? "5 5" : undefined}
         markerEnd="url(#arrow)"
@@ -227,7 +243,7 @@ export function Diagram({ spec }: { spec: DiagramSpec }) {
               markerHeight="6"
               orient="auto-start-reverse"
             >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(167,139,250,0.75)" />
+              <path d="M 0 0 L 10 5 L 0 10 z" fill={`color-mix(in srgb, ${ACCENT} 75%, transparent)`} />
             </marker>
           </defs>
 
@@ -244,8 +260,8 @@ export function Diagram({ spec }: { spec: DiagramSpec }) {
                   width={w}
                   height={h}
                   rx={12}
-                  fill="rgba(108,140,255,0.045)"
-                  stroke="rgba(108,140,255,0.22)"
+                  fill={`color-mix(in srgb, ${ACCENT} 5%, transparent)`}
+                  stroke={`color-mix(in srgb, ${ACCENT} 22%, transparent)`}
                   strokeDasharray="6 5"
                 />
                 <text
@@ -253,7 +269,7 @@ export function Diagram({ spec }: { spec: DiagramSpec }) {
                   y={y + 15}
                   fontSize={10.5}
                   letterSpacing={0.9}
-                  fill="var(--color-iris)"
+                  fill={ACCENT}
                   fontFamily="var(--font-mono)"
                 >
                   {g.label.toUpperCase()}

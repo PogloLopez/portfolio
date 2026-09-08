@@ -14,7 +14,13 @@ export default function Home() {
           profile header and the LinkedIn banner, so someone arriving from
           either one lands on something they recognise.
       --------------------------------------------------------------- */}
-      <section className="relative isolate overflow-hidden border-b border-line">
+      {/*
+          The hero is deliberately NOT opaque: the living neural field sits in
+          the fixed background layer and has to read through here, so the
+          static artwork is a texture over it rather than a lid on top of it.
+          The left gradient still buys the headline its contrast.
+      */}
+      <section className="relative overflow-hidden border-b border-line">
         <div aria-hidden className="absolute inset-0 -z-10">
           <Image
             src="/hero/flow-2400.webp"
@@ -22,18 +28,17 @@ export default function Home() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-[72%_center] opacity-55 sm:opacity-100"
+            className="object-cover object-[72%_center] opacity-35 mix-blend-screen sm:opacity-55"
           />
-          <div className="absolute inset-0 bg-linear-to-r from-ground via-ground/95 to-ground/40 sm:via-ground/80 sm:to-transparent" />
-          <div className="absolute inset-0 bg-linear-to-t from-ground via-transparent to-ground/70" />
+          <div className="absolute inset-0 bg-linear-to-r from-ground via-ground/90 to-transparent sm:via-ground/55" />
         </div>
 
         <div className="mx-auto max-w-6xl px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
           <Eyebrow>{site.tagline}</Eyebrow>
 
-          <h1 className="mt-6 text-[2.25rem] leading-[0.95] font-extrabold tracking-[-0.035em] text-fg uppercase sm:text-6xl lg:text-7xl">
-            <span className="block">Data engineer</span>
-            <span className="block">AI &amp; automation</span>
+          <h1 className="mt-6 text-[2.25rem] leading-[0.95] font-extrabold tracking-[-0.035em] uppercase sm:text-6xl lg:text-7xl">
+            <span className="block text-fg">Data engineer</span>
+            <span className="text-gradient block">AI &amp; automation</span>
           </h1>
 
           <p className="mt-6 text-base font-medium text-fg-2 sm:text-xl">{site.name}</p>
@@ -65,9 +70,9 @@ export default function Home() {
       <section className="border-b border-line bg-surface/30">
         <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
           <ul className="grid grid-cols-2 gap-8 lg:grid-cols-4 lg:gap-10">
-            {headlineStats.map((s) => (
-              <li key={s.label}>
-                <Stat value={s.value} label={s.label} size="lg" />
+            {headlineStats.map((s, i) => (
+              <li key={s.label} data-accent={`a${i + 1}`}>
+                <Stat value={s.value} label={s.label} size="lg" accent />
               </li>
             ))}
           </ul>
