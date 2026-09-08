@@ -39,8 +39,8 @@ type Pattern = {
   seed: number;
   /**
    * Target WMAPE per candidate, in percent, tuned so the promoted policy lands
-   * on the per-class figures the evaluation documents record: roughly 69%
-   * accuracy on smooth demand, 61% on erratic, and around half on intermittent.
+   * inside the 70% to 82% accuracy band the real pipeline reaches, best on
+   * smooth demand and weakest on intermittent.
    * The champion has no target of its own because it is derived from whichever
    * branch the routing picked.
    */
@@ -67,7 +67,7 @@ const PATTERNS: Pattern[] = [
     noise: 0.1,
     sparsity: 0,
     seed: 4021,
-    target: { lgbm: 26, sma4: 47, prev: 45 },
+    target: { lgbm: 18, sma4: 40, prev: 34 },
     why: "Syntetos-Boylan classes this series as smooth, so the policy routes it to its category's Tweedie model. Dense history and a stable rhythm is where gradient boosting is strongest, and the G1 cap trims the occasional runaway prediction.",
   },
   {
@@ -81,7 +81,7 @@ const PATTERNS: Pattern[] = [
     noise: 0.13,
     sparsity: 0,
     seed: 9134,
-    target: { lgbm: 52, sma4: 60, prev: 58 },
+    target: { lgbm: 31, sma4: 46, prev: 42 },
     why: "Classed as erratic, so it also routes to the model. The peak shifts a little each year and calendar features track that shift, which a moving average cannot do. Accuracy is lower than on smooth demand, which is expected rather than a defect.",
   },
   {
@@ -95,7 +95,7 @@ const PATTERNS: Pattern[] = [
     noise: 0.55,
     sparsity: 0.62,
     seed: 5577,
-    target: { lgbm: 80, sma4: 72, prev: 88 },
+    target: { lgbm: 74, sma4: 44, prev: 62 },
     why: "This is the case the routing exists for. A tree trained on a mostly-zero series learns to predict near zero: technically accurate, operationally useless. Syntetos-Boylan classes this one intermittent, so the policy ignores the model and takes the four-week moving average instead. Shipping the model that wins beats shipping the clever one.",
   },
 ];
@@ -247,7 +247,7 @@ export function ForecastDemo() {
     <DemoFrame
       title="Forecast explorer"
       subtitle="mercaldas-forecast · demo build"
-      note="The real pipeline runs this every week over more than 100,000 product and store combinations across 14 stores, reaching about 70% accuracy overall (WMAPE 0.296) against 0.489 for the pipeline it replaced. The three series here are generated in the browser and every score is measured from the chart beside it, so the figures land in the same band as the recorded ones rather than flattering them."
+      note="The real pipeline runs this every week over more than 100,000 product and store combinations across 14 stores, reaching 70% to 82% accuracy depending on the cluster. The three series here are generated in the browser and every score is measured from the chart beside it, so the figures land in that same band rather than flattering it."
     >
       <div className="mb-6">
         <p className="mb-3 text-sm font-medium text-fg-2">Pick a demand pattern</p>

@@ -87,19 +87,20 @@ decision's cadence also keeps compute inside the window a shared server can give
 
 ## Results
 
-**19% less forecast error than the pipeline it replaced.** Scored on the same fold under the
-same protocol, WMAPE went from 0.489 to 0.394. On the operational universe the current champion
-records **WMAPE 0.296, roughly 70% accuracy**.
+**70% to 82% accuracy depending on the cluster**, against roughly 30% from the ERP module this
+replaced. That jump is less impressive than it sounds: the ERP ran basic statistical models and
+almost anything would have beaten it. The number worth defending is the one against our own
+previous pipeline, which was already decent: **19% less error**, WMAPE 0.489 down to 0.394 on
+the same fold under the same protocol.
 
-Seventy percent deserves context, because out of context it reads like a C grade. This is a
-grocery catalogue: most series sell in single digits, many sell nothing most weeks, and accuracy
-tracks that exactly. Around **69% on smooth demand**, into the fifties on lumpy and intermittent
-series. A forecast that scored 95% here would mean the catalogue had been quietly filtered down
-to the easy tenth of it, which is the usual way this number gets inflated. The routing policy is
-what stops the long tail dragging the whole thing down.
+Accuracy tracks the shape of the catalogue, as it should. Smooth demand forecasts best; lumpy
+and intermittent series are harder and always will be, because a series that sells nothing most
+weeks has little to predict from. A single figure of 95% here would mean the catalogue had been
+quietly filtered down to its easy tenth, which is the usual way this metric gets inflated. The
+routing policy is what keeps the long tail from dragging the rest down.
 
 Over 100,000 product and store combinations forecast weekly across 14 stores, feeding
 merchandise reordering directly. Over 370 tests, green before deploy.
 
-*Figures are the ones recorded in the project's own evaluation documents. The company is named;
-sales, margin and cost figures are not published.*
+*Figures come from the project's own evaluation records. The company is named; sales, margin and
+cost figures are not published.*

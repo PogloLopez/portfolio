@@ -43,15 +43,15 @@ export const headlineStats = [
     label: "Product and store combinations forecast every week, across 14 stores",
   },
   {
+    value: "70-82%",
+    label: "Forecast accuracy depending on the cluster, up from 30% under the old ERP module",
+  },
+  {
     value: "19% less",
-    label: "Forecast error than the production pipeline it replaced, same fold and protocol",
+    label: "Forecast error than the pipeline before it, scored on the same fold",
   },
   {
     value: "5 systems",
     label: "In production, each designed and built end to end",
-  },
-  {
-    value: "End to end",
-    label: "Ingestion, modelling, orchestration and interface on every one",
   },
 ] as const;

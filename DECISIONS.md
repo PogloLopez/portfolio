@@ -107,12 +107,15 @@ What the audit changed in the forecast case study:
 - **Scale** was "thousands of series". The operational universe is over 100,000 product and
   store combinations, out of a wider universe above half a million. Understated by two orders
   of magnitude.
-- **Accuracy** was published as a 70–82% band. Only the ~70% is recorded (WMAPE 0.296 on the
-  operational universe, run 2026-07-15). The 82% had no source and is gone.
-- **The baseline** claimed a reduction "against the ERP". The documents only compare against
-  the previous production pipeline: 0.489 → 0.296. The ERP number Pablo recalls (~30%) is not
-  written down anywhere and, in his own judgment, beating it is not an achievement worth
-  citing. So the ERP is context now, never a metric.
+- **Accuracy** is a 70–82% band by cluster, confirmed by Pablo. The docs I can read only
+  record the lower end of it (WMAPE 0.296 on the operational universe, run 2026-07-15); the
+  upper end comes from per-cluster figures I did not locate in the repository. Treated as his
+  own project knowledge, which outranks my search.
+- **The baseline.** The ERP module scored roughly 30%, per Pablo. It is stated as context and
+  deliberately not sold as the achievement, on his reasoning that beating a basic statistical
+  model is no feat. The claim that carries weight is the same-fold comparison against the
+  previous pipeline: WMAPE 0.489 → 0.394, a 19% relative reduction, which the evaluation table
+  records directly.
 - **The architecture was simply wrong.** The site described K-Means clustering with
   Croston/SBA. The repo explicitly marks the K-Means path legacy and not for production. The
   real champion is eight LightGBM Tweedie models by taxonomic category, a Syntetos-Boylan

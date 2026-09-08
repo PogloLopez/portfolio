@@ -63,7 +63,7 @@ export const projects: Project[] = [
       "Mercaldas forecast demand with the black box bundled into its ERP. Nobody could see why a forecast missed and there was no lever to make it better, yet replenishment for every store ran on it. Replacing it was the easy part. Getting a single model to behave across a catalogue where most series barely move was not.",
     cardStats: [
       { value: "100k+", label: "Series, weekly" },
-      { value: "19% less", label: "Error vs. previous" },
+      { value: "70-82%", label: "Accuracy by cluster" },
     ],
     visual: {
       kind: "line",
@@ -72,12 +72,16 @@ export const projects: Project[] = [
     },
     achievements: [
       {
-        value: "19% less error",
-        label: "WMAPE 0.489 to 0.394 against the pipeline it replaced, scored on the same fold",
+        value: "70-82% accuracy",
+        label: "Depending on the cluster, against roughly 30% from the ERP module it replaced",
       },
       {
         value: "100,000+",
         label: "Product and store combinations forecast every week across 14 stores",
+      },
+      {
+        value: "19% less error",
+        label: "WMAPE 0.489 to 0.394 against the previous pipeline, scored on the same fold",
       },
       { value: "Feeds reordering", label: "Output drives replenishment directly, not a report" },
       {
