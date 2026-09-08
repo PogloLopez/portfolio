@@ -101,7 +101,9 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
       {/* -------------------------------------------------------------
           Layer 1: the summary. Everything a hiring manager needs before
-          deciding whether the deep dive below is worth their time.
+          deciding whether the deep dive below is worth their time. A review
+          timed these pages at 5,700-7,000px and asked for the short version
+          above the fold, so `inShort` sits directly under the header.
       ------------------------------------------------------------- */}
       <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
@@ -179,6 +181,8 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
       <div className="border-b border-line bg-surface/35">
         <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
           <div className="grid gap-10 lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-12">
+            {/* The rail carries the numbers as well as the contents, so a
+                reader who stops anywhere in a 7,000px page still has them. */}
             <nav aria-label="On this page" className="lg:sticky lg:top-24 lg:self-start">
               <p className="font-mono text-[0.625rem] tracking-[0.14em] text-fg-3 uppercase">
                 Deep dive
@@ -188,13 +192,32 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
                   <li key={entry.id}>
                     <a
                       href={`#${entry.id}`}
-                      className="block leading-snug text-fg-3 transition-colors hover:text-iris"
+                      className="block leading-snug text-fg-3 transition-colors hover:text-fg"
                     >
                       {entry.title}
                     </a>
                   </li>
                 ))}
               </ul>
+
+              <dl className="mt-8 hidden space-y-4 border-t border-line pt-6 lg:block">
+                {project.cardStats.map((st) => (
+                  <div key={st.label}>
+                    <dt className="sr-only">{st.label}</dt>
+                    <dd>
+                      <span
+                        className="block text-lg leading-none font-semibold"
+                        style={{ color: "var(--accent)" }}
+                      >
+                        {st.value}
+                      </span>
+                      <span className="mt-1 block text-[0.6875rem] leading-snug text-fg-3">
+                        {st.label}
+                      </span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </nav>
 
             <div className="prose min-w-0">

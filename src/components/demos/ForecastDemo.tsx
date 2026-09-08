@@ -68,7 +68,7 @@ const PATTERNS: Pattern[] = [
     sparsity: 0,
     seed: 4021,
     target: { lgbm: 18, sma4: 40, prev: 34 },
-    why: "Syntetos-Boylan classes this series as smooth, so the policy routes it to its category's Tweedie model. Dense history and a stable rhythm is where gradient boosting is strongest, and the G1 cap trims the occasional runaway prediction.",
+    why: "Dense history and a stable rhythm is where gradient boosting is strongest: it reads price, promotion and calendar effects that a moving average cannot. The G1 cap still sits on top, trimming the occasional runaway prediction.",
   },
   {
     id: "seasonal",
@@ -82,7 +82,7 @@ const PATTERNS: Pattern[] = [
     sparsity: 0,
     seed: 9134,
     target: { lgbm: 31, sma4: 46, prev: 42 },
-    why: "Classed as erratic, so it also routes to the model. The peak shifts a little each year and calendar features track that shift, which a moving average cannot do. Accuracy is lower than on smooth demand, which is expected rather than a defect.",
+    why: "The peak shifts a little each year and calendar features track that shift, which a moving average cannot. Accuracy is lower than on smooth demand, which is the shape of the series rather than a defect.",
   },
   {
     id: "intermittent",
@@ -96,7 +96,7 @@ const PATTERNS: Pattern[] = [
     sparsity: 0.62,
     seed: 5577,
     target: { lgbm: 74, sma4: 44, prev: 62 },
-    why: "This is the case the routing exists for. A tree trained on a mostly-zero series learns to predict near zero: technically accurate, operationally useless. Syntetos-Boylan classes this one intermittent, so the policy ignores the model and takes the four-week moving average instead. Shipping the model that wins beats shipping the clever one.",
+    why: "A tree trained on a mostly-zero series learns to predict near zero, which is technically accurate and operationally useless. Shipping the model that wins beats shipping the clever one.",
   },
 ];
 
@@ -205,8 +205,17 @@ export function ForecastDemo() {
   const shown = selected ?? data.champion;
   const shownScore = data.scores.find((s) => s.id === shown)!;
   const worst = Math.max(...data.scores.map((s) => s.wmape));
-  // Within a tenth of a point is a tie, not a win, and the copy must say so.
-  const tied = Math.abs(data.scores[0].wmape - data.scores[1].wmape) < 0.15;
+  /*
+   * The champion is the routed branch with the cap applied, so it necessarily
+   * ties with that branch. The honest and more interesting comparison is
+   * against the branch the routing did NOT take: on intermittent demand that
+   * is the tree model, and the gap is the whole argument for routing.
+   */
+  const routedName = pattern.sparsity > 0.4 ? "SMA-4" : "LightGBM Tweedie";
+  const avoidedName = pattern.sparsity > 0.4 ? "LightGBM Tweedie" : "SMA-4";
+  const avoided = data.scores.find((m) => m.name === avoidedName);
+  const routed = data.scores.find((m) => m.name === routedName);
+  const gap = avoided && routed ? avoided.wmape - routed.wmape : 0;
 
   const series: Series[] = [
     { id: "actual", name: "What actually sold", color: seriesColor.primary, values: data.actual },
@@ -388,13 +397,10 @@ export function ForecastDemo() {
           >
             <p className="text-xs leading-relaxed text-fg-2">
               <span className="font-semibold text-fg">
-                {tied
-                  ? "A tie, and that is the honest result. "
-                  : `Why ${data.scores[0].name} wins here. `}
+                {`The policy routes this series to ${routedName}, so they tie. `}
               </span>
-              {tied
-                ? "On this pattern the policy routes to the category model, so the two land in the same place. The policy earns its keep on intermittent demand, where the model it would otherwise use collapses."
-                : pattern.why}
+              {`That is the point: the alternative, ${avoidedName}, scores ${avoided?.wmape.toFixed(1)}% here, ${Math.round(gap)} points worse. `}
+              {pattern.why}
             </p>
           </div>
         </div>
