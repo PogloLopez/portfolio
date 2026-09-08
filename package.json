@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "assets": "node scripts/build-assets.mjs",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "preview": "next build && next start -p 3000 -H 0.0.0.0"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
