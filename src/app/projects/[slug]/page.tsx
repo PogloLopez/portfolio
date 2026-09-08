@@ -68,8 +68,13 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
               <dt className="font-mono text-[0.6875rem] tracking-[0.16em] text-fg-3 uppercase">
                 Repo
               </dt>
-              <dd className="mt-2 font-mono text-sm" style={{ color: "var(--accent)" }}>
+              {/* Neutral, not accent: this is an identifier, not a link, and
+                  colouring it like one promised code that is not published. */}
+              <dd className="mt-2 font-mono text-sm text-fg-2">
                 {project.repo}
+                <span className="mt-1 block text-xs text-fg-3">
+                  {project.confidential ? "private" : "public"}
+                </span>
               </dd>
             </div>
             <div>

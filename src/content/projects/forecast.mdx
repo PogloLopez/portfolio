@@ -87,17 +87,15 @@ decision's cadence also keeps compute inside the window a shared server can give
 
 ## Results
 
-**70% to 82% accuracy depending on the cluster**, against roughly 30% from the ERP module this
-replaced. That jump is less impressive than it sounds: the ERP ran basic statistical models and
-almost anything would have beaten it. The number worth defending is the one against our own
-previous pipeline, which was already decent: **19% less error**, WMAPE 0.489 down to 0.394 on
-the same fold under the same protocol.
+**19% less forecast error than the pipeline it replaced.** WMAPE 0.489 to 0.394, scored on the
+same held-out folds under the same protocol. That comparison is the one worth defending: the
+previous pipeline was already a real model, not a strawman.
 
-Accuracy tracks the shape of the catalogue, as it should. Smooth demand forecasts best; lumpy
-and intermittent series are harder and always will be, because a series that sells nothing most
-weeks has little to predict from. A single figure of 95% here would mean the catalogue had been
-quietly filtered down to its easy tenth, which is the usual way this metric gets inflated. The
-routing policy is what keeps the long tail from dragging the rest down.
+Accuracy sits between **70% and 82% depending on the demand cluster**, best on smooth series and
+weakest on intermittent ones. That spread is the shape of the catalogue, not a defect. A single
+figure in the nineties here would mean the catalogue had been quietly filtered down to its easy
+tenth, which is the usual way this metric gets inflated. The routing policy is what keeps the
+long tail from dragging the rest down.
 
 Over 100,000 product and store combinations forecast weekly across 14 stores, feeding
 merchandise reordering directly. Over 370 tests, green before deploy.

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 /**
@@ -15,6 +16,12 @@ import { useEffect, useRef } from "react";
  *
  * It lives in the fixed background layer, so it spans the whole document and
  * the content scrolls over it.
+ *
+ * It renders on the home page only. On the case studies and the about page the
+ * body copy runs the full width of the viewport, and a review measured the
+ * particles at a higher luminance than the text they sat behind: the decoration
+ * was literally brighter than the sentences. Those pages keep the auroras and
+ * the grid, which never cross a glyph.
  *
  * Drawn on a canvas rather than as DOM or SVG: at ~90 nodes with edges
  * recomputed per frame this is far cheaper, and it never triggers layout.
@@ -89,6 +96,8 @@ function seedNodes(): Node[] {
 
 export function NeuralField() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const pathname = usePathname();
+  const onHome = pathname === "/";
 
   useEffect(() => {
     const canvas = ref.current;
@@ -284,5 +293,25 @@ export function NeuralField() {
     };
   }, []);
 
-  return <canvas ref={ref} aria-hidden className="absolute inset-0 h-full w-full" />;
+  if (!onHome) return null;
+
+  /*
+   * The mask keeps the field out of the left column, where the headline and
+   * every body paragraph live. It is a hard guarantee rather than a matter of
+   * opacity: no node can be drawn over text because the layer is not painted
+   * there at all.
+   */
+  return (
+    <canvas
+      ref={ref}
+      aria-hidden
+      className="absolute inset-0 h-full w-full"
+      style={{
+        WebkitMaskImage:
+          "linear-gradient(90deg, transparent 0%, transparent 38%, rgba(0,0,0,0.55) 55%, #000 72%)",
+        maskImage:
+          "linear-gradient(90deg, transparent 0%, transparent 38%, rgba(0,0,0,0.55) 55%, #000 72%)",
+      }}
+    />
+  );
 }

@@ -91,8 +91,10 @@ const laneColor = {
 type Phase = "idle" | "thinking" | "awaiting" | "approved" | "rejected" | "answered";
 
 export function CortanaDemo() {
-  const [request, setRequest] = useState<Request | null>(null);
-  const [phase, setPhase] = useState<Phase>("idle");
+  // Opens on the gated request, already waiting for approval: the gate is the
+  // point of the project and an empty pane does not make it.
+  const [request, setRequest] = useState<Request | null>(REQUESTS[0]);
+  const [phase, setPhase] = useState<Phase>("awaiting");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);

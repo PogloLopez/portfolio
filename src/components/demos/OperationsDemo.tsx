@@ -281,8 +281,8 @@ export function OperationsDemo() {
           )}
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button onClick={() => setSubmitted(true)} disabled={!moves.length || submitted}>
-              {submitted ? "Plan generated" : "Generate plan"}
+            <Button onClick={() => setSubmitted(true)} disabled={!moves.length || submitted} variant="ghost">
+              {submitted ? "Plan ready" : "Show the transfer plan"}
             </Button>
             {(Object.keys(edits).length > 0 || submitted) && (
               <Button

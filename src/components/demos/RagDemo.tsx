@@ -116,9 +116,12 @@ const pathMeta = {
 } as const;
 
 export function RagDemo() {
-  const [current, setCurrent] = useState<Exchange | null>(null);
+  // Opens answered rather than empty: three zeros and a blank pane read as a
+  // broken widget, and the zero that matters only means something once a
+  // question has actually been answered.
+  const [current, setCurrent] = useState<Exchange | null>(EXCHANGES[0]);
   const [stage, setStage] = useState<Stage>("done");
-  const [asked, setAsked] = useState<string[]>([]);
+  const [asked, setAsked] = useState<string[]>([EXCHANGES[0].id]);
   const [showSql, setShowSql] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -198,7 +201,7 @@ export function RagDemo() {
             ))}
           </ul>
 
-          <div className="mt-6 min-h-44 rounded-lg border border-line bg-surface-2/40 p-4 sm:p-5">
+          <div className="mt-6 min-h-56 rounded-lg border border-line bg-surface-2/40 p-4 sm:p-5">
             {!current && (
               <p className="text-sm leading-relaxed text-fg-3">
                 Choose one of the three questions above. The assistant will show which of its two

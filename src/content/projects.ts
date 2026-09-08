@@ -75,16 +75,16 @@ export const projects: Project[] = [
     },
     achievements: [
       {
-        value: "70-82% accuracy",
-        label: "Depending on the cluster, against roughly 30% from the ERP module it replaced",
+        value: "19% less error",
+        label: "WMAPE 0.489 to 0.394 against the previous pipeline, scored on the same folds",
       },
       {
         value: "100,000+",
         label: "Product and store combinations forecast every week across 14 stores",
       },
       {
-        value: "19% less error",
-        label: "WMAPE 0.489 to 0.394 against the previous pipeline, scored on the same fold",
+        value: "70-82%",
+        label: "Accuracy band by demand cluster, best on smooth series and weakest on intermittent",
       },
       { value: "Feeds reordering", label: "Output drives replenishment directly, not a report" },
       {

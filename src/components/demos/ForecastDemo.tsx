@@ -195,7 +195,8 @@ const PIPELINE = [
 ];
 
 export function ForecastDemo() {
-  const [patternId, setPatternId] = useState<PatternId>("fast");
+  // Opens on the pattern where the routing policy actually changes the answer.
+  const [patternId, setPatternId] = useState<PatternId>("intermittent");
   const [selected, setSelected] = useState<ModelId | null>(null);
 
   const pattern = PATTERNS.find((p) => p.id === patternId)!;
@@ -204,6 +205,8 @@ export function ForecastDemo() {
   const shown = selected ?? data.champion;
   const shownScore = data.scores.find((s) => s.id === shown)!;
   const worst = Math.max(...data.scores.map((s) => s.wmape));
+  // Within a tenth of a point is a tie, not a win, and the copy must say so.
+  const tied = Math.abs(data.scores[0].wmape - data.scores[1].wmape) < 0.15;
 
   const series: Series[] = [
     { id: "actual", name: "What actually sold", color: seriesColor.primary, values: data.actual },
@@ -247,7 +250,7 @@ export function ForecastDemo() {
     <DemoFrame
       title="Forecast explorer"
       subtitle="mercaldas-forecast · demo build"
-      note="The real pipeline runs this every week over more than 100,000 product and store combinations across 14 stores, reaching 70% to 82% accuracy depending on the cluster. The three series here are generated in the browser and every score is measured from the chart beside it, so the figures land in that same band rather than flattering it."
+      note="The real pipeline runs this every week over more than 100,000 product and store combinations across 14 stores. These three series are synthetic, so the page ships without company data: the scoring code is the same one, the numbers are illustrative, and the production band is 70% to 82% accuracy by cluster."
     >
       <div className="mb-6">
         <p className="mb-3 text-sm font-medium text-fg-2">Pick a demand pattern</p>
@@ -291,8 +294,13 @@ export function ForecastDemo() {
               },
               {
                 k: "Bias",
-                v: `${bias > 0 ? "+" : ""}${bias.toFixed(1)}%`,
-                d: bias > 0 ? "Forecasts high on average" : "Forecasts low on average",
+                v: `${bias > 0 ? "+" : bias < 0 ? "" : "±"}${Math.abs(bias) < 0.05 ? "0.0" : bias.toFixed(1)}%`,
+                d:
+                  Math.abs(bias) < 0.5
+                    ? "Neither high nor low on average"
+                    : bias > 0
+                      ? "Forecasts high on average"
+                      : "Forecasts low on average",
               },
               {
                 k: "Coverage",
@@ -379,8 +387,14 @@ export function ForecastDemo() {
             style={{ borderColor: "var(--accent, var(--color-iris))" }}
           >
             <p className="text-xs leading-relaxed text-fg-2">
-              <span className="font-semibold text-fg">Why {data.scores[0].name} wins here. </span>
-              {pattern.why}
+              <span className="font-semibold text-fg">
+                {tied
+                  ? "A tie, and that is the honest result. "
+                  : `Why ${data.scores[0].name} wins here. `}
+              </span>
+              {tied
+                ? "On this pattern the policy routes to the category model, so the two land in the same place. The policy earns its keep on intermittent demand, where the model it would otherwise use collapses."
+                : pattern.why}
             </p>
           </div>
         </div>

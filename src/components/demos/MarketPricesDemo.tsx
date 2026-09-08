@@ -365,7 +365,7 @@ export function MarketPricesDemo() {
             Written reading
           </p>
           <Button onClick={generate} disabled={generating}>
-            {generating ? "Writing…" : revealed ? "Regenerate" : "Generate reading"}
+            {generating ? "Reading the series…" : revealed ? "Show it again" : "Show the written reading"}
           </Button>
         </div>
 

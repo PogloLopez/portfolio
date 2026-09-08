@@ -86,6 +86,24 @@
     text-rendering: optimizeLegibility;
   }
 
+  /*
+   * Tailwind v4 removed `cursor: pointer` from its preflight for <button>, so
+   * every control on the site was rendering with the default arrow. A reviewer
+   * scrolled past the best interaction on the page because hovering it did
+   * nothing. Restored explicitly.
+   */
+  button:not(:disabled),
+  [role="tab"]:not(:disabled),
+  [role="switch"]:not(:disabled),
+  summary,
+  label:has(> input[type="range"]) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   ::selection {
     background-color: color-mix(in srgb, var(--color-glow) 55%, transparent);
     color: #fff;
