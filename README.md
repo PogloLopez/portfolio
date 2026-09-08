@@ -83,17 +83,21 @@ and the CV read as one identity.
 
 ## Deploying
 
+Deploys come from Git. A push to `main` publishes to production; a pull request gets its own
+preview URL. There is nothing to run by hand.
+
+The manual path still works for a one-off, because the repo is also linked locally
+(`.vercel/`, ignored by git):
+
 ```bash
 npx vercel deploy          # preview
 npx vercel deploy --prod   # production
 ```
 
-The Vercel project is `pablo-lopez` on the hobby team `poglolopezs-projects`. Git integration is
-not connected yet, so deploys are manual; installing the Vercel GitHub App and linking this
-repository turns on deploy-on-push and per-PR previews.
-
-**The site is currently behind Vercel Authentication** — every `*.vercel.app` URL asks for a
-login. See `DECISIONS.md` for the two steps that make it public.
+The Vercel project is `pablo-lopez` on the hobby team `poglolopezs-projects`. The site is public
+at **<https://pablo.maieutik-data.com>**, which is the canonical address; `pablo-lopez.vercel.app`
+is an alias of the same project. `site.url` must match the canonical one — it feeds
+`metadataBase`, and therefore every canonical link and social card URL the site emits.
 
 ## Structure
 

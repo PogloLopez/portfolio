@@ -132,24 +132,26 @@ are the kind of claim a reference check settles in conversation rather than on p
 
 ## Where the deployment stands
 
-The Vercel project is **`pablo-lopez`** under the hobby team `poglolopezs-projects`, and the
-site is deployed and verified rendering. It is **not public yet**, and that is deliberate.
+The Vercel project is **`pablo-lopez`** under the hobby team `poglolopezs-projects`. The site is
+**live and public**, served from **<https://pablo.maieutik-data.com>**, which is the canonical
+address and the one `site.url` declares. `pablo-lopez.vercel.app` is an alias of the same
+project and resolves to the same deployment.
 
-Vercel Authentication is on for the project with scope `all_except_custom_domains`, so every
-`*.vercel.app` URL — preview and production alike — asks for a Vercel login first. Signed in as
-the account owner the site opens normally; to anyone else it is a login page.
+Vercel Authentication is **off**. It was on with scope `all_except_custom_domains` while the
+site was being built, which put every `*.vercel.app` URL behind a login.
 
-Git integration is **not** connected: the Vercel GitHub App is not installed on the account, so
-deploys are manual (`npx vercel deploy`) rather than on push.
+Git integration is **connected**. A push to `main` deploys to production and a pull request gets
+its own preview URL; both were verified by pushing and watching the commit's `Vercel` check go
+green without anyone running the CLI. The manual path (`npx vercel deploy --prod`) still works
+and the repo is still linked locally, so either route is available.
+
+The canonical address is worth stating because it was wrong in code for two days. `site.url`
+feeds `metadataBase`, so while it held the Vercel address, a page served from the custom domain
+still pointed crawlers and link previews at `pablo-lopez.vercel.app` for its Open Graph image.
+Nothing looked broken in a browser; what it cost was the canonical.
 
 ## What is left for Pablo
 
-- **Make it public, when he is happy with it.** Two steps, in this order:
-  1. Project Settings → Deployment Protection → turn **Vercel Authentication** off.
-  2. `npx vercel deploy --prod` from this repo.
-  Left undone on purpose — publishing is the decision the plan reserves for him.
-- **Optional: connect Git.** Installing the Vercel GitHub App (`github.com/apps/vercel`) and
-  linking `PogloLopez/portfolio` gives deploy-on-push and preview deployments per pull request.
 - **Verify the figures.** `case-studies.md` in the vault carries a note saying the ranges are
   representative of each repo's state as of 2026-09-05 but were never checked figure by figure.
   Nothing here invented a number, but nothing here verified one either.
