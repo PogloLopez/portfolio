@@ -132,6 +132,14 @@ export function NeuralField() {
     let t = 0;
     let lastProgress = -1;
 
+    /*
+     * Everything is sized in CSS pixels, so on a 390px phone the same field is
+     * proportionally three times denser and swamps the text it sits behind.
+     * `scale` shrinks the marks and thins the population to match the viewport.
+     */
+    let scale = 1;
+    let visibleCount = NODE_COUNT;
+
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = canvas.clientWidth;
@@ -139,6 +147,8 @@ export function NeuralField() {
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      scale = Math.min(1, Math.max(0.5, width / 1100));
+      visibleCount = Math.round(NODE_COUNT * (0.45 + 0.55 * scale));
     };
 
     /** 0 assembled, 1 fully decomposed. */
@@ -155,13 +165,13 @@ export function NeuralField() {
 
       ctx.clearRect(0, 0, width, height);
 
-      const pts = nodes.map((n) => {
+      const pts = nodes.slice(0, visibleCount).map((n) => {
         // A slow bob keeps the assembled state alive rather than frozen.
         const bob = reduced ? 0 : Math.sin(t * 0.0004 + n.phase) * 0.006;
         return {
           x: (n.hx + n.dx * e) * width,
           y: (n.hy + n.dy * e + bob) * height,
-          r: n.r,
+          r: n.r * scale,
         };
       });
 
@@ -204,11 +214,12 @@ export function NeuralField() {
 
       // Nodes dim as they scatter, so the field recedes instead of competing
       // with the content that scrolls over it.
-      const a = 0.85 * (1 - e * 0.8);
+      // Dimmer on a small screen, where the field is closer to the text.
+      const a = (0.55 + 0.3 * scale) * (1 - e * 0.8);
 
       ctx.globalAlpha = a;
       for (const q of pts) {
-        if (q.r <= 2.2) continue;
+        if (q.r <= 2.2 * scale) continue;
         const d = q.r * 10;
         ctx.drawImage(sprite, q.x - d / 2, q.y - d / 2, d, d);
       }
