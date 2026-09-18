@@ -10,9 +10,8 @@ export const site = {
 
   /** The longer version, for /about and for meta descriptions. */
   intro: [
-    "I'm a data and automation engineer at Mercaldas, a retail grocery chain in Colombia, where I build the systems behind forecasting, pricing and internal operations.",
+    "I'm a data engineer at Mercaldas, a retail grocery chain in Colombia, where I build the systems behind forecasting, pricing and internal operations.",
     "I build the data platform behind the weekly demand forecast for over 100,000 product and store combinations, a market price platform the commercial team takes into supplier negotiations, and an assistant that answers business questions with verified numbers instead of invented ones.",
-    "Outside work I build my own infrastructure, and I'm interested in how these same methods apply to energy data: load forecasting, distributed generation, and the reliability problems that come with both.",
   ],
 
   /**
