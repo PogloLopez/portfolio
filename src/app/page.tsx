@@ -102,7 +102,7 @@ export default function Home() {
         <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr]">
           <div className="space-y-4 text-base leading-relaxed text-fg-2">
             <p>{site.intro[0]}</p>
-            <p>{site.intro[2]}</p>
+            <p>{site.intro[1]}</p>
           </div>
 
           <div
