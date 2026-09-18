@@ -31,12 +31,6 @@ export function SiteHeader() {
           >
             Work
           </SectionLink>
-          <Link
-            href="/about"
-            className="rounded-md px-3 py-2 text-sm font-medium text-fg-2 transition-colors hover:bg-white/6 hover:text-fg"
-          >
-            About
-          </Link>
           <SectionLink
             hash="contact"
             className="inline-flex items-center gap-2 rounded-lg border border-iris/55 bg-iris/12 px-3 py-2 text-sm font-semibold text-iris transition-colors hover:border-iris hover:bg-iris/20"
