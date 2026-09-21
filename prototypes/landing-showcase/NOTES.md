@@ -31,6 +31,7 @@ content. Edit the generator, not the HTML.
 | `brain.js` | The neural field in the hero |
 | `tokens.css` | Palette, copied verbatim from the app's `globals.css` |
 | `hero.webp` | The flow-field artwork, copied from `public/hero/` |
+| `verify.cjs` | `node verify.cjs` — drives the page in Chromium and checks the things that break by accident |
 
 ## Round 4 (this round): the review changes
 
@@ -80,6 +81,19 @@ What did it:
   every frame of its growth, and it alone doubled that segment's frame time.
 - The dim backdrop and the grayscale filter behind project 4 are gone with the
   ghost they existed for.
+
+## Checking it
+
+`node verify.cjs` (needs the app's Playwright, already a dependency) starts its
+own server and asserts: live mode, the title card at the pin, project 1's entry
+offset, the order the pieces arrive in, the assembled state, project 3 leaving,
+the finale's growth curve, a pixel-identical 4->5 swap, reversibility, the
+keyboard path, idle pausing, and the three fallbacks (reduced motion, phone, no
+JavaScript). 15/15 pass as committed.
+
+An axe-core audit over five states (live at the top, mid-sequence, at the
+recap, the static fallback, a phone) reports no violations, colour contrast
+included.
 
 ## Known deviations from the earlier rounds' rules
 

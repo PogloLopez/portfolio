@@ -436,15 +436,18 @@ ${gradients}
          own copy of them has scrolled away (chrome.js flips data-shown), so it
          never sits over the hero, and it stays reachable through the pinned
          sequence. -->
-    <div class="topbar" data-shown="0">
+    <!-- The bar is itself the landmark: a second <nav> inside it would share
+         the hero's label, and the name beside the links would sit outside any
+         landmark at all. -->
+    <nav class="topbar" data-shown="0" aria-label="Top bar">
       <div class="wrap topbar__inner">
         <span class="topbar__name">Pablo A. López</span>
-        <nav class="topbar__actions" aria-label="Page sections">
+        <div class="topbar__actions">
           <a class="btn btn--ghost" href="#work">See the work</a>
           <a class="btn btn--accent" href="#contact">Contact me</a>
-        </nav>
+        </div>
       </div>
-    </div>
+    </nav>
 
     <header class="hero">
       <!-- The flow-field artwork from the live site, plus the neural field over
