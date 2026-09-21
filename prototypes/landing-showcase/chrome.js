@@ -10,40 +10,24 @@
   "use strict";
 
   var topbar = document.querySelector(".topbar");
-  var hero = document.querySelector(".hero");
-  var heroActions = document.querySelector(".hero__actions");
 
   /* -------------------------------------------------------------------------
-     Top bar. It appears only once the hero's own pair of buttons has scrolled
-     out of view, so the two are never on screen together.
+     Top bar. Fixed and on screen from the first frame to the last (the CSS
+     handles that); this only measures its real height into --topbar-h so
+     the page can reserve the matching space instead of sitting underneath
+     it. Re-measured on resize, since the bar wraps to a second line under
+     560px.
   ------------------------------------------------------------------------- */
 
-  function showTopbar(on) {
-    if (topbar) topbar.setAttribute("data-shown", on ? "1" : "0");
+  function syncTopbarHeight() {
+    if (!topbar) return;
+    document.documentElement.style.setProperty("--topbar-h", topbar.offsetHeight + "px");
   }
 
-  if (topbar && heroActions && window.IntersectionObserver) {
-    new IntersectionObserver(
-      function (entries) {
-        showTopbar(!entries[entries.length - 1].isIntersecting);
-      },
-      { rootMargin: "-8px 0px 0px 0px" },
-    ).observe(heroActions);
-  } else if (topbar && hero) {
-    // No observer support: fall back to one passive scroll listener.
-    var ticking = false;
-    window.addEventListener(
-      "scroll",
-      function () {
-        if (ticking) return;
-        ticking = true;
-        window.requestAnimationFrame(function () {
-          ticking = false;
-          showTopbar(window.scrollY > hero.offsetHeight * 0.6);
-        });
-      },
-      { passive: true },
-    );
+  if (topbar) {
+    syncTopbarHeight();
+    window.addEventListener("resize", syncTopbarHeight);
+    if (window.ResizeObserver) new ResizeObserver(syncTopbarHeight).observe(topbar);
   }
 
   /* -------------------------------------------------------------------------
@@ -94,7 +78,7 @@
     var target = document.getElementById(id);
     if (!target) return; // the project CTAs point at pages this prototype has not got
     e.preventDefault();
-    var bar = topbar && topbar.getAttribute("data-shown") === "1" ? topbar.offsetHeight : 0;
+    var bar = topbar ? topbar.offsetHeight : 0;
     var y = Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - bar - 8);
     window.scrollTo({ top: y, behavior: reduced.matches ? "auto" : "smooth" });
     // Keep the keyboard with the pointer: the target owns focus after the jump.

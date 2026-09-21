@@ -623,9 +623,8 @@
   // so the intro drops to its label alone. offsetTop ignores the scrub
   // transforms, so this is the resting layout wherever the page is. Its rise
   // is capped by the room above it, so the label never crosses the top edge.
-  // The fixed page bar is over the stage, so the title card has to start below
-  // it. It is only shown once the hero has scrolled away, which is exactly
-  // when the stage is pinned.
+  // The fixed page bar is over the stage, so the title card has to start
+  // below it (the bar is on screen for the whole page, pinned stage included).
   function topClear() {
     var bar = document.querySelector(".topbar");
     var h = bar ? bar.offsetHeight : 0;

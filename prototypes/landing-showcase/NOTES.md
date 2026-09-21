@@ -33,7 +33,90 @@ content. Edit the generator, not the HTML.
 | `hero.webp` | The flow-field artwork, copied from `public/hero/` |
 | `verify.cjs` | `node verify.cjs` — drives the page in Chromium and checks the things that break by accident |
 
-## Round 4 (this round): the review changes
+## Round 6 (this round): the review changes
+
+Correction. Round 5's "personal AI assistant" fixes (background, KPIs, natural
+copy) went to project 3 (the business-data assistant); the actual target,
+confirmed this round by name ("the last project", "approval required"), was
+project 5 (cortana). Project 5's background is now plain `var(--ground)` in
+both the static and live rules — it had its own accent-tinted radial gradient
+and glow, the thing making it look more important than the other four, in
+both. Its picture is no longer the ledger-diff-plus-"approval required" mockup
+(that is the real gate mechanic, but it is case-study detail, not a homepage
+card); it is one plain question and one plain answer, no typing indicator, no
+routing line, nothing to explain first. Project 3's round-5 fixes stand: its
+own round-5 feedback ("golden queries", "not a guess") was about it directly.
+
+Bugs, not taste. The neural field's dispersion is driven by
+`window.scrollY / span`; round 5 gave the hero a top offset (the fixed top
+bar's reserved space) without telling `brain.js`, so the field finished
+dispersing well before the hero actually scrolled away and then sat still,
+on screen, for the rest of that stretch — worse than before round 5, which
+had no offset to account for. It now measures the hero's own document
+position and subtracts it, so progress is 0 at the hero's actual top and 1
+just before its actual bottom, regardless of anything above it. Project 4's
+SURPLUS-side connector was still off after round 5's fix to the SHORT side:
+that fix anchored each store to its own top, which was correct, but the
+SURPLUS store was still positioned by centering its whole box (roof + body +
+label) in the row — and that box is only symmetric around the body if the
+roof and the label are the same height, which they were not. Matching the
+label's rendered height to the roof's makes the box symmetric, so the
+existing centering does the rest; no offset math to keep in sync with the
+picture's scale.
+
+Content, project 3. "120 tests" was a code metric, not something a business
+reader weighs; its card stats are now "Zero / Numbers the model makes up" and
+"Golden queries / Plus a live path for the rest" (keeping the certified/
+dynamic idea, saying what it buys instead of naming it). Its chat footer
+drops "not a guess" — "Pulled straight from the database." says the same
+thing without the double negative.
+
+Picture, project 2. Not a range chart at all anymore: two rounds of trying to
+make bars read as "a range" never said what the platform actually does,
+which is compare a public price to what the buying team pays today. It is
+now a line chart with both prices, the market one forecast past a divider,
+the internal one held flat as a reference, the gap between them shaded, and
+an AI verdict chip ("Buy now" / "Hold" and why) reading the gap — the thing
+neither a bar chart nor a single line could show.
+
+Contact marks. Noticeably larger again (2.1rem icon in a 3rem box, 3rem in
+3.5rem now) — round 5's increase was real but still read as small next to
+the box.
+
+## Round 5: the review changes
+
+Content. Project 1's hook now says "per cluster" instead of "per series" (the
+routing policy picks a model per demand cluster, not one per series), and its
+caption is just "Forecast" instead of "Forecast against actuals". Project 2
+drops the word "bulletins" ("Weekly public data..."), and its caption is five
+words instead of nine. Project 3's two card stats used to be "2 paths /
+Certified + dynamic" and "0 / Figures from the model" — neither said anything
+a reader could act on; they're now "Zero / Numbers the model makes up" and
+"120 tests / Covering every guardrail".
+
+Pictures. Project 2's range chart lost the zigzag line threading through the
+bars (it read as tangled, not as a range): each bar carries its own midpoint
+dot instead. Project 3's chat lost its jargon — "Certified recipe → SQL
+validated → run" and "1 query → 3 rows → 41 ms" are gone, replaced by
+"Checking real sales data…" and "Pulled straight from the database, not a
+guess." Its question bubble also lost most of its saturation (38% accent down
+to 16%): it was the brightest thing in the whole sequence, which made the
+panel read as more important than the other four. Project 4's dashed
+connectors to the two SHORT stores now land on the middle of each store's
+body — they used to sit up near the roof, a `top: 27%` that only happened to
+be close for one specific label height. Its travelling box now moves the full
+width of the lane (a CSS transform percentage is relative to the box's own
+~1em size, not the lane, so it barely moved before); it still goes surplus →
+short, left to right, and loops from the start once it reaches the stores.
+
+Page. The top bar (name plus "See the work" / "Contact me") is on screen for
+the whole page now, not only once the hero has scrolled past — chrome.js
+measures its real height into `--topbar-h` so the body reserves the matching
+space instead of sitting under it. Gmail's own four-colour mark replaces the
+generic envelope stroke, and all three contact marks (Gmail, LinkedIn,
+GitHub) are noticeably larger inside their buttons.
+
+## Round 4: the review changes
 
 Content. The employer is not named anywhere. Project 2 lost "a hostile public
 data source"; project 3's hook now says what the assistant is; project 4 is

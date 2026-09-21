@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const REPO = "C:/Users/ASUS/Desktop/Poglo_local/data_analysis/portfolio";
+const REPO = path.resolve(__dirname, "..", "..");
 const OUT = path.resolve(__dirname, "index.html");
 
 const src = fs.readFileSync(`${REPO}/src/content/projects.ts`, "utf8");
@@ -24,18 +24,35 @@ const ORDER = ["forecast", "market-prices", "rag", "operations-platform", "corta
  * than reaching for a clever line.
  */
 const OVERRIDES = {
+  forecast: {
+    // "per series" read as though every one of the 100k+ series gets its own
+    // model; the routing policy actually decides per demand cluster.
+    hook:
+      "Over 100,000 product and store combinations, forecast weekly by a routing policy that picks a model per cluster.",
+    visual: { caption: "Forecast" },
+  },
   "market-prices": {
     // Was "A hostile public data source, turned into a tool...": a judgement
-    // about the source instead of a description of the system.
+    // about the source instead of a description of the system. "bulletins"
+    // was jargon a reader has to already know the domain to parse.
     hook:
-      "Weekly public price bulletins, parsed into a 52-week forecast the buying team takes into supplier negotiations.",
-    visual: { caption: "Weekly market price range, forecast ahead of the line" },
+      "Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations.",
+    visual: { caption: "Market vs. internal price, forecast ahead" },
   },
   rag: {
     // Was "Built the spend guardrails first, then broke them on purpose...":
     // it never said what the assistant does.
     hook:
       "A Telegram assistant for questions about sales, inventory and margin. Every figure it gives comes from a query it actually ran.",
+    // "2 paths / Certified + dynamic" told a reader nothing they could act
+    // on, and "120 tests" was a code metric, not something a business reader
+    // weighs. These keep the certified/dynamic idea but say what it buys:
+    // trust on the numbers, and no dead end on the questions nobody
+    // pre-wrote for.
+    cardStats: [
+      { value: "Zero", label: "Numbers the model makes up" },
+      { value: "Golden queries", label: "Plus a live path for the rest" },
+    ],
   },
   "operations-platform": {
     // Internally "la herramienta de traslados". The old title described any
@@ -50,6 +67,12 @@ const OVERRIDES = {
       { value: "Self-serve", label: "Run by the analysts" },
     ],
     visual: { caption: "Stock moving from a surplus store to the short ones" },
+  },
+  cortana: {
+    // The real caption ("Proposed change, held for approval") describes the
+    // ledger-diff mockup this replaced; the new picture is just a question
+    // and an answer, so the caption says that instead.
+    visual: { caption: "Ask it something, in your own words" },
   },
 };
 
@@ -82,55 +105,82 @@ function lineGeometry(points, w, h, pad) {
 }
 
 /**
- * Project 2's chart: one thin bar per weekly bulletin (the price range that
- * week), with the forecast weeks drawn lighter past a divider.
+ * Project 2's chart: the market price against what the buying team is
+ * paying today, both forecast, with the AI reading of the gap between them.
  *
- * It used to be a second line chart, which made projects 1 and 2 read as the
- * same system twice. The range bars say "weekly published prices" at a glance
- * and stay legible at card size, where a two-line comparison would not.
+ * Two rounds of trying to make this "a range, not a line" (bars, then bars
+ * with a connecting line) never read as clearly as the thing the project
+ * actually does: compare a public price to an internal one and tell the
+ * buyer what to do about the gap. A second line does the comparison
+ * directly, and the insight chip is what a bar chart could never show.
  */
-function rangeViz(p, ctx, ind) {
+function marketViz(p, ctx, ind) {
   const pts = p.visual.points;
   const big = ctx === "panel";
-  const [w, h, pad] = big ? [480, 300, 24] : [300, 96, 10];
-  // A deterministic half-range per week: the real spread is not in the content
-  // file, and a random one would change on every generation.
-  const halfOf = (i) => 3 + ((i * 7) % 5);
-  const lo = Math.min(...pts.map((v, i) => v - halfOf(i)));
-  const hi = Math.max(...pts.map((v, i) => v + halfOf(i)));
+  const [w, h, pad] = big ? [480, 300, 18] : [300, 96, 10];
+  const split = Math.floor((pts.length - 1) * 0.66);
+
+  // The internal (negotiated) price the buying team pays today: a trailing
+  // 3-week average of the market series, standing in for a real internal
+  // price feed the content file does not carry. Deterministic, so it does
+  // not change on every generation, and it only has to be a plausible,
+  // steadier counter-line to the volatile market one.
+  const internalAt = (i) => {
+    const from = Math.max(0, i - 2);
+    const slice = pts.slice(from, i + 1);
+    return slice.reduce((a, b) => a + b, 0) / slice.length;
+  };
+  const internalPts = pts.slice(0, split + 1).map((_, i) => internalAt(i));
+  const flatValue = internalPts[internalPts.length - 1];
+
+  const lo = Math.min(...pts, ...internalPts);
+  const hi = Math.max(...pts, ...internalPts);
   const x = (i) => pad + (i / (pts.length - 1)) * (w - pad * 2);
   const y = (v) => h - pad - ((v - lo) / (hi - lo || 1)) * (h - pad * 2);
-  const split = Math.floor((pts.length - 1) * 0.66);
-  const bw = big ? 9 : 6;
+  const seg = (arr, from) =>
+    arr.map((v, k) => `${k === 0 ? "M" : "L"} ${x(from + k).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
 
-  const bars = pts
-    .map((v, i) => {
-      const half = halfOf(i);
-      const top = y(v + half);
-      const height = Math.max(bw, y(v - half) - top);
-      return (
-        `${ind}    <rect class="rng__bar${i > split ? " rng__bar--fc" : ""}" style="--i: ${i}"` +
-        ` x="${(x(i) - bw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw}" height="${height.toFixed(1)}" rx="${(bw / 2).toFixed(1)}" />`
-      );
-    })
-    .join("\n");
-  const mid = pts.map((v, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
-  const divider =
-    `${ind}    <line class="rng__split" x1="${x(split + 0.5).toFixed(1)}" x2="${x(split + 0.5).toFixed(1)}"` +
-    ` y1="${pad}" y2="${h - pad}" />`;
-  const label = big
-    ? `${ind}    <text class="rng__label" x="${(x(split + 0.5) + 10).toFixed(1)}" y="${pad + 12}">52 weeks ahead</text>\n`
+  const marketSolid = seg(pts.slice(0, split + 1), 0);
+  const marketForecast = seg(pts.slice(split), split);
+  const internalSolid = seg(internalPts, 0);
+  const internalFlat =
+    `M ${x(split).toFixed(1)} ${y(flatValue).toFixed(1)} L ${x(pts.length - 1).toFixed(1)} ${y(flatValue).toFixed(1)}`;
+
+  // The gap the insight is about: shaded between the market forecast and
+  // today's internal price, wherever they differ.
+  const gapArea =
+    `${seg(pts.slice(split), split)} L ${x(pts.length - 1).toFixed(1)} ${y(flatValue).toFixed(1)}` +
+    ` L ${x(split).toFixed(1)} ${y(flatValue).toFixed(1)} Z`;
+  const risesAboveToday = pts[pts.length - 1] > flatValue;
+
+  const divider = `${ind}    <line class="line__split" x1="${x(split).toFixed(1)}" x2="${x(split).toFixed(1)}" y1="${pad}" y2="${h - pad}" />`;
+  const legend = big
+    ? `${ind}    <text class="mkt__legend mkt__legend--market" x="${pad}" y="${pad - 5}">Market</text>\n` +
+      `${ind}    <text class="mkt__legend mkt__legend--internal" x="${pad + 58}" y="${pad - 5}">Internal, today</text>\n`
+    : "";
+  const insight = big
+    ? `${ind}  <div class="mkt__insight">\n` +
+      `${ind}    <span class="mkt__insight-dot" aria-hidden="true"></span>\n` +
+      `${ind}    <span class="mkt__insight-verdict">${risesAboveToday ? "Buy now" : "Hold"}</span>\n` +
+      `${ind}    <span class="mkt__insight-reason">${
+        risesAboveToday ? "forecast climbs past today’s price" : "forecast stays under today’s price"
+      }</span>\n` +
+      `${ind}  </div>\n`
     : "";
 
   return (
-    `${ind}<div class="viz viz--range" role="img" aria-label="${esc(p.visual.caption)}">\n` +
+    `${ind}<div class="viz viz--market" role="img" aria-label="${esc(p.visual.caption)}">\n` +
     (big ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
-    `${ind}  <svg class="rng" viewBox="0 0 ${w} ${h}" aria-hidden="true" focusable="false">\n` +
-    `${ind}    <path class="rng__mid" d="${mid}" pathLength="1" />\n` +
-    bars + "\n" +
+    `${ind}  <svg class="mkt" viewBox="0 0 ${w} ${h}" aria-hidden="true" focusable="false">\n` +
+    `${ind}    <path class="mkt__gap" d="${gapArea}" />\n` +
     divider + "\n" +
-    label +
+    legend +
+    `${ind}    <path class="mkt__internal mkt__internal--solid" d="${internalSolid}" />\n` +
+    `${ind}    <path class="mkt__internal mkt__internal--flat" d="${internalFlat}" />\n` +
+    `${ind}    <path class="mkt__market mkt__market--solid" d="${marketSolid}" />\n` +
+    `${ind}    <path class="mkt__market mkt__market--forecast" d="${marketForecast}" />\n` +
     `${ind}  </svg>\n` +
+    insight +
     `${ind}</div>`
   );
 }
@@ -144,11 +194,18 @@ function rangeViz(p, ctx, ind) {
  */
 function flowViz(p, ctx, ind) {
   const big = ctx === "panel";
+  // The label always renders, even in the card miniature where it is
+  // visually hidden (see .mcard .flow__label): it is what makes each
+  // store's own box symmetric around its body (the roof's height above
+  // matches the label's height below), which is what lets the SURPLUS
+  // store's body land on the shared line just by being centred like every
+  // other piece in the row, with no separate offset to keep in sync with
+  // the picture's scale.
   const store = (cls, label, level) =>
     `${ind}    <div class="flow__store ${cls}">\n` +
     `${ind}      <span class="flow__roof"></span>\n` +
     `${ind}      <span class="flow__body"><span class="flow__level" style="--lv: ${level}"></span></span>\n` +
-    (big ? `${ind}      <span class="flow__label">${label}</span>\n` : "") +
+    `${ind}      <span class="flow__label">${label}</span>\n` +
     `${ind}    </div>`;
   const boxes = [0, 1, 2]
     .map((i) => `${ind}      <i class="flow__box" style="--i: ${i}"></i>`)
@@ -221,13 +278,24 @@ function barsViz(p, ctx, ind) {
   );
 }
 
+/**
+ * Project 3's chat: a question in plain language, a processing state anyone
+ * reads (not the internal path name), and an answer with a footer that says
+ * why it can be trusted, again in plain language.
+ *
+ * Round 4's "Certified recipe -> SQL validated -> run" and "1 query -> 3
+ * rows -> 41 ms" were the pipeline's own vocabulary, meaningless to someone
+ * who has never seen the system. Both are replaced by what a non-technical
+ * reader already understands: "the assistant is looking this up for real"
+ * and "this came from a live number, not a guess."
+ */
 function chatViz(p, ctx, ind) {
   return (
     `${ind}<div class="viz viz--chat" role="img" aria-label="${esc(p.visual.caption)}">\n` +
     (ctx === "panel" ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
     `${ind}  <div class="chat" aria-hidden="true">\n` +
-    `${ind}    <p class="chat__q">Dairy margin last week, by store?</p>\n` +
-    `${ind}    <p class="chat__route"><span class="chat__route-dot"></span>Certified recipe ${ARROW} SQL validated ${ARROW} run</p>\n` +
+    `${ind}    <p class="chat__q">What was our dairy margin last week, by store?</p>\n` +
+    `${ind}    <p class="chat__route"><span class="chat__route-dot"></span>Checking real sales data${ARROW}</p>\n` +
     `${ind}    <div class="chat__slot">\n` +
     `${ind}      <span class="chat__typing"><i></i><i></i><i></i></span>\n` +
     `${ind}      <div class="chat__a">\n` +
@@ -237,7 +305,7 @@ function chatViz(p, ctx, ind) {
     `${ind}          <li><span>Store 07</span><b>21.0%</b></li>\n` +
     `${ind}          <li class="chat__row--low"><span>Store 11</span><b>17.3%</b></li>\n` +
     `${ind}        </ul>\n` +
-    `${ind}        <p class="chat__src">1 query ${ARROW} 3 rows ${ARROW} 41 ms</p>\n` +
+    `${ind}        <p class="chat__src">Pulled straight from the database.</p>\n` +
     `${ind}      </div>\n` +
     `${ind}    </div>\n` +
     `${ind}  </div>\n` +
@@ -245,26 +313,44 @@ function chatViz(p, ctx, ind) {
   );
 }
 
-function gateViz(p, ctx, ind) {
+/**
+ * Project 5's picture: one plain exchange with the assistant, nothing else.
+ *
+ * The real ledger diff and its "approval required" chip are what the gate
+ * actually looks like, but that is a term of art from the project's own
+ * README, meaningless on a first look. A home-page card is not where that
+ * gets explained — the case study page is — so this shows the one thing
+ * that needs no explanation: you ask it something, in your own words, and
+ * it answers. No typing indicator, no routing line, no footer: the other
+ * four cards already carry that texture, and this project's whole pitch is
+ * that the interesting part (it asks before doing anything irreversible) is
+ * one plain sentence, not a mechanism to diagram.
+ */
+function assistantChatViz(p, ctx, ind) {
+  const big = ctx === "panel";
   return (
-    `${ind}<div class="viz viz--gate" role="img" aria-label="${esc(p.visual.caption)}">\n` +
-    (ctx === "panel" ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
-    `${ind}  <div class="gate" aria-hidden="true">\n` +
-    `${ind}    <span class="gate__line">| 2026-09-04 | Groceries | -186,400 |</span>\n` +
-    `${ind}    <span class="gate__line gate__line--new">+ | 2026-09-06 | Electricity | -214,300 |</span>\n` +
-    `${ind}    <span class="gate__chip">approval required</span>\n` +
+    `${ind}<div class="viz viz--chat" role="img" aria-label="${esc(p.visual.caption)}">\n` +
+    (big ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
+    `${ind}  <div class="chat" aria-hidden="true">\n` +
+    `${ind}    <p class="chat__q">Move $200 from savings to checking.</p>\n` +
+    `${ind}    <p class="chat__a">Sure — want me to go ahead, or just get it ready for you to confirm?</p>\n` +
     `${ind}  </div>\n` +
     `${ind}</div>`
   );
 }
 
-// Two projects get a picture of their own rather than the shared `kind`
-// miniature: 1 and 2 were both line charts, and project 4's generic bar chart
-// said nothing about moving stock between stores.
-const BY_SLUG = { "market-prices": rangeViz, "operations-platform": flowViz };
+// Three projects get a picture of their own rather than the shared `kind`
+// miniature: 1 and 2 were both line charts, project 4's generic bar chart
+// said nothing about moving stock between stores, and project 5's real gate
+// mechanic is case-study detail, not a home-page miniature.
+const BY_SLUG = {
+  "market-prices": marketViz,
+  "operations-platform": flowViz,
+  cortana: assistantChatViz,
+};
 
 function viz(p, ctx, ind) {
-  const fn = BY_SLUG[p.slug] || { line: lineViz, bars: barsViz, chat: chatViz, gate: gateViz }[p.visual.kind];
+  const fn = BY_SLUG[p.slug] || { line: lineViz, bars: barsViz, chat: chatViz }[p.visual.kind];
   return fn(p, ctx, ind);
 }
 
@@ -381,20 +467,33 @@ const WORK_LEDE = WORK_LEDE_MAIN + " " + WORK_LEDE_REST;
 // Brand glyphs for the contact row, so the addresses stop shouting their full
 // length at the bottom of the page. Single-path marks, sized by the button.
 const ICONS = {
-  email:
-    "M1.5 4.5h21v15h-21zM2.2 5.2 12 13l9.8-7.8",
   linkedin:
     "M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.76V21h-4v-5.6c0-1.34-.03-3.07-1.9-3.07-1.9 0-2.2 1.46-2.2 2.97V21H9z",
   github:
     "M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z",
 };
 
-// `fill` marks (LinkedIn, GitHub) and the `stroke` one (the envelope) need
-// different attributes, so the mark carries them rather than the CSS.
+// The Gmail mark (Google's 2020 four-colour envelope), used verbatim rather
+// than a generic envelope stroke: it is the address people recognise at a
+// glance. Its own colours are the point, so it carries no currentColor fill.
+const GMAIL_PATHS = [
+  { fill: "#4285f4", d: "M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6" },
+  { fill: "#34a853", d: "M120 108h14c3.32 0 6-2.69 6-6V59l-20 15" },
+  { fill: "#fbbc04", d: "M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2" },
+  { fill: "#ea4335", d: "M72 74V48l24 18 24-18v26L96 92" },
+  { fill: "#c5221f", d: "M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2" },
+];
+const gmailIcon = () =>
+  `<svg class="ico ico--gmail" viewBox="52 42 88 66" aria-hidden="true" focusable="false">` +
+  GMAIL_PATHS.map((p) => `<path fill="${p.fill}" d="${p.d}" />`).join("") +
+  `</svg>`;
+
+// `fill` marks (LinkedIn, GitHub) use currentColor so they follow the button's
+// text colour; Gmail keeps its own brand colours (see gmailIcon above).
 const icon = (name) =>
-  `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"${
-    name === "email" ? ' fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"' : ' fill="currentColor"'
-  }><path d="${ICONS[name]}" /></svg>`;
+  name === "email"
+    ? gmailIcon()
+    : `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="${ICONS[name]}" /></svg>`;
 
 const gradients = ["a1", "a2", "a3", "a4", "a5"]
   .map(

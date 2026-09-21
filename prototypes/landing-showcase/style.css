@@ -31,6 +31,10 @@ body {
   background: transparent;
   font-family: var(--font-sans);
   line-height: 1.5;
+  /* Reserves room for the fixed .topbar, which is always on screen (see
+     below). chrome.js measures the bar's real height into this var; the
+     fallback covers the first paint, before that measurement runs. */
+  padding-top: var(--topbar-h, 3.75rem);
 }
 
 h1, h2, h3, p, dl, dd, ul {
@@ -499,7 +503,11 @@ a {
   align-self: flex-end;
   max-width: 78%;
   border-radius: 1rem 1rem 0.3rem 1rem;
-  background: color-mix(in srgb, var(--accent) 38%, var(--surface-2));
+  /* A whisper of accent on the same dark surface every other viz uses, not a
+     saturated fill: at 38% this bubble was the brightest thing in the whole
+     sequence, and it made the panel read as more important than the rest. */
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .chat__route {
@@ -605,78 +613,6 @@ a {
   height: 4px;
 }
 
-/* gate ------------------------------------------------------------------- */
-
-.gate {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 0.3rem;
-  height: 100%;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  line-height: 1.6;
-  white-space: pre;
-}
-
-.gate__line {
-  position: relative;
-  color: var(--fg-3);
-}
-
-.gate__line--new {
-  color: var(--accent);
-}
-
-/* The "new entry just arrived" flash lives on a pseudo-element so the loop
-   only animates opacity. */
-.gate__line--new::before {
-  content: "";
-  position: absolute;
-  inset: -1px -0.5rem;
-  z-index: -1;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--accent) 26%, transparent);
-  opacity: 0;
-}
-
-.gate__chip {
-  position: relative;
-  margin-top: 0.4rem;
-  padding: 0.1rem 0.55rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-}
-
-.gate__chip::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  box-shadow: 0 0 16px 2px color-mix(in srgb, var(--accent) 55%, transparent);
-  opacity: 0;
-}
-
-.gate {
-  isolation: isolate;
-}
-
-/* The type shrinks with the screen below about 333px, so the longest ledger
-   line (41 characters) still fits the card on a 320px phone. */
-.mcard .gate {
-  gap: 0.1rem;
-  padding: 0 0.75rem;
-  font-size: min(0.5625rem, 2.7vw);
-}
-
-.mcard .gate__chip {
-  margin-top: 0.25rem;
-  padding: 0.05rem 0.4rem;
-}
-
 /* ---------------------------------------------------------------------------
    Static layouts (also the resting geometry the live stage reuses)
 --------------------------------------------------------------------------- */
@@ -761,9 +697,6 @@ a {
     height: 230px;
   }
 
-  /* The ledger lines are preformatted; give them the width instead of
-     letting them wrap or clip, and let the type shrink with the screen so the
-     longest line (41 characters) still fits a 320px phone. */
   .panel.panel--finale {
     margin-inline: 0.75rem;
     padding-inline: 1rem;
@@ -776,21 +709,11 @@ a {
   }
 
   /* The caption wraps on small phones, so it takes its own row instead of
-     floating over the first ledger line. */
+     floating over the chat bubbles. */
   .panel.panel--finale .viz__caption {
     position: static;
     display: block;
     margin-bottom: 0.7rem;
-  }
-
-  .panel .gate {
-    font-size: clamp(0.5625rem, 3vw, 0.75rem);
-  }
-}
-
-@media (max-width: 339.98px) {
-  .mcard .gate {
-    padding-inline: 0.375rem;
   }
 }
 
@@ -805,21 +728,23 @@ a {
   }
 }
 
-/* The finale as a static block: a framed card in normal flow. */
+/* The finale as a static block: a framed card in normal flow. Same ground
+   colour as every other panel's background (there is none; --ground shows
+   through) — an accent-tinted glow here read as "more important than the
+   other four", which is not the point of the framing. The border and
+   rounded corners stay: the live version scales this card to fill the
+   screen, and it needs a visible edge for that to read as a card at all. */
 .panel--finale {
   margin-block: clamp(2rem, 6vh, 4rem);
   margin-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2 - var(--gutter)));
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line-strong));
+  border: 1px solid var(--line-strong);
   border-radius: 2rem;
-  background:
-    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 17%, var(--surface)) 0%, var(--surface) 62%);
-  box-shadow:
-    0 0 120px -40px color-mix(in srgb, var(--accent) 60%, transparent),
-    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  background: var(--ground);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 .panel + .panel--finale {
-  border-top: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line-strong));
+  border-top: 1px solid var(--line-strong);
 }
 
 .panel--finale .panel__inner {
@@ -961,23 +886,23 @@ a {
 
 /* `.seq-live .panel` drops the stacked-block borders; the finale keeps its
    framed-card border. At local 0 the card is fully transparent, so this adds
-   nothing to the 4->5 swap. */
+   nothing to the 4->5 swap. Flat var(--ground) rather than the static
+   block's old accent tint: same reasoning as the static rule above (no glow
+   that reads as "more important"), and flat is also the cheapest possible
+   fill for a card that repaints on every frame of its scale-up — cheaper
+   even than the flat accent tint this replaced, which was already chosen
+   over a gradient for the same reason (see the frame-time note this used to
+   carry: a re-rendered gradient at every size doubled this segment's median
+   frame time under a 6x CPU throttle). */
 .seq-live .panel--finale {
   max-width: none;
   margin: 0;
   padding: 0;
   justify-content: center;
   transform-origin: 50% 50%;
-  border: 1.5px solid color-mix(in srgb, var(--accent) 40%, var(--line-strong));
-  /* A flat tint instead of the static block's radial gradient, and a smaller
-     shadow. The card scales on every frame of its segment, and a gradient has
-     to be re-rendered at each new size: measured with the CPU throttled 6x,
-     the gradient alone doubled the median frame time of this segment (33ms to
-     17ms once it was flat) and the worst frames from 100ms to 50ms. */
-  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
-  box-shadow:
-    0 0 80px -40px color-mix(in srgb, var(--accent) 55%, transparent),
-    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  border: 1.5px solid var(--line-strong);
+  background: var(--ground);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 /* Near the end of the sequence the lower part of the card surface fades to
@@ -1084,14 +1009,6 @@ a {
   animation: chat-a 4.5s ease-out infinite;
 }
 
-.seq-live .gate__line--new::before {
-  animation: gate-flash 5s ease-out infinite;
-}
-
-.seq-live .gate__chip::after {
-  animation: chip-breathe 2.6s ease-in-out infinite;
-}
-
 /* dashoffset 1 -> 0 on a pathLength="1" path draws the whole solid run; the
    2-unit gap keeps a zero-length dash (and its round cap) off the far end
    while hidden. Hold, fade, repeat: the faint copy underneath keeps the chart
@@ -1140,17 +1057,6 @@ a {
   0%, 46% { opacity: 0; transform: translateY(8px); }
   54%, 86% { opacity: 1; transform: none; }
   96%, 100% { opacity: 0; transform: none; }
-}
-
-@keyframes gate-flash {
-  0% { opacity: 0; }
-  5% { opacity: 1; }
-  32%, 100% { opacity: 0; }
-}
-
-@keyframes chip-breathe {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 1; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1668,6 +1574,10 @@ a {
   margin-top: 2.25rem;
 }
 
+/* Present from the first frame to the last: a recruiter should be able to
+   reach "Contact me" at any point in the page, not only once the hero has
+   scrolled past. chrome.js measures its own height into --topbar-h so the
+   page can reserve room for it instead of sitting underneath it. */
 .topbar {
   position: fixed;
   top: 0;
@@ -1679,17 +1589,6 @@ a {
      every frame of a scroll is one of the most expensive things a weak GPU
      can be asked to do. */
   background: color-mix(in srgb, var(--ground) 92%, transparent);
-  transform: translateY(-100%);
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 0.28s ease, opacity 0.28s ease, visibility 0s linear 0.28s;
-}
-
-.topbar[data-shown="1"] {
-  transform: none;
-  opacity: 1;
-  visibility: visible;
-  transition: transform 0.28s ease, opacity 0.28s ease;
 }
 
 .topbar__inner {
@@ -1780,61 +1679,8 @@ a {
   }
 }
 
-/* ---------------------------------------------------------------------------
-   Project 2: one bar per weekly bulletin (that week's price range), with the
-   forecast weeks hollow past the divider.
---------------------------------------------------------------------------- */
-
-.panel .viz--range {
-  height: auto;
-  aspect-ratio: 578 / 414;
-  max-height: calc(100vh - 14vh);
-}
-
-.rng {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.rng__bar {
-  fill: var(--accent);
-  opacity: 0.75;
-}
-
-.seq-live .rng__bar {
-  animation: rng-tick 3.6s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.16s);
-}
-
-/* The forecast weeks read as "not measured yet". */
-.rng__bar--fc {
-  fill: color-mix(in srgb, var(--accent) 26%, transparent);
-  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
-  stroke-width: 1;
-}
-
-.seq-live .rng__bar--fc {
-  animation-name: rng-tick-fc;
-}
-
-.rng__mid {
-  fill: none;
-  stroke: var(--fg);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.42;
-}
-
-.rng__split {
-  stroke: var(--line-strong);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
-}
-
-/* The divider between measured weeks and forecast weeks on project 1's chart,
-   and its two labels. Same treatment as the caption above it. */
+/* The divider between measured weeks and forecast weeks, and its labels.
+   Shared by project 1's chart and project 2's below. */
 .line__split {
   stroke: var(--line-strong);
   stroke-width: 1;
@@ -1854,36 +1700,133 @@ a {
   display: none;
 }
 
-.rng__label {
-  fill: var(--fg-3);
+/* ---------------------------------------------------------------------------
+   Project 2: the market price against today's internal price, both forecast,
+   with the AI reading of the gap between them.
+--------------------------------------------------------------------------- */
+
+.panel .viz--market {
+  aspect-ratio: 578 / 414;
+  max-height: 86vh;
+}
+
+.mkt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mkt__market {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mkt__market--forecast {
+  stroke-dasharray: 5 5;
+}
+
+.seq-live .mkt__market--forecast {
+  animation: mkt-forecast 2.8s ease-in-out infinite;
+}
+
+/* The internal price: a steadier, secondary line, so it reads as the
+   reference the market line is being measured against rather than a
+   second forecast competing with it. */
+.mkt__internal {
+  fill: none;
+  stroke: var(--fg-3);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.mkt__internal--flat {
+  stroke-dasharray: 1 4;
+  opacity: 0.85;
+}
+
+.mkt__gap {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+  stroke: none;
+}
+
+.mkt__legend {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.mcard .rng__label {
+.mkt__legend--market {
+  fill: var(--accent);
+}
+
+.mkt__legend--internal {
+  fill: var(--fg-3);
+}
+
+.mcard .mkt__legend {
   display: none;
 }
 
-@keyframes rng-tick {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
+/* The AI's own reading of the chart: a verdict plus the one-line reason,
+   the thing a bar or a range could never say on its own. */
+.mkt__insight {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  font-size: 0.8125rem;
+}
+
+.mkt__insight-dot {
+  align-self: center;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.seq-live .mkt__insight-dot {
+  animation: mkt-dot-pulse 2.2s ease-in-out infinite;
+}
+
+.mkt__insight-verdict {
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.mkt__insight-reason {
+  color: var(--fg-3);
+}
+
+@media (max-width: 559.98px) {
+  .mkt__insight {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
   }
 }
 
-@keyframes rng-tick-fc {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.95;
-  }
+@keyframes mkt-forecast {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes mkt-dot-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1919,6 +1862,24 @@ a {
   align-items: center;
   gap: 0.3rem;
   flex: 0 0 auto;
+}
+
+/* .flow's align-items: center centers every store's own box at the row's
+   true centre — including the SURPLUS store's, and including the SHORT
+   stores' (its .flow__to wrapper is centred the same way, which is why the
+   dashed fork above lines up with it without any special-casing). But a
+   store's box is roof + body + label, and it is only symmetric around the
+   body if the roof above and the label below are the same height — they
+   were not (the roof scales with the picture; the label is fixed-size
+   text), so the SURPLUS store's centred box put its body a few pixels off
+   the line the lane and the SHORT stores share. Matching the label's
+   rendered height to the roof's makes the box symmetric, so centring the
+   box also centres the body, with no extra offset math to keep in sync
+   with the picture's scale. */
+.panel .flow__label {
+  height: calc(var(--u) * 1.05);
+  display: flex;
+  align-items: center;
 }
 
 .flow__roof {
@@ -1969,6 +1930,10 @@ a {
 }
 
 .flow__lane {
+  /* A query container of its own inline size, so the box below can travel
+     the lane's actual width (in cqw) instead of a percentage of its own
+     tiny size, which barely moved it at all. */
+  container-type: inline-size;
   position: relative;
   flex: 1 1 auto;
   align-self: center;
@@ -1995,9 +1960,11 @@ a {
   border-radius: 2px;
   background: color-mix(in srgb, var(--accent) 85%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ground) 45%, transparent);
-  /* Static, the boxes sit still at the start of the lane; the picture still
-     reads as stock waiting to move. */
-  transform: translateX(12%);
+  /* Static, the boxes sit still near the start of the lane; the picture
+     still reads as stock waiting to move. cqw (the lane's own width, see
+     .flow__lane) rather than % (the box's own tiny width) so this lines up
+     with the animation below, which needs the same unit to travel for real. */
+  transform: translateX(12cqw);
 }
 
 .seq-live .flow__box {
@@ -2014,13 +1981,24 @@ a {
   padding-left: calc(var(--u) * 1.7);
 }
 
+/* The vertical centre of a store's body, measured from the top of its own
+   .flow__store--to box: the roof's rendered height, the gap below it, then
+   half the body. (Same formula both contexts use, since --u carries the
+   scale: cqh in the panel, a fixed rem in the card.) A fraction of the
+   store's total height would drift off-centre whenever the label's own
+   height changed the total, which is what put these dashes up near the roof
+   instead of level with the body. */
+.flow__to {
+  --to-mid: calc(var(--u) * 1.05 + 0.3rem + var(--u) * 2.8);
+}
+
 /* The fork: one vertical run between the two stores... */
 .flow__to::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 27%;
-  bottom: 27%;
+  top: var(--to-mid);
+  bottom: var(--to-mid);
   border-left: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
@@ -2032,27 +2010,29 @@ a {
 .flow__store--to::before {
   content: "";
   position: absolute;
-  top: 27%;
+  top: var(--to-mid);
   left: calc(var(--u) * -1.7);
   width: calc(var(--u) * 1.7);
   border-top: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
+/* Left to right: the surplus store sits at the start of the lane (0cqw) and
+   the short stores at the end (100cqw), same reading order as the markup. */
 @keyframes flow-cross {
   0% {
-    transform: translateX(0) scale(0.7);
+    transform: translateX(0cqw) scale(0.7);
     opacity: 0;
   }
   12% {
-    transform: translateX(12%) scale(1);
+    transform: translateX(12cqw) scale(1);
     opacity: 1;
   }
   88% {
-    transform: translateX(88%) scale(1);
+    transform: translateX(88cqw) scale(1);
     opacity: 1;
   }
   100% {
-    transform: translateX(100%) scale(0.7);
+    transform: translateX(100cqw) scale(0.7);
     opacity: 0;
   }
 }
@@ -2060,6 +2040,16 @@ a {
 .mcard .flow__roof {
   width: 1.9rem;
   border-bottom-width: 0.42rem;
+}
+
+/* Present for the same symmetry reason as .panel .flow__label, but there is
+   no room to actually show a caption at this size, so only its height (not
+   its text) is kept. */
+.mcard .flow__label {
+  height: calc(var(--u) * 1.05);
+  display: flex;
+  align-items: center;
+  color: transparent;
 }
 
 .mcard .flow__body {
@@ -2176,10 +2166,10 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border: 1px solid var(--line-strong);
-  border-radius: 0.6rem;
+  border-radius: 0.7rem;
   color: var(--fg-2);
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
@@ -2190,9 +2180,19 @@ a {
   background: color-mix(in srgb, var(--iris) 12%, transparent);
 }
 
+/* The mark, not a glyph inside it: as close to the box's own size as the
+   border can spare, rather than a small icon with room around it. */
 .ico {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 3rem;
+  height: 3rem;
+}
+
+/* The Gmail mark's own viewBox (88x66) is wider than it is tall, so at the
+   same box size it would sit smaller than the square LinkedIn/GitHub marks.
+   Scaling past the square keeps its visual weight equal to theirs. */
+.ico--gmail {
+  width: 3.35rem;
+  height: 3.35rem;
 }
 
 .contact__cvs {

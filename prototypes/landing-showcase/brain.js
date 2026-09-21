@@ -95,6 +95,8 @@
     scale = 1,
     visibleCount = NODE_COUNT;
 
+  var hero = document.querySelector(".hero");
+
   function resize() {
     // A retina backing store costs 4x the fill for an ornament nobody reads
     // pixel by pixel; 1.5 is indistinguishable here and much cheaper.
@@ -104,6 +106,13 @@
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     span = Math.max(1, height * 0.85);
+    // Document-relative, not viewport-relative, so it stays correct however
+    // far the page is already scrolled when this runs. The fixed top bar
+    // reserves space above the hero (body's padding-top), which moved the
+    // hero's start down; reading raw scrollY without this offset made the
+    // field finish dispersing well before the hero actually scrolled away,
+    // leaving it sitting still on screen for the rest of that stretch.
+    heroTop = hero ? hero.getBoundingClientRect().top + window.scrollY : 0;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     scale = Math.min(1, Math.max(0.55, width / 1100));
     visibleCount = Math.round(NODE_COUNT * (0.5 + 0.5 * scale));
@@ -111,12 +120,13 @@
 
   // The field comes apart over the hero's own height rather than the whole
   // document: it lives inside the hero now, so it has to finish its journey
-  // before the hero scrolls away. `span` is cached by resize(), so no frame
-  // reads layout.
+  // before the hero scrolls away. `span` and `heroTop` are cached by
+  // resize(), so no frame reads layout.
   let span = 1;
+  let heroTop = 0;
 
   function progress() {
-    return Math.min(1, Math.max(0, window.scrollY / span));
+    return Math.min(1, Math.max(0, (window.scrollY - heroTop) / span));
   }
 
   function draw() {
