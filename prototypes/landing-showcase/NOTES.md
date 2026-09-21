@@ -60,13 +60,15 @@ once the hero scrolls away. The pinned stage opens on a title card with a
 "keep scrolling" cue, so it never reads as an unfinished page. The contact row
 is marks plus both CVs on one line.
 
-Performance, measured with the CPU throttled 6x (`scratchpad/r4/work.cjs` and
-`perf.cjs`):
+Performance, measured against the round-3 build with the CPU throttled
+(`scratchpad/r4/work.cjs` and `perf.cjs`):
 
-- Main-thread work for one full pass: **0.64s → 0.35s**, on a page that is now
-  1.6x longer.
-- Script time per pass: 0.051s → 0.015s.
-- Median frame time through the sequence: 67–100ms → 17–33ms.
+- Main-thread work for one full pass: **0.72s → 0.34s**, on a page that is now
+  1.6x longer. Script time per pass: 0.047s → 0.012s.
+- Median frame time through the sequence at 4x throttle (roughly an office
+  machine next to this desktop): **50–83ms → 16.7ms**, i.e. 12–20fps to a
+  steady 60fps, with 20–43% of frames over 33ms instead of 100%.
+- At a punishing 6x throttle the medians are 33ms (30fps) throughout.
 
 What did it:
 
@@ -86,6 +88,11 @@ What did it:
 - The `accept-seq` suite's "parts unchanged" check and `accept-static`'s
   "identical to round 1" checks fail on purpose — the phase windows and the
   hero are what this round changed.
+- `swap2.cjs`'s "running" variant (idle loops left running) now reports about
+  70 differing pixels where it used to report 0-2. That is the travelling box
+  in project 4's new picture moving between the two captures, not a pop: with
+  that one animation disabled the swap measures 0 differing pixels, and the
+  clones' loops are phase-locked to the same `currentTime` as the original.
 
 ## Still open for review
 

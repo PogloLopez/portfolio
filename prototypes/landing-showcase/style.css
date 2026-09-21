@@ -1833,6 +1833,27 @@ a {
   stroke-dasharray: 3 4;
 }
 
+/* The divider between measured weeks and forecast weeks on project 1's chart,
+   and its two labels. Same treatment as the caption above it. */
+.line__split {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.line__mark {
+  fill: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mcard .line__mark,
+.mcard .line__split {
+  display: none;
+}
+
 .rng__label {
   fill: var(--fg-3);
   font-family: var(--font-mono);
