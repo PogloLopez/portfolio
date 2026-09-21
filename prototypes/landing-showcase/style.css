@@ -35,6 +35,9 @@ body {
      below). chrome.js measures the bar's real height into this var; the
      fallback covers the first paint, before that measurement runs. */
   padding-top: var(--topbar-h, 3.75rem);
+  /* The containing block for .brain-track's inset: 0 below, so that spans
+     the whole document (body's own height), not just the viewport. */
+  position: relative;
 }
 
 h1, h2, h3, p, dl, dd, ul {
@@ -1390,30 +1393,6 @@ a {
   border-top: 1px solid var(--line);
 }
 
-.contact__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.contact__links a {
-  display: inline-flex;
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 0.6rem;
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  color: var(--fg-2);
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: border-color 0.2s ease, color 0.2s ease;
-}
-
-.contact__links a:hover {
-  border-color: var(--iris);
-  color: var(--fg);
-}
-
 .contact__loc {
   margin-top: 1.5rem;
   font-family: var(--font-mono);
@@ -1489,20 +1468,40 @@ a {
   mix-blend-mode: screen;
 }
 
-#brain-canvas {
-  /* Overrides the fixed, full-page rule in tokens.css. */
+/* Absolutely positioned the height of the whole document (body is its
+   containing block, see body's own position: relative above), so it takes
+   no layout space and can hold a sticky child stuck for the entire page,
+   not just one screen of it. Carries the z-index/pointer-events tokens.css
+   put on #brain-canvas itself when the canvas was position: fixed. */
+.brain-track {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  /* Above the fade below, or the nodes at the left margin are painted over. */
-  z-index: 1;
+  z-index: -5;
   pointer-events: none;
+}
+
+/* Overrides tokens.css's #brain-canvas (position: fixed, inset: 0, width/
+   height: 100%) — sticky instead of fixed is what gives brain.js's
+   two-phase behaviour: ordinary scrolling (margin-top, set by resize(),
+   anchors its un-stuck position next to "Selected work") until it would
+   scroll above top: 0, then stuck there for the rest of .brain-track's
+   height. height: 100% would follow .brain-track's own height (the whole
+   document) here, not the viewport, so it has to be spelled out as 100vh. */
+#brain-canvas {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  margin-top: var(--brain-anchor, 0px);
   opacity: 0.9;
 }
 
 /* The artwork resolves into the page ground at the left and the bottom, so
-   the hero has no hard edge and the headline keeps its contrast. */
+   the hero has no hard edge and the headline keeps its contrast. A
+   translucent version of this existed briefly so the neural field's canvas
+   could show through here — the field's resting point has since moved out
+   of the hero entirely (see brain.js), so this is back to solid, its
+   original design. */
 .hero__art-fade {
   position: absolute;
   inset: 0;
@@ -1722,15 +1721,25 @@ a {
   overflow: visible;
 }
 
-/* Today's internal price: a flat, quiet reference the market line moves
-   against, not a second line competing with it for attention. */
+/* Today's internal price: its own colour (the site's blue, not the
+   project's pink accent) rather than plain grey, so it reads as a second
+   real series and not an undercooked afterthought. Thinner than the market
+   line and solid rather than the market's ghost/trace treatment, so it
+   still stays secondary next to it. */
 .mkt__internal {
   fill: none;
-  stroke: var(--fg-3);
-  stroke-width: 1.5;
-  stroke-dasharray: 1 4;
+  stroke: var(--iris);
+  stroke-width: 2;
   stroke-linecap: round;
-  opacity: 0.8;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+/* The stretch past the split: what is being paid now, held flat rather
+   than forecast, so the dash reads as "this is known" against the market
+   line's "this is projected" dash on the other series. */
+.mkt__internal--flat {
+  stroke-dasharray: 5 4;
 }
 
 .mkt__legend {
@@ -2142,12 +2151,18 @@ a {
   background: color-mix(in srgb, var(--iris) 12%, transparent);
 }
 
-/* The mark, not a glyph inside it: as close to the 2.6rem box's own size as
-   the border can spare (about 2px of breathing room per side), rather than
-   a small icon with visible room around it. */
+/* GitHub's size (this base rule, unmodified) is confirmed right. LinkedIn
+   and Gmail below are their own classes now, not this one — they needed to
+   keep shrinking after GitHub was already correct, and could not move on
+   their own while all three shared this rule. */
 .ico {
-  width: 2.3rem;
-  height: 2.3rem;
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.ico--linkedin {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* The Gmail mark's own viewBox (88x66) is wider than it is tall, so at the
@@ -2155,8 +2170,8 @@ a {
    Scaling past the square keeps its visual weight equal to theirs; its
    rendered height (66/88 of this) still clears the box. */
 .ico--gmail {
-  width: 2.55rem;
-  height: 2.55rem;
+  width: 1.45rem;
+  height: 1.45rem;
 }
 
 .contact__cvs {

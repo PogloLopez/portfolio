@@ -37,21 +37,31 @@ const OVERRIDES = {
     // was jargon a reader has to already know the domain to parse.
     hook:
       "Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations.",
-    visual: { caption: "Market vs. internal price, forecast ahead" },
+    visual: {
+      caption: "Market vs. internal price, forecast ahead",
+      // "Peak" here means a high point only, not every turn — so the ask
+      // was 2-3 highs before today, 1-2 after. Actuals: up/down/up/down/
+      // up/down, three descending highs (90, 78, 68), landing today at a
+      // low (40). Forecast: up/down/up, two rising highs (72, then 95, the
+      // one that earns "Buy now"). 10 points, every leg exactly two of
+      // them, so every leg is one straight line. `split` is explicit
+      // because this point count doesn't land the default 0.66 rule on the
+      // index (6) this shape actually needs.
+      points: [60, 90, 55, 78, 48, 68, 40, 72, 58, 95],
+      split: 6,
+    },
   },
   rag: {
     // Was "Built the spend guardrails first, then broke them on purpose...":
     // it never said what the assistant does.
     hook:
-      "A Telegram assistant for questions about sales, inventory and margin. Every figure it gives comes from a query it actually ran.",
+      "A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.",
     // "2 paths / Certified + dynamic" told a reader nothing they could act
-    // on, and "120 tests" was a code metric, not something a business reader
-    // weighs. These keep the certified/dynamic idea but say what it buys:
-    // trust on the numbers, and no dead end on the questions nobody
-    // pre-wrote for.
+    // on. This keeps the certified/dynamic idea but says what it buys: no
+    // dead end on the questions nobody pre-wrote a recipe for.
     cardStats: [
       { value: "Zero", label: "Numbers the model makes up" },
-      { value: "Embedded/Vector DB", label: "Powers the live path" },
+      { value: "Golden queries", label: "Embedded/Vector DB" },
     ],
   },
   "operations-platform": {
@@ -97,13 +107,18 @@ const esc = (s) =>
 const num2 = (i) => String(i + 1).padStart(2, "0");
 const ARROW = "\u2192";
 
-/* Same geometry as CardVisual.tsx LineMini, for a given viewBox. */
-function lineGeometry(points, w, h, pad) {
-  const lo = Math.min(...points);
-  const hi = Math.max(...points);
+/* Same geometry as CardVisual.tsx LineMini, for a given viewBox. loOverride/
+   hiOverride let a caller share its y-scale with a second series (project
+   2's internal-price line), so both plot on the same axis. splitOverride
+   lets a caller pick its own actuals/forecast boundary instead of the
+   default 0.66-of-length rule, when the point count doesn't land the rule
+   on the index the caller actually wants (project 2's peak count). */
+function lineGeometry(points, w, h, pad, loOverride, hiOverride, splitOverride) {
+  const lo = loOverride ?? Math.min(...points);
+  const hi = hiOverride ?? Math.max(...points);
   const x = (i) => pad + (i / (points.length - 1)) * (w - pad * 2);
   const y = (v) => h - pad - ((v - lo) / (hi - lo || 1)) * (h - pad * 2);
-  const split = Math.floor((points.length - 1) * 0.66);
+  const split = splitOverride ?? Math.floor((points.length - 1) * 0.66);
   const seg = (from, to) =>
     points
       .slice(from, to + 1)
@@ -114,37 +129,52 @@ function lineGeometry(points, w, h, pad) {
 }
 
 /**
- * Project 2's chart: the market price, same drawing as project 1's (grid,
- * gradient fill, ghost/trace/tail), plus a flat reference for what the
- * buying team pays today and the AI's one-word reading of the gap.
+ * Project 2's chart: the market price, drawn the same way as project 1's
+ * (grid, gradient fill, ghost/trace/tail), against the full internal-price
+ * line — not just a flat reference — in its own colour, plus the AI's
+ * one-word reading of the gap once both lines reach the forecast.
  *
  * Two earlier attempts (range bars, then bars with a connecting line) tried
  * to look different from project 1 by looking rougher, which just read as
  * worse, not as a different system. This round's brief: build project 2's
- * picture like project 1's — clean line, one accent colour, nothing has to
- * be literally accurate — and let the second, flatter line and the corner
- * verdict be what tells the two systems apart, not the line quality.
+ * picture like project 1's — clean line, nothing has to be literally
+ * accurate — while keeping both real series the project is actually about.
  */
 function marketViz(p, ctx, ind) {
   const pts = p.visual.points;
   const big = ctx === "panel";
   const [w, h, pad] = big ? [480, 300, 18] : [300, 96, 10];
-  const g = lineGeometry(pts, w, h, pad);
-  const split = Math.floor((pts.length - 1) * 0.66);
+  // An explicit split index, not the default 0.66-of-length rule: with this
+  // many peaks, the point count that gives the right actuals/forecast leg
+  // counts doesn't land on the index the rule would pick on its own.
+  const split = p.visual.split ?? Math.floor((pts.length - 1) * 0.66);
   const sx = pad + (split / (pts.length - 1)) * (w - pad * 2);
 
-  // The internal (negotiated) price the buying team pays today: a flat
-  // reference at the recent average, standing in for a real internal price
-  // feed the content file does not carry. Flat and full-width so it reads
-  // as a reference the market line is being measured against, rather than
-  // a second, competing forecast.
-  const recent = pts.slice(-3);
-  const flatValue = recent.reduce((a, b) => a + b, 0) / recent.length;
-  const lo = Math.min(...pts);
-  const hi = Math.max(...pts);
-  const fy = (h - pad - ((flatValue - lo) / (hi - lo || 1)) * (h - pad * 2)).toFixed(1);
-  const internalFlat = `M ${pad} ${fy} L ${w - pad} ${fy}`;
+  // The internal (negotiated) price the buying team pays today: a trailing
+  // 3-week average of the market series up to the forecast split, standing
+  // in for a real internal price feed the content file does not carry —
+  // smoother than the market line by construction, which is what makes it
+  // read as the steadier, negotiated number next to the volatile public
+  // one. Held flat past the split: it is what is being paid now, not
+  // itself forecast.
+  const internalAt = (i) => {
+    const from = Math.max(0, i - 2);
+    const slice = pts.slice(from, i + 1);
+    return slice.reduce((a, b) => a + b, 0) / slice.length;
+  };
+  const internalPts = pts.slice(0, split + 1).map((_, i) => internalAt(i));
+  const flatValue = internalPts[internalPts.length - 1];
   const risesAboveToday = pts[pts.length - 1] > flatValue;
+
+  const lo = Math.min(...pts, ...internalPts);
+  const hi = Math.max(...pts, ...internalPts);
+  const g = lineGeometry(pts, w, h, pad, lo, hi, split);
+  const x = (i) => pad + (i / (pts.length - 1)) * (w - pad * 2);
+  const y = (v) => h - pad - ((v - lo) / (hi - lo || 1)) * (h - pad * 2);
+  const internalSolid = internalPts
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`)
+    .join(" ");
+  const internalFlat = `M ${x(split).toFixed(1)} ${y(flatValue).toFixed(1)} L ${x(pts.length - 1).toFixed(1)} ${y(flatValue).toFixed(1)}`;
 
   const grid = big
     ? `${ind}    <g class="line__grid">${[0.25, 0.5, 0.75]
@@ -176,7 +206,8 @@ function marketViz(p, ctx, ind) {
     grid +
     `${ind}    <path class="line__area" d="${g.area}" fill="url(#fill-${p.accent})" />\n` +
     marks +
-    `${ind}    <path class="mkt__internal" d="${internalFlat}" />\n` +
+    `${ind}    <path class="mkt__internal" d="${internalSolid}" />\n` +
+    `${ind}    <path class="mkt__internal mkt__internal--flat" d="${internalFlat}" />\n` +
     legend +
     `${ind}    <path class="line__ghost" d="${g.solid}" />\n` +
     `${ind}    <path class="line__trace" d="${g.solid}" pathLength="1" />\n` +
@@ -334,7 +365,7 @@ function assistantChatViz(p, ctx, ind) {
     (big ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
     `${ind}  <div class="chat" aria-hidden="true">\n` +
     `${ind}    <p class="chat__q">Spent $50 at the movies tonight.</p>\n` +
-    `${ind}    <p class="chat__a">Got it — update your Entertainment budget by $50 too?</p>\n` +
+    `${ind}    <p class="chat__a">Logged under Entertainment — want me to top it up $50 from savings?</p>\n` +
     `${ind}    <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>\n` +
     `${ind}  </div>\n` +
     `${ind}</div>`
@@ -494,11 +525,14 @@ const gmailIcon = () =>
   `</svg>`;
 
 // `fill` marks (LinkedIn, GitHub) use currentColor so they follow the button's
-// text colour; Gmail keeps its own brand colours (see gmailIcon above).
+// text colour; Gmail keeps its own brand colours (see gmailIcon above). GitHub
+// gets no size class of its own (it lands on plain .ico's size) — LinkedIn
+// and Gmail each needed sizing down again after GitHub's own size was
+// already right, so they need a class of their own to move independently.
 const icon = (name) =>
   name === "email"
     ? gmailIcon()
-    : `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="${ICONS[name]}" /></svg>`;
+    : `<svg class="ico${name === "linkedin" ? " ico--linkedin" : ""}" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="${ICONS[name]}" /></svg>`;
 
 const gradients = ["a1", "a2", "a3", "a4", "a5"]
   .map(
@@ -527,6 +561,22 @@ const html = `<!doctype html>
   </head>
   <body>
 
+    <!-- The neural field. .brain-track is an absolutely-positioned overlay
+         the height of the whole document (position: relative on body makes
+         that the containing block) so it takes no layout space of its own;
+         the canvas inside it is position: sticky, which is what gives the
+         two-phase behaviour brain.js's resize() sets up: normal document
+         flow (scrolling like anything else, anchored by margin-top next to
+         "Selected work") until that section is a quarter of the way down
+         the viewport, then it sticks there and stays on screen, dispersing,
+         for the rest of the page. Both live outside .hero — .hero has its
+         own stacking context (isolation: isolate, for the split/finale swap
+         later in the sequence), and a position: fixed or sticky descendant
+         of one is still confined to compete inside it. -->
+    <div class="brain-track" aria-hidden="true">
+      <canvas id="brain-canvas"></canvas>
+    </div>
+
     <!-- One always-rendered defs block for every line chart's area fill. Panels
          can be display:none and the 4->5 halves are clones, so a gradient id
          living inside any of them could vanish or be duplicated. -->
@@ -554,12 +604,12 @@ ${gradients}
     </nav>
 
     <header class="hero">
-      <!-- The flow-field artwork from the live site, plus the neural field over
-           it. Both belong to the hero alone: the canvas used to be fixed behind
-           the whole page, redrawing 150 nodes every frame all the way down. -->
+      <!-- The flow-field artwork from the live site. The neural field is no
+           longer nested here — see the comment by <canvas id="brain-canvas">
+           above — but the fade still needs to sit over both of them, so it
+           stays in the hero along with the image. -->
       <div class="hero__art" aria-hidden="true">
         <img src="hero.webp" alt="" width="2400" height="1260" fetchpriority="high" decoding="async" />
-        <canvas id="brain-canvas"></canvas>
         <span class="hero__art-fade"></span>
       </div>
       <div class="wrap hero__body">

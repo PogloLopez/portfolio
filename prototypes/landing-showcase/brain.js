@@ -1,7 +1,13 @@
 /**
- * Vanilla-JS port of the site's NeuralField: a canvas brain, top-left, that
- * comes apart into a field of nodes as the page scrolls. Ported for these
- * static mockups so the "cerebro móvil" carries over unchanged for comparison.
+ * Vanilla-JS port of the site's NeuralField: a canvas brain that comes apart
+ * into a field of nodes as the page scrolls. Ported for these static
+ * mockups so the "cerebro móvil" carries over unchanged for comparison.
+ *
+ * Two phases, both driven by the same trigger (see resize()'s triggerY):
+ * ordinary document flow next to "Selected work" until that section is a
+ * quarter of the way down the viewport, then stuck to the screen and
+ * dispersing for the rest of the page (see #brain-canvas and .brain-track
+ * in style.css for the position: sticky mechanics behind that).
  */
 (function () {
   const canvas = document.getElementById("brain-canvas");
@@ -9,14 +15,19 @@
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  // Round 4: the field is a hero ornament now, not a page background, so it
-  // both draws fewer nodes and stops entirely once the hero is off-screen.
-  // The link search below is O(n^2) over the node list, which is what made it
-  // expensive on a two-core machine; halving n quarters that work.
+  // Round 4 confined this to the hero (fewer nodes, stops once it scrolls
+  // off) for a two-core machine's frame budget. The node count is still
+  // capped for the same reason — the link search below is O(n^2) over the
+  // node list, and once stuck it runs for the rest of the page, not less.
   const CORES = navigator.hardwareConcurrency || 4;
   const NODE_COUNT = CORES <= 4 || window.innerWidth < 900 ? 84 : 132;
-  const HOME_X = 0.082;
-  const HOME_Y = 0.235;
+  // Where the field rests, and when it starts coming apart: just left of the
+  // "Selected work" lede, not before that section is a quarter of the way
+  // down the viewport. Both targets are normal-flow content above the
+  // pinned sequence's pin point, so their document position is stable and
+  // safe to measure once per resize(), not something read every frame.
+  const homeTarget = document.querySelector(".work__lede");
+  const triggerTarget = document.getElementById("work-title");
   const HOME_R = 78;
   const LINK_NEAR = 0.036;
   const LINK_FAR = 0.15;
@@ -95,8 +106,6 @@
     scale = 1,
     visibleCount = NODE_COUNT;
 
-  var hero = document.querySelector(".hero");
-
   function resize() {
     // A retina backing store costs 4x the fill for an ornament nobody reads
     // pixel by pixel; 1.5 is indistinguishable here and much cheaper.
@@ -105,28 +114,50 @@
     height = canvas.clientHeight;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
-    span = Math.max(1, height * 0.85);
-    // Document-relative, not viewport-relative, so it stays correct however
-    // far the page is already scrolled when this runs. The fixed top bar
-    // reserves space above the hero (body's padding-top), which moved the
-    // hero's start down; reading raw scrollY without this offset made the
-    // field finish dispersing well before the hero actually scrolled away,
-    // leaving it sitting still on screen for the rest of that stretch.
-    heroTop = hero ? hero.getBoundingClientRect().top + window.scrollY : 0;
+    // The full scrollable length of the page, not one screen of it: the
+    // field should still be visibly coming apart wherever you are in the
+    // scroll, not finish early and then just sit there idling for the rest
+    // of a page this long. Recomputed on resize since the document's height
+    // changes with the viewport (the pinned sequence is defined in vh).
+    span = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+
+    // triggerY: the scrollY at which #work-title's top reaches a quarter of
+    // the way down the viewport. Its document position (getBoundingClientRect
+    // plus the current scroll) is scroll-invariant, so this is correct
+    // however far the page happens to be scrolled when resize() runs. It
+    // doubles as #brain-canvas's margin-top (--brain-anchor in style.css):
+    // .brain-track starts at document y0, so a sticky child's natural,
+    // un-stuck top sits at margin-top, and with `top: 0` it sticks exactly
+    // once scrollY passes that — the same instant JS starts the dispersal
+    // below, so the canvas locks to the screen and the field starts coming
+    // apart on the same frame.
+    if (triggerTarget) {
+      const titleDocTop = triggerTarget.getBoundingClientRect().top + window.scrollY;
+      triggerY = titleDocTop - height * 0.25;
+      canvas.style.setProperty("--brain-anchor", Math.max(0, triggerY) + "px");
+      // homeY: level with the lede, expressed as where the lede would sit in
+      // the viewport at the moment of the trigger above — the offset between
+      // the two document positions is fixed, so this holds at any scroll.
+      if (homeTarget) {
+        const ledeRect = homeTarget.getBoundingClientRect();
+        const ledeDocTop = ledeRect.top + window.scrollY;
+        homeX = Math.max(0.02, (ledeRect.left * 0.5) / width);
+        homeY = Math.min(0.85, Math.max(0.05, (ledeDocTop - titleDocTop + height * 0.25) / height));
+      }
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     scale = Math.min(1, Math.max(0.55, width / 1100));
     visibleCount = Math.round(NODE_COUNT * (0.5 + 0.5 * scale));
   }
 
-  // The field comes apart over the hero's own height rather than the whole
-  // document: it lives inside the hero now, so it has to finish its journey
-  // before the hero scrolls away. `span` and `heroTop` are cached by
-  // resize(), so no frame reads layout.
+  // Cached by resize(), so no frame reads layout.
   let span = 1;
-  let heroTop = 0;
+  let triggerY = 0;
+  let homeX = 0.06;
+  let homeY = 0.3;
 
   function progress() {
-    return Math.min(1, Math.max(0, (window.scrollY - heroTop) / span));
+    return Math.min(1, Math.max(0, (window.scrollY - triggerY) / span));
   }
 
   function draw() {
@@ -134,20 +165,19 @@
     const e = Math.pow(p, 0.85);
     ctx.clearRect(0, 0, width, height);
 
-    const homeX = HOME_X * width;
-    const homeY = HOME_Y * height;
+    const homeXPx = homeX * width;
+    const homeYPx = homeY * height;
     const knot = HOME_R * scale;
 
     const pts = nodes.slice(0, visibleCount).map(function (n) {
       // Faster and wider than before: at rest (e near 0, the resting
-      // cluster in the hero) the old 2px/15.7s drift was too slow and too
-      // small to read as motion at a glance, which is what made the field
-      // look static before you had scrolled at all.
+      // cluster) the old 2px/15.7s drift was too slow and too small to read
+      // as motion at a glance, which is what made the field look static.
       const bobY = reduced ? 0 : Math.sin(t * 0.00085 + n.phase) * (3.5 + 6 * e);
       const bobX = reduced ? 0 : Math.cos(t * 0.00065 + n.phase * 1.3) * (2 + 4 * e);
       const ei = Math.min(1, e * n.lag);
-      const hx = homeX + n.hx * knot;
-      const hy = homeY + n.hy * knot;
+      const hx = homeXPx + n.hx * knot;
+      const hy = homeYPx + n.hy * knot;
       return {
         x: hx + (n.tx * width - hx) * ei + bobX,
         y: hy + (n.ty * height - hy) * ei + bobY,
@@ -218,8 +248,6 @@
     raf = 0;
   }
 
-  let onScreen = true;
-
   resize();
   if (reduced) draw();
   else start();
@@ -235,14 +263,17 @@
     },
     { passive: true },
   );
+
+  let onScreen = true;
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) stop();
-    else if (onScreen) start();
+    else if (onScreen && !reduced) start();
   });
 
-  // The whole point of moving the canvas into the hero: once the hero is out
-  // of view there is nothing to animate, so the loop stops instead of
-  // repainting a hidden canvas for the length of the sequence.
+  // Sticky, not fixed: before the trigger it scrolls like ordinary content,
+  // so there is a real stretch (0 to triggerY) where it is genuinely off
+  // the top of the screen, not just quiet — the loop pauses there instead
+  // of repainting a hidden canvas.
   if (window.IntersectionObserver) {
     new IntersectionObserver(
       function (entries) {

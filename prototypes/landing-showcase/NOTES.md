@@ -33,7 +33,138 @@ content. Edit the generator, not the HTML.
 | `hero.webp` | The flow-field artwork, copied from `public/hero/` |
 | `verify.cjs` | `node verify.cjs` — drives the page in Chromium and checks the things that break by accident |
 
-## Round 7 (this round): the review changes
+## Round 11 (this round): the review changes
+
+Neural field, confirmed in writing before building it this time (round 10's
+version scrolled with the page correctly, but was already fixed and on
+screen from page load — the actual ask was two phases, not one). It is
+present in the document from load, anchored next to "Selected work" and
+scrolling with the page exactly like any other content — invisible until
+that point scrolls into view, same as any content below the fold — until
+"Selected work" is a quarter of the way down the viewport, at which point
+it locks to the screen and starts dispersing, staying stuck (and coming
+apart) for the rest of the page. Built on `position: sticky`, not a custom
+scroll-position switch: `.brain-track` is an absolutely-positioned overlay
+the height of the whole document (`body` is its containing block, now
+`position: relative`), which takes no layout space itself but gives its
+sticky child room to stick through the entire remaining page; `#brain-canvas`
+is `position: sticky; top: 0` with a `margin-top` (`--brain-anchor`) that
+`brain.js` sets to the same document position used for the dispersal
+trigger, so the two engage on the same scroll pixel by construction, not
+by keeping two numbers in sync by hand. The `IntersectionObserver` that
+pauses the animation off-screen is back too — sticky means there is now a
+real stretch before the trigger where the canvas is genuinely off the top
+of the screen, not just quiet.
+
+Project 2's picture. "Peaks" meant highs only, not every high and low —
+round 10's shape had one peak per side. This one: three descending highs
+before today (90, 78, 68), landing at a low, then two rising highs in the
+forecast (72, then 95, the one "Buy now" names) — nine legs, ten points,
+still every leg exactly two of them. The point count needed for that shape
+doesn't land the default 0.66-of-length split rule on the index it actually
+needs, so `lineGeometry` and `marketViz` both take an explicit split
+override now, read from `visual.split` when a project sets one.
+
+## Round 10: the review changes
+
+Neural field, a different design instead of another patch on the hero one.
+Round 9's translucent fade was still too faint against the actual page (a
+tight crop made it look more visible than it was) — rather than keep tuning
+opacity against a fade built for something else, the field's resting point
+moved out of the hero entirely: it now sits just left of the "Selected
+work" lede, and stays put (no dispersal, only its idle drift) until that
+heading reaches a quarter of the way down the viewport. Both the position
+and the trigger are measured off the real elements (`.work__lede`,
+`#work-title`) rather than guessed as fixed fractions, since both are
+normal-flow content above the pinned sequence's pin point and safe to read
+once per resize(). `.hero__art-fade` is back to its original solid — it was
+only ever translucent to let the field show through a position it no longer
+rests at.
+
+Project 2's picture. A single decline-then-climb (last round) was not the
+ask: this is 5 points, split lands on the 3rd by the existing 0.66 rule, so
+it draws as down / up (to today) / down / up (the forecast) — four legs,
+each exactly two points, so each is unambiguously one straight line. Today
+lands on a real peak, and the forecast opens with one more dip before the
+turn the "Buy now" chip names.
+
+Contact marks. GitHub's size was already right and stayed there; LinkedIn
+and Gmail needed their own classes to move independently of it (they were
+all sharing `.ico`) and are a notch smaller again.
+
+## Round 9: the review changes
+
+Neural field, two real bugs from round 8's restructure. It was invisible at
+the top of the page: `.hero__art-fade` paints solid `var(--ground)` over
+the hero's left ~40% (to blend the artwork into the page there), and used
+to sit under the field when the field was a sibling inside `.hero__art` at
+a higher z-index — moving the field out to a fixed, page-level layer put it
+behind that fade instead, and solid ground fully hid it. The fade is
+translucent now (55%/40% ground instead of 100%), which still softens the
+edge without blocking what is behind it. Separately, its dispersal was
+tied to one viewport height, so it finished almost immediately and then
+just idled for the rest of the (very long) page; span is now the full
+document scroll range, so it keeps visibly coming apart the whole way down,
+much more slowly.
+
+Project 2's picture, restraightened. Even project 1's own points alternate
+direction on nearly every step — what actually reads as "clean lines" is
+each rise or fall landing on one slope, not several segments at close but
+different angles. This round's points are two exactly-evenly-spaced runs (a
+straight -5-per-step decline, then a straight +10-per-step climb) meeting
+at the split, so each leg draws as one line, not an approximation of a
+curve. The shape itself now carries the "Buy now" case instead of relying
+on the chip alone: prices have been falling, and the forecast turns up
+exactly at today. The internal-price line (a trailing average of the same
+points) tracks it closely now too, being a smoothed copy of a line that is
+itself simple, rather than of a zigzag.
+
+Contact marks, one size down from round 8's — round 8 overshot on the first
+pass with the real box finally free to use.
+
+## Round 8: the review changes
+
+Neural field, for real this time. Round 7's fix addressed the wrong problem
+(a slow idle drift) — the actual ask, repeated across several rounds, was
+that the field should stay with you for the whole scroll, the way it does
+on the live site, instead of scrolling away with the hero and being absent
+for the other 95% of the (very long, ~1200vh) page. It is now a fixed,
+page-long background again: tokens.css already had it this way (`position:
+fixed`, copied from the live site's own globals.css) and round 4 overrode
+that to confine it to the hero for a frame-budget win on weak hardware,
+which is what this round gives back on request. The `<canvas>` moved out of
+`.hero__art` to a direct child of `<body>`: `.hero` has its own stacking
+context (`isolation: isolate`, for the split/finale swap later in the
+sequence), and a `position: fixed` descendant of one is still confined to
+compete inside it, which would have kept the field pinned to the hero's
+old screen position instead of the viewport's. `brain.js`'s span is now the
+viewport height, not the hero's, and the "stop once the hero scrolls off"
+`IntersectionObserver` is gone — a fixed element never leaves the viewport,
+so it was dead code once the position changed.
+
+Project 2. The internal-price line is a full second series again, not the
+flat reference it became last round: dropping it wasn't asked for, only a
+better colour was, so it never should have been cut down to that. Its own
+colour is the site's blue (`var(--iris)`) instead of grey. Its points are
+recomputed with fewer, gentler swings — the previous set read as a roller
+coaster (a peak or valley on nearly every step, each about the same size as
+the trend itself); this one climbs the way project 1's own points do, with
+pullbacks that are small next to the overall rise rather than matching it.
+
+Project 3. "Embedded/Vector DB" is the stat's subtext now, under "Golden
+queries" — not a replacement for it, which is what last round did by
+mistake. Hook: "sales, inventory and purchasing" (was "margin").
+
+Contact marks. Round 7's repeated failure to visibly enlarge them had a
+real cause: a stale rule from an older build of `.contact__links a`,
+setting `padding: 0.65rem 1rem`, survived every round because it was never
+actually deleted, only judged harmless. That padding alone left about 7.6px
+of the 2.6rem box free for the mark, no matter what `.ico`'s own width said
+— confirmed by measuring the rendered SVG box, not just rereading the CSS.
+Deleted now. With the real box finally available, the marks went a little
+past the mark on the first correct pass and came back down a notch.
+
+## Round 7: the review changes
 
 Neural field. Its idle drift at rest (2px, a 15.7s cycle) was too slow and
 too small to read as motion — which is what made the field look static
