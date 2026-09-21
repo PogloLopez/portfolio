@@ -22,17 +22,29 @@
 
   var PANELS = 5;
 
-  // The phase budget. Each piece starts 0.09 after the previous one, so they
+  // The phase budget. Each piece starts 0.12 after the previous one, so they
   // arrive staggered rather than together; the viz deliberately starts before
   // the stats have settled.
+  //
+  // Round 4: the pieces used to land in the first two thirds of a segment that
+  // was itself only 1.2 screens of scroll, which read as everything snapping
+  // in at once. The segment is now 2.2 screens (see `.seq-live .sequence`) and
+  // the pieces are spread over more of it, so one turn of the wheel moves one
+  // piece rather than three.
   var WINDOWS = {
-    kicker: [0, 0.18],
-    title: [0.09, 0.27],
-    hook: [0.18, 0.36],
-    stats: [0.27, 0.45],
-    viz: [0.4, 0.58],
-    cta: [0.58, 0.68],
+    kicker: [0, 0.22],
+    title: [0.1, 0.34],
+    hook: [0.22, 0.52],
+    stats: [0.38, 0.62],
+    viz: [0.52, 0.76],
+    cta: [0.74, 0.88],
   };
+
+  // The finale is the exception: it keeps growing for its whole segment, so
+  // its pieces have to be complete well before the end or the card finishes
+  // arriving long after it has stopped being interesting. Its windows are the
+  // ones above, squeezed into the first part of the segment.
+  var FINALE_WINDOW = 0.6;
 
   // Where each project's pieces start from (px), by entry direction. Vertical
   // entries travel less: there is less room before the panel edge clips them.
@@ -55,10 +67,13 @@
 
   var EXIT_END = 0.25; // simple exits finish moving in the first quarter of the incoming segment
   var EXIT_FADE_END = 0.12; // ...and are already invisible from here, see exitStyle()
-  var PUSH_END = 0.35; // the 3->4 push-back reaches its held state here
+  var PUSH_END = 0.3; // the 3->4 push-back is complete (and project 3 invisible) here
   var SPLIT_END = 0.5; // the 4->5 halves are fully off-screen here
-  var FINALE_FADE_END = 0.25; // see finaleStyle()
-  var FINALE_FADE_POWER = 6; // ...and how late in that quarter it becomes visible
+  var FINALE_FADE_END = 0.22; // see finaleStyle()
+  var FINALE_FADE_POWER = 5; // ...and how late in that window it becomes visible
+  var FINALE_GROW_END = 0.5; // the finale card reaches full screen here...
+  var FINALE_SCALE_FULL = 1.0;
+  var FINALE_SCALE_END = 1.12; // ...and keeps drifting this far while you keep scrolling
   var SEAM_START = 0.8; // see seamFade()
 
   // Every inline property the scrubber ever writes, so static mode and the
@@ -160,8 +175,10 @@
     panels[active] = true;
     // 1->2 and 2->3: the outgoing panel lingers while it slides out.
     if ((active === 1 || active === 2) && locals[active] < EXIT_END) panels[active - 1] = true;
-    // 3->4: project 3 stays, dimmed, behind the whole of project 4.
-    if (active === 3) panels[2] = true;
+    // 3->4: project 3 recedes and fades out behind project 4, then leaves.
+    // It used to stay dimly visible for the whole of project 4's segment, and
+    // its chat bubbles showed through project 4's picture.
+    if (active === 3 && locals[3] < PUSH_END) panels[2] = true;
     return {
       panels: panels,
       // 4->5: project 4 (and the ghost of 3) is replaced by the two halves.
@@ -208,12 +225,16 @@
     };
   }
 
+  // Project 3 as project 4 arrives: it recedes and goes, rather than sitting
+  // behind project 4 for the rest of the segment. No `filter` here either: a
+  // grayscale filter on a full-screen layer is a full-screen repaint on every
+  // frame of the push-back, and it bought nothing once the layer was leaving.
   function pushBackStyle(t) {
     if (t <= 0) return null;
     return {
       transform: "scale(" + fmt(lerp(1, 0.88, t)) + ")",
-      filter: "grayscale(" + fmt(t) + ") brightness(" + fmt(lerp(1, 0.5, t)) + ")",
-      opacity: fmt(lerp(1, 0.35, t)),
+      filter: "",
+      opacity: fmt(1 - t),
     };
   }
 
@@ -224,10 +245,22 @@
   // steep ease-in (f^6: under 0.05 at local 0.15, about 0.26 at 0.2), so the
   // card is not read through the halves before the gap between them has
   // opened.
+  // Round 4: the growth used to be linear across the whole segment, so the
+  // card was still creeping towards full screen long after everything on it
+  // had been read. It now reaches the full frame in the first half, eased, and
+  // then keeps drifting gently for as long as you keep scrolling, which is
+  // what the growth was for.
+  function finaleScale(local) {
+    if (local >= FINALE_GROW_END) {
+      return lerp(FINALE_SCALE_FULL, FINALE_SCALE_END, (local - FINALE_GROW_END) / (1 - FINALE_GROW_END));
+    }
+    return lerp(0.35, FINALE_SCALE_FULL, easeOutCubic(local / FINALE_GROW_END));
+  }
+
   function finaleStyle(local) {
     var f = clamp01(local / FINALE_FADE_END);
     return {
-      transform: "scale(" + fmt(0.35 + local * 0.9) + ")",
+      transform: "scale(" + fmt(finaleScale(local)) + ")",
       opacity: f >= 1 ? "" : fmt(Math.pow(f, FINALE_FADE_POWER)),
       filter: "",
     };
@@ -265,11 +298,11 @@
   var intro = null;
   var panels = [];
   var halves = [];
-  var backdrop = null;
   var parts = [];
   var hooks = []; // [{ el, text }], the original hook strings
   var seam = { left: 0, right: 0 };
   var introRise = INTRO_RISE; // see placeIntro()
+  var introFits = true; // false on a window too short to hold the title card
   var prevMounted = [false, false, false, false, false];
   var prevHalves = false;
   var written = new Set();
@@ -348,7 +381,6 @@
       put(part.el, "opacity", "");
       put(part.el, "transform", "");
     });
-    if (i === 3 && backdrop) put(backdrop, "opacity", "");
     if (i === 4) put(panels[4], "--seam", "");
   }
 
@@ -379,8 +411,9 @@
     });
     if (intro) {
       // Hidden or at rest, the intro carries no inline style but display.
-      applyWhole(intro, plan.intro ? introStyle(locals[0], introRise) : null);
-      put(intro, "display", plan.intro ? "" : "none");
+      var showIntro = plan.intro && introFits;
+      applyWhole(intro, showIntro ? introStyle(locals[0], introRise) : null);
+      put(intro, "display", showIntro ? "" : "none");
     }
     prevMounted = plan.panels;
     prevHalves = plan.halves;
@@ -389,13 +422,6 @@
       if (!plan.panels[i]) continue;
       renderParts(i, locals[i]);
       applyWhole(panels[i], wholeStyle(i, st.active, locals));
-    }
-
-    // Project 4's backdrop arrives with the push-back, so the moment it mounts
-    // it does not suddenly darken project 3.
-    if (plan.panels[3] && backdrop) {
-      var dim = easeOutCubic(clamp01(locals[3] / PUSH_END));
-      put(backdrop, "opacity", dim >= 1 ? "" : fmt(dim));
     }
 
     if (plan.panels[4]) {
@@ -521,12 +547,14 @@
     var enter = panel.getAttribute("data-enter");
     var off = ENTRY_OFFSET[enter] || [0, 0];
     var lag = enter === "top" ? TOP_FADE_LAG : 0;
+    // The finale's pieces run on a squeezed clock; see FINALE_WINDOW.
+    var squeeze = enter === "finale" ? FINALE_WINDOW : 1;
     var list = [];
     function q(name) {
       return panel.querySelector('[data-part="' + name + '"]');
     }
     function add(el, win, dx, dy) {
-      if (el) list.push({ el: el, start: win[0], end: win[1], dx: dx, dy: dy, lag: lag });
+      if (el) list.push({ el: el, start: win[0] * squeeze, end: win[1] * squeeze, dx: dx, dy: dy, lag: lag });
     }
     add(q("kicker"), WINDOWS.kicker, off[0], off[1]);
     add(q("title"), WINDOWS.title, off[0], off[1]);
@@ -567,14 +595,13 @@
     return clone;
   }
 
-  // Each half holds the dimmed project 3 and project 4 on top of it, i.e. the
-  // whole picture as it stands at the end of segment 4, clipped to one side.
+  // Each half is project 4 as it stands at the end of its segment, clipped to
+  // one side. (It used to carry a dimmed clone of project 3 underneath as
+  // well; project 3 now fades out early in segment 4, so there is nothing
+  // behind project 4 to reproduce.)
   function buildHalves() {
     halves.forEach(function (half) {
       half.textContent = "";
-      var ghost = cleanClone(panels[2]);
-      ghost.classList.add("panel--ghost");
-      half.appendChild(ghost);
       half.appendChild(cleanClone(panels[3]));
     });
     if (prevHalves) halves.forEach(lockPhase);
@@ -596,8 +623,18 @@
   // so the intro drops to its label alone. offsetTop ignores the scrub
   // transforms, so this is the resting layout wherever the page is. Its rise
   // is capped by the room above it, so the label never crosses the top edge.
+  // The fixed page bar is over the stage, so the title card has to start below
+  // it. It is only shown once the hero has scrolled away, which is exactly
+  // when the stage is pinned.
+  function topClear() {
+    var bar = document.querySelector(".topbar");
+    var h = bar ? bar.offsetHeight : 0;
+    return Math.max(INTRO_MIN_TOP, h + 8);
+  }
+
   function placeIntro() {
     if (!intro) return;
+    var minTop = topClear();
     var inner = panels[0].querySelector(".panel__inner");
     var band = 0;
     var height = 0;
@@ -609,15 +646,36 @@
         height = intro.offsetHeight;
       });
     }
-    intro.classList.remove("work__intro--compact");
+    // Two steps down, not one: first the tighter type (and no scroll cue),
+    // and only on a very short window the label by itself. Dropping straight
+    // to the label left the pinned stage nearly blank on a 720px-tall laptop,
+    // which is the thing the title card exists to prevent.
+    function fits() {
+      return band - INTRO_GAP - height >= minTop;
+    }
+    intro.classList.remove("work__intro--compact", "work__intro--label-only");
     measure();
-    if (band - INTRO_GAP - height < INTRO_MIN_TOP) {
+    if (!fits()) {
       intro.classList.add("work__intro--compact");
       measure();
     }
-    var y = Math.max(INTRO_MIN_TOP, Math.min(Math.round((band - height) / 2), band - INTRO_GAP - height));
+    if (!fits()) {
+      intro.classList.add("work__intro--label-only");
+      measure();
+    }
+    // A very short window (a 600px-tall browser, say) has no room for the bar,
+    // the title card and a clear gap above project 1. The card is the thing
+    // that gives way: an overlapping label is worse than none.
+    introFits = fits();
+    if (!introFits) {
+      put(intro, "display", "none");
+      return;
+    }
+    var y = Math.max(minTop, Math.min(Math.round((band - height) / 2), band - INTRO_GAP - height));
     stage.style.setProperty("--intro-y", y + "px");
-    introRise = Math.max(0, Math.min(INTRO_RISE, y - INTRO_TOP_CLEAR));
+    // The rise is capped by the room above it, so the label never slides
+    // under the bar (or off the top of the window when there is no bar).
+    introRise = Math.max(0, Math.min(INTRO_RISE, y - Math.max(INTRO_TOP_CLEAR, topClear() - INTRO_GAP)));
   }
 
   function relayout() {
@@ -686,10 +744,11 @@
     stage.style.removeProperty("--intro-y");
     if (stage.getAttribute("style") === "") stage.removeAttribute("style");
     if (intro) {
-      intro.classList.remove("work__intro--compact");
+      intro.classList.remove("work__intro--compact", "work__intro--label-only");
       intro.removeAttribute("aria-hidden");
     }
     introRise = INTRO_RISE;
+    introFits = true;
     prevMounted = [false, false, false, false, false];
     prevHalves = false;
     root.classList.remove("seq-live");
@@ -723,9 +782,17 @@
     return panel.querySelectorAll("a[href], button, input, select, textarea, [tabindex]:not([tabindex='-1'])");
   }
 
-  // Parks panel i at ownLocal 0.8: past its hold point, so it is fully built.
+  // The ownLocal at which panel i is finished: its last piece (the call to
+  // action) has landed. The finale runs on a squeezed clock, and project 4's
+  // pieces fade late, so this cannot be one number for every panel.
+  function assembledLocal(i) {
+    var end = WINDOWS.cta[1] * (i === PANELS - 1 ? FINALE_WINDOW : 1);
+    return Math.min(0.98, end + 0.04);
+  }
+
+  // Parks panel i past that point, so a focused panel is fully built.
   function jumpTo(i) {
-    window.scrollTo(0, scrollYFor(i, 0.8));
+    window.scrollTo(0, scrollYFor(i, assembledLocal(i)));
     render();
   }
 
@@ -747,7 +814,7 @@
     if (!panel) return;
     var i = panels.indexOf(panel);
     var st = readState();
-    if (st.active === i && ownLocal(st.posFloat, i) >= WINDOWS.cta[1]) return;
+    if (st.active === i && ownLocal(st.posFloat, i) >= assembledLocal(i)) return;
     jumpTo(i);
   }
 
@@ -828,7 +895,6 @@
     intro = stage.querySelector(":scope > .work__intro");
     panels = Array.prototype.slice.call(stage.querySelectorAll(":scope > .panel"));
     halves = [stage.querySelector(".split-half--left"), stage.querySelector(".split-half--right")];
-    backdrop = panels[3] ? panels[3].querySelector(".panel__backdrop") : null;
     panels.forEach(function (panel) {
       var el = panel.querySelector('[data-part="hook"]');
       if (el) hooks.push({ el: el, text: el.textContent, panel: panel });

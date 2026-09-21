@@ -226,7 +226,6 @@ a {
 }
 
 /* Only the live 3->4 and 4->5 transitions need these. */
-.panel__backdrop,
 .split-half {
   display: none;
 }
@@ -877,7 +876,10 @@ a {
 --------------------------------------------------------------------------- */
 
 .seq-live .sequence {
-  height: 700vh;
+  /* Five projects, 2.2 screens of scroll each plus the pinned screen itself.
+     Round 4: was 700vh (1.2 screens per project), which made every piece land
+     within a couple of turns of the wheel. */
+  height: 1200vh;
 }
 
 .seq-live .sequence__stage {
@@ -928,12 +930,26 @@ a {
 
 /* Set by sequence.js when the viewport is too short for the paragraph to fit
    above project 1: the label alone introduces the section. */
+/* Short viewport: the intro tightens rather than dropping to its label. The
+   label alone left the pinned stage looking like a page that had failed to
+   load, which is the whole thing the title card is there to prevent. */
 .seq-live .work__intro--compact .work__lede {
-  display: none;
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  max-width: none;
+  /* One line: the title card is competing with the first project for a very
+     short band here, and a second line costs more than the words are worth. */
+  white-space: nowrap;
 }
 
 .seq-live .work__intro--compact .section-label {
   margin-bottom: 0;
+}
+
+/* Last resort, on a very short window: the label alone. */
+.seq-live .work__intro--label-only .work__lede {
+  display: none;
 }
 
 /* Later projects sit on top; the halves sit above the finale they reveal. */
@@ -942,28 +958,6 @@ a {
 .seq-live .panel[data-index="2"] { z-index: 3; }
 .seq-live .panel[data-index="3"] { z-index: 4; }
 .seq-live .panel[data-index="4"] { z-index: 5; }
-
-/* Project 4 reads over the dimmed ghost of project 3. A plain translucent
-   ground, no backdrop blur: blur would sample different pixels inside the
-   clipped split halves than on the real panel, and the 4->5 swap would pop. */
-.seq-live .panel__backdrop {
-  display: block;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: color-mix(in srgb, var(--ground) 50%, transparent);
-}
-
-/* Project 4's viz sits exactly over project 3's headline, so its frame is
-   glass rather than solid: the ghost stays legible as "behind" without ever
-   reaching the contrast of the bars or the text in front. */
-.seq-live .panel--rows.panel--viz-first .viz {
-  background: linear-gradient(
-    155deg,
-    color-mix(in srgb, color-mix(in srgb, var(--accent) 11%, var(--surface)) 72%, transparent),
-    color-mix(in srgb, var(--surface) 72%, transparent) 70%
-  );
-}
 
 /* `.seq-live .panel` drops the stacked-block borders; the finale keeps its
    framed-card border. At local 0 the card is fully transparent, so this adds
@@ -975,6 +969,15 @@ a {
   justify-content: center;
   transform-origin: 50% 50%;
   border: 1.5px solid color-mix(in srgb, var(--accent) 40%, var(--line-strong));
+  /* A flat tint instead of the static block's radial gradient, and a smaller
+     shadow. The card scales on every frame of its segment, and a gradient has
+     to be re-rendered at each new size: measured with the CPU throttled 6x,
+     the gradient alone doubled the median frame time of this segment (33ms to
+     17ms once it was flat) and the worst frames from 100ms to 50ms. */
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  box-shadow:
+    0 0 80px -40px color-mix(in srgb, var(--accent) 55%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 /* Near the end of the sequence the lower part of the card surface fades to
@@ -1541,4 +1544,699 @@ a {
   .marquee-toggle {
     transition: none;
   }
+}
+
+/* ===========================================================================
+   Round 4. Review changes: hero artwork, the page actions, the scroll cue,
+   two new project pictures, the contact row, and the paint work that keeps
+   all of it cheap on a low-end machine.
+=========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Hero artwork. The flow-field image from the live site with the neural field
+   drawn over it, both scoped to the hero: the canvas used to be fixed behind
+   the whole document, repainting 150 nodes every frame all the way down.
+--------------------------------------------------------------------------- */
+
+.hero__art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  /* Its own layer, so the hero scrolls away as one bitmap instead of
+     repainting the artwork while the sequence runs. */
+  contain: strict;
+}
+
+.hero__art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 72% center;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+}
+
+#brain-canvas {
+  /* Overrides the fixed, full-page rule in tokens.css. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Above the fade below, or the nodes at the left margin are painted over. */
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* The artwork resolves into the page ground at the left and the bottom, so
+   the hero has no hard edge and the headline keeps its contrast. */
+.hero__art-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, var(--ground) 0%, color-mix(in srgb, var(--ground) 80%, transparent) 40%, transparent 70%),
+    linear-gradient(180deg, transparent 55%, var(--ground) 100%);
+}
+
+@media (max-width: 779.98px) {
+  .hero__art img {
+    opacity: 0.38;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Page actions: the pair in the hero, and the slim bar that takes over once
+   the hero's copy has scrolled away (chrome.js sets data-shown).
+--------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn::after {
+  content: "\2192";
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.btn:hover::after {
+  transform: translateX(2px);
+}
+
+/* The highlight: a tinted fill and a soft accent glow, not a solid slab. */
+.btn--accent {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 55%, transparent);
+  background: color-mix(in srgb, var(--iris) 16%, transparent);
+  box-shadow: 0 8px 24px -14px color-mix(in srgb, var(--iris) 80%, transparent);
+}
+
+.btn--accent:hover {
+  border-color: var(--iris);
+  background: color-mix(in srgb, var(--iris) 26%, transparent);
+}
+
+.btn--ghost {
+  color: var(--fg-2);
+  border-color: var(--line-strong);
+}
+
+.btn--ghost:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 60%, var(--line-strong));
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.25rem;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--line);
+  /* A tinted bar rather than backdrop-filter: blurring a full-width strip on
+     every frame of a scroll is one of the most expensive things a weak GPU
+     can be asked to do. */
+  background: color-mix(in srgb, var(--ground) 92%, transparent);
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.28s ease, opacity 0.28s ease, visibility 0s linear 0.28s;
+}
+
+.topbar[data-shown="1"] {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.6rem;
+}
+
+.topbar__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.topbar__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.topbar .btn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 559.98px) {
+  .topbar__name {
+    display: none;
+  }
+
+  .topbar__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   "Keep scrolling" cue under the intro title card (live mode only): the first
+   project assembles from nothing, so without it the stage reads as a page
+   that failed to load.
+--------------------------------------------------------------------------- */
+
+.work__cue {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.seq-live .work__cue {
+  display: flex;
+}
+
+/* On a short viewport the intro drops to its label alone (see placeIntro);
+   the cue goes with the paragraph, or it eats the clearance the first
+   project's kicker needs below it. */
+.seq-live .work__intro--compact .work__cue {
+  display: none;
+}
+
+.work__cue-arrow {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.seq-live .work__cue-arrow {
+  animation: cue-nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes cue-nudge {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: rotate(45deg) translate(3px, 3px);
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Project 2: one bar per weekly bulletin (that week's price range), with the
+   forecast weeks hollow past the divider.
+--------------------------------------------------------------------------- */
+
+.panel .viz--range {
+  height: auto;
+  aspect-ratio: 578 / 414;
+  max-height: calc(100vh - 14vh);
+}
+
+.rng {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.rng__bar {
+  fill: var(--accent);
+  opacity: 0.75;
+}
+
+.seq-live .rng__bar {
+  animation: rng-tick 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.16s);
+}
+
+/* The forecast weeks read as "not measured yet". */
+.rng__bar--fc {
+  fill: color-mix(in srgb, var(--accent) 26%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 1;
+}
+
+.seq-live .rng__bar--fc {
+  animation-name: rng-tick-fc;
+}
+
+.rng__mid {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.42;
+}
+
+.rng__split {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.rng__label {
+  fill: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mcard .rng__label {
+  display: none;
+}
+
+@keyframes rng-tick {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes rng-tick-fc {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Project 4: stock crossing from the surplus store to the short ones. Plain
+   boxes on a dashed lane; the fill height of each store is its cover.
+--------------------------------------------------------------------------- */
+
+/* The picture is sized from its own frame rather than in fixed rem: the frame
+   is 190-300px tall depending on the window, and at 720px the two stores on
+   the right were being clipped by it. `cqh` needs the size containment that
+   the rule below establishes. */
+.panel .viz--flow {
+  container-type: size;
+}
+
+.flow {
+  --u: 4.6cqh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  width: 100%;
+  /* The frame is as wide as the panel; the shapes are not. Without a cap the
+     stores end up as specks at either end of a very long lane. */
+  max-width: 48rem;
+  height: 100%;
+  margin-inline: auto;
+}
+
+.flow__store {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+}
+
+.flow__roof {
+  width: calc(var(--u) * 5.8);
+  height: 0;
+  border-bottom: calc(var(--u) * 1.05) solid color-mix(in srgb, var(--accent) 70%, transparent);
+  border-left: calc(var(--u) * 0.75) solid transparent;
+  border-right: calc(var(--u) * 0.75) solid transparent;
+}
+
+.flow__body {
+  position: relative;
+  width: calc(var(--u) * 4.8);
+  height: calc(var(--u) * 5.6);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-strong));
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  overflow: hidden;
+}
+
+.flow__level {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--lv) * 1%);
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* The cover each store is supposed to hold, so a short store reads as short
+   rather than just small. */
+.flow__body::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 62%;
+  border-top: 1px dashed color-mix(in srgb, var(--fg-3) 55%, transparent);
+}
+
+.flow__store--to .flow__level {
+  background: color-mix(in srgb, var(--fg-3) 70%, transparent);
+}
+
+.flow__label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.flow__lane {
+  position: relative;
+  flex: 1 1 auto;
+  align-self: center;
+  height: 1.6rem;
+  min-width: 4rem;
+  max-width: 20rem;
+}
+
+.flow__lane::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.flow__box {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: calc(var(--u) * 1.15);
+  height: calc(var(--u) * 1.15);
+  margin-top: calc(var(--u) * -0.575);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 85%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ground) 45%, transparent);
+  /* Static, the boxes sit still at the start of the lane; the picture still
+     reads as stock waiting to move. */
+  transform: translateX(12%);
+}
+
+.seq-live .flow__box {
+  animation: flow-cross 3.2s linear infinite;
+  animation-delay: calc(var(--i) * 1.05s);
+}
+
+.flow__to {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1.3);
+  flex: 0 0 auto;
+  padding-left: calc(var(--u) * 1.7);
+}
+
+/* The fork: one vertical run between the two stores... */
+.flow__to::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 27%;
+  bottom: 27%;
+  border-left: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ...and a stub into each of them, level with the middle of its body. */
+.flow__store--to {
+  position: relative;
+}
+
+.flow__store--to::before {
+  content: "";
+  position: absolute;
+  top: 27%;
+  left: calc(var(--u) * -1.7);
+  width: calc(var(--u) * 1.7);
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+@keyframes flow-cross {
+  0% {
+    transform: translateX(0) scale(0.7);
+    opacity: 0;
+  }
+  12% {
+    transform: translateX(12%) scale(1);
+    opacity: 1;
+  }
+  88% {
+    transform: translateX(88%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%) scale(0.7);
+    opacity: 0;
+  }
+}
+
+.mcard .flow__roof {
+  width: 1.9rem;
+  border-bottom-width: 0.42rem;
+}
+
+.mcard .flow__body {
+  width: 1.6rem;
+  height: 1.8rem;
+}
+
+.mcard .flow__box {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: -0.25rem;
+}
+
+.mcard .flow__to {
+  gap: 0.35rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Project 3: the assistant answers with figures, not with a sentence about
+   having answered.
+--------------------------------------------------------------------------- */
+
+.chat__lead {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.chat__rows {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.chat__rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  color: var(--fg-2);
+}
+
+.chat__rows b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.chat__row--low b {
+  color: var(--fg-3);
+}
+
+.chat__src {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* Card scale: the recap cards get a 96px-tall box, so the conversation shows
+   the question and the headline figure only, and the stores and their lane
+   shrink to fit inside the frame. */
+.mcard .chat__rows,
+.mcard .chat__src {
+  display: none;
+}
+
+.mcard .chat__lead {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.mcard .flow {
+  --u: 0.62rem;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding-inline: 0.2rem;
+}
+
+.mcard .flow__lane {
+  min-width: 1.5rem;
+  max-width: 5rem;
+  height: 1rem;
+}
+
+.mcard .flow__to {
+  padding-left: 0.85rem;
+  gap: 0.45rem;
+}
+
+.mcard .flow__store--to::before {
+  left: -0.85rem;
+  width: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Contact row: marks and the two CVs on one line.
+--------------------------------------------------------------------------- */
+
+.contact__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem 2rem;
+}
+
+.contact__links {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.contact__links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.6rem;
+  color: var(--fg-2);
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.contact__links a:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 60%, var(--line-strong));
+  background: color-mix(in srgb, var(--iris) 12%, transparent);
+}
+
+.ico {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.contact__cvs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.contact__cvs a {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8125rem;
+  color: var(--fg-2);
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.contact__cvs a:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 60%, var(--line-strong));
+}
+
+.contact__loc {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-3);
+}
+
+@media (max-width: 559.98px) {
+  .contact__loc {
+    margin-left: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Paint and CPU work.
+
+   Idle loops only run where they can be seen: chrome.js marks any section
+   that is off-screen with `data-idle`, and everything inside it stops. On a
+   two-core office machine the eleven carousel cards alone, each with its own
+   looping picture, were enough to keep a core busy while the user was still
+   up in the sequence.
+--------------------------------------------------------------------------- */
+
+[data-idle="1"] .viz *,
+[data-idle="1"] .viz,
+[data-idle="1"] .marquee__track {
+  animation-play-state: paused !important;
+}
+
+/* Cards are independent boxes: the browser can skip laying out and painting
+   the ones that are off-screen, and does not have to re-check their subtree
+   when a neighbour changes. */
+.mcard {
+  contain: layout paint style;
+}
+
+.seq-live .panel__inner {
+  contain: layout style;
+}
+
+/* The pinned stage never affects the rest of the document's layout. */
+.seq-live .sequence__stage {
+  contain: layout paint;
 }

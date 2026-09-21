@@ -9,7 +9,12 @@
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const NODE_COUNT = 150;
+  // Round 4: the field is a hero ornament now, not a page background, so it
+  // both draws fewer nodes and stops entirely once the hero is off-screen.
+  // The link search below is O(n^2) over the node list, which is what made it
+  // expensive on a two-core machine; halving n quarters that work.
+  const CORES = navigator.hardwareConcurrency || 4;
+  const NODE_COUNT = CORES <= 4 || window.innerWidth < 900 ? 84 : 132;
   const HOME_X = 0.082;
   const HOME_Y = 0.235;
   const HOME_R = 78;
@@ -91,19 +96,26 @@
     visibleCount = NODE_COUNT;
 
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // A retina backing store costs 4x the fill for an ornament nobody reads
+    // pixel by pixel; 1.5 is indistinguishable here and much cheaper.
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     width = canvas.clientWidth;
     height = canvas.clientHeight;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
+    span = Math.max(1, height * 0.85);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     scale = Math.min(1, Math.max(0.55, width / 1100));
     visibleCount = Math.round(NODE_COUNT * (0.5 + 0.5 * scale));
   }
 
+  // The field comes apart over the hero's own height rather than the whole
+  // document: it lives inside the hero now, so it has to finish its journey
+  // before the hero scrolls away. `span` is cached by resize(), so no frame
+  // reads layout.
+  let span = 1;
+
   function progress() {
-    const span = document.documentElement.scrollHeight - window.innerHeight;
-    if (span <= 0) return 0;
     return Math.min(1, Math.max(0, window.scrollY / span));
   }
 
@@ -191,6 +203,8 @@
     raf = 0;
   }
 
+  let onScreen = true;
+
   resize();
   if (reduced) draw();
   else start();
@@ -208,6 +222,20 @@
   );
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) stop();
-    else start();
+    else if (onScreen) start();
   });
+
+  // The whole point of moving the canvas into the hero: once the hero is out
+  // of view there is nothing to animate, so the loop stops instead of
+  // repainting a hidden canvas for the length of the sequence.
+  if (window.IntersectionObserver) {
+    new IntersectionObserver(
+      function (entries) {
+        onScreen = entries[entries.length - 1].isIntersecting;
+        if (!onScreen) stop();
+        else if (!document.hidden && !reduced) start();
+      },
+      { rootMargin: "80px" },
+    ).observe(canvas);
+  }
 })();
