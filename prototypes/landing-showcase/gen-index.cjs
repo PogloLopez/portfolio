@@ -83,14 +83,14 @@ const OVERRIDES = {
     // ledger-diff mockup this replaced; the new picture is just a question
     // and an answer, so the caption says that instead.
     visual: { caption: "Ask it something, in your own words" },
-    // "4 gates required in CI" and the spend ceiling were both true, but the
-    // first is a fact about the test suite, not about what the assistant is
-    // for. Its real pitch — you don't come home to a surprise transfer — is
-    // one plain sentence, matched to the "Zero" pattern the other projects
-    // already use for a trust stat.
+    // Picked from options after two earlier rounds got rejected outright.
+    // First: the approval gate, in a sentence rather than the "Zero"
+    // pattern used elsewhere. Second: the real achievement text ("A
+    // Markdown vault in Git is the source of truth") condensed to fit the
+    // stat's two lines.
     cardStats: [
-      { value: "Zero", label: "Irreversible actions without approval" },
-      { value: "< $20/mo", label: "Total cloud spend" },
+      { value: "Asks first", label: "Before anything it can't undo" },
+      { value: "Plain text", label: "Git is the source of truth" },
     ],
   },
 };
