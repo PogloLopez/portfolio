@@ -2261,3 +2261,26 @@ a {
 .seq-live .sequence__stage {
   contain: layout paint;
 }
+
+/* ---------------------------------------------------------------------------
+   Narrow static layout: the text-based pictures (the conversation, the
+   ledger) need to grow rather than be cropped, and their caption cannot float
+   over the first bubble once it wraps.
+--------------------------------------------------------------------------- */
+
+@media (max-width: 779.98px) {
+  .panel .viz--chat {
+    height: auto;
+    min-height: 12rem;
+  }
+
+  .panel .viz--chat .viz__caption {
+    position: static;
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+
+  .panel .chat__q {
+    max-width: 88%;
+  }
+}
