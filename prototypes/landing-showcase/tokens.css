@@ -1,0 +1,118 @@
+/* Palette lifted directly from the live site's globals.css. Not up for
+   debate in this round — only structure and typography are. */
+:root {
+  --ground: #05060e;
+  --surface: #0a0c18;
+  --surface-2: #101324;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --fg: #f4f6fa;
+  --fg-2: #c7ced9;
+  --fg-3: #939cad;
+
+  --iris: #6c8cff;
+  --violet: #a78bfa;
+  --glow: #5b2be0;
+
+  --a1: #6480f0;
+  --a2: #c8558f;
+  --a3: #8b6be8;
+  --a4: #c07e2e;
+  --a5: #12a5b8;
+
+  --accent: var(--a1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--ground);
+  color: var(--fg-2);
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+canvas {
+  max-width: 100%;
+}
+
+#brain-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -5;
+  pointer-events: none;
+}
+
+/* Language toggle: two copies of every string, one hidden by data-lang. */
+:root[data-lang="en"] [data-es] {
+  display: none !important;
+}
+:root[data-lang="es"] [data-en] {
+  display: none !important;
+}
+
+body.modal-lock {
+  overflow: hidden;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4vh 1.25rem;
+  background: rgba(5, 6, 14, 0.78);
+  backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+
+.modal.is-open {
+  display: flex;
+}
+
+.modal__panel {
+  width: 100%;
+  max-width: 46rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 2rem;
+  position: relative;
+}
+
+.modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--fg-2);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}

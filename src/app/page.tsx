@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { headlineStats, site } from "@/lib/site";
 import { projects } from "@/content/projects";
 import { ProjectCard } from "@/components/ProjectCard";
@@ -103,14 +102,7 @@ export default function Home() {
         <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr]">
           <div className="space-y-4 text-base leading-relaxed text-fg-2">
             <p>{site.intro[0]}</p>
-            <p>{site.intro[2]}</p>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-2 pt-1 text-sm font-semibold text-iris underline-offset-4 transition-colors hover:text-violet hover:underline"
-            >
-              More about how I work
-              <Arrow />
-            </Link>
+            <p>{site.intro[1]}</p>
           </div>
 
           <div

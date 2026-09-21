@@ -102,8 +102,8 @@ export const projects: Project[] = [
       "MLflow",
       "SQL Server",
     ],
-    role: "Data engineering and productionisation; modelling with the team's data scientist",
-    duration: "In production since 2025",
+    role: "Architecture and data engineering; modelling with the team's data scientist",
+    duration: "In production since 2026",
     technical: [
       { value: "370+", label: "Automated tests, green before every deploy" },
       { value: "8 models", label: "LightGBM Tweedie, one per taxonomic category" },
@@ -153,7 +153,7 @@ export const projects: Project[] = [
       "Anthropic API",
     ],
     role: "Sole engineer, design to operation",
-    duration: "In production since 2025",
+    duration: "In production since 2026",
     technical: [
       { value: "Hundreds", label: "Automated tests running in CI" },
       { value: "Delta Lake", label: "Chosen over flat Parquet for incremental upserts" },

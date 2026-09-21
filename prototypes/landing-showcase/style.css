@@ -1,0 +1,2265 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap");
+@import "tokens.css";
+
+/* ---------------------------------------------------------------------------
+   Landing-page project showcase, prototype.
+
+   Progressive enhancement: everything outside `.seq-live` is the static
+   stacked fallback (no JS, reduced motion, touch, or a narrow viewport all
+   land here). `sequence.js` adds `html.seq-live` only when motion is allowed,
+   and every pinned/stage/split rule and every idle loop is scoped under it.
+--------------------------------------------------------------------------- */
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --page-max: 72rem;
+  --gutter: clamp(1.25rem, 4vw, 2rem);
+}
+
+/* A project sets its hue once and everything inside inherits it. */
+[data-accent="a1"] { --accent: var(--a1); }
+[data-accent="a2"] { --accent: var(--a2); }
+[data-accent="a3"] { --accent: var(--a3); }
+[data-accent="a4"] { --accent: var(--a4); }
+[data-accent="a5"] { --accent: var(--a5); }
+
+/* tokens.css paints <body> too. An opaque body sits above the fixed brain
+   canvas (z-index -5) in the root stacking context, so the canvas would never
+   show; <html> keeps the ground colour instead. */
+body {
+  background: transparent;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  /* Reserves room for the fixed .topbar, which is always on screen (see
+     below). chrome.js measures the bar's real height into this var; the
+     fallback covers the first paint, before that measurement runs. */
+  padding-top: var(--topbar-h, 3.75rem);
+  /* The containing block for .brain-track's inset: 0 below, so that spans
+     the whole document (body's own height), not just the viewport. */
+  position: relative;
+}
+
+h1, h2, h3, p, dl, dd, ul {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent, var(--iris));
+  outline-offset: 3px;
+}
+
+/* Read by assistive tech, never drawn. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.wrap {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* Section heading, same shape as SectionLabel in the app. */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.section-label h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg-2);
+}
+
+.rule-accent {
+  flex: 1;
+  height: 1px;
+  opacity: 0.7;
+  background: linear-gradient(90deg, var(--accent, var(--iris)), transparent);
+}
+
+.hero,
+.work,
+.recap,
+.contact {
+  --accent: var(--iris);
+}
+
+/* ---------------------------------------------------------------------------
+   Hero (page.tsx strings and type scale; the flow-field artwork is not
+   available here, so a soft glow stands in for it)
+--------------------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(55% 75% at 82% 45%, color-mix(in srgb, var(--glow) 20%, transparent), transparent 70%);
+}
+
+.hero__body {
+  padding-block: clamp(4rem, 10vh, 6rem) clamp(5rem, 12vh, 7rem);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--iris);
+}
+
+.hero__title {
+  margin-top: 1.5rem;
+  font-size: clamp(2.25rem, 1rem + 5vw, 4.5rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.hero__line {
+  display: block;
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, var(--fg) 0%, var(--fg) 38%, var(--accent) 88%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero__name {
+  margin-top: 1.5rem;
+  font-size: clamp(1rem, 0.8rem + 0.8vw, 1.25rem);
+  font-weight: 500;
+  color: var(--fg-2);
+}
+
+.hero__lede {
+  margin-top: 1rem;
+  max-width: 36rem;
+  font-size: clamp(0.9375rem, 0.8rem + 0.6vw, 1.125rem);
+  line-height: 1.625;
+  color: var(--fg-2);
+}
+
+.hero__loc {
+  margin-top: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-3);
+}
+
+/* ---------------------------------------------------------------------------
+   Selected work intro
+--------------------------------------------------------------------------- */
+
+.work__intro {
+  padding-top: clamp(4rem, 9vh, 5rem);
+  padding-bottom: 2.5rem;
+}
+
+.work__lede {
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.625;
+  color: var(--fg-2);
+}
+
+/* The intro's copy for assistive tech (visually hidden, .sr-only). Only live
+   mode needs it: there the visual intro is a stage layer that sequence.js
+   scrubs out and marks aria-hidden. Static, the visual intro is exposed and
+   this copy is not rendered, so the heading is never announced twice. */
+.work__a11y {
+  display: none;
+}
+
+.seq-live .work__a11y {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Panels: static fallback first (normal flow, one project per block)
+--------------------------------------------------------------------------- */
+
+.sequence,
+.sequence__stage {
+  position: relative;
+}
+
+.panel {
+  position: relative;
+  padding: clamp(3rem, 9vh, 5.5rem) var(--gutter);
+}
+
+.panel + .panel {
+  border-top: 1px solid var(--line);
+}
+
+.panel__inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+/* Only the live 3->4 and 4->5 transitions need these. */
+.split-half {
+  display: none;
+}
+
+.panel__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.panel__num {
+  color: var(--fg-3);
+  letter-spacing: 0.04em;
+}
+
+.panel__kicker-rule {
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.panel__title {
+  margin-top: 1rem;
+  max-width: 18ch;
+  font-size: clamp(2.25rem, 1rem + 2.6vw, 3.25rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  text-wrap: balance;
+}
+
+.panel__hook {
+  margin-top: 1.25rem;
+  max-width: 44ch;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+/* sequence.js wraps each rendered line of the hook in one of these so the
+   lines can arrive one after another. */
+.hook-line {
+  display: block;
+}
+
+.panel__foot {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.75rem;
+}
+
+.panel__stats,
+.mcard__stats {
+  display: flex;
+  gap: 2.5rem;
+}
+
+/* Label first in the markup (dt, dd) so it reads label-then-value; the value
+   sits on top visually, as on ProjectCard. */
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.stat__value {
+  font-size: clamp(1.75rem, 1rem + 1.4vw, 2.25rem);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+.stat__label {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--fg-3);
+}
+
+.panel__cta,
+.mcard__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  padding: 0.7rem 1.1rem;
+  border-radius: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: color-mix(in srgb, var(--accent) 72%, var(--fg));
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.panel__cta:hover,
+.mcard__cta:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.panel__viz {
+  margin-top: 2.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Viz frame + the four kinds (derived from CardVisual.tsx). The resting
+   styles below ARE the static frame: full line, both bubbles, no typing dots.
+   The idle loops further down only ever run under .seq-live.
+--------------------------------------------------------------------------- */
+
+.viz {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 1rem;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--accent) 11%, var(--surface)), var(--surface) 70%);
+  box-shadow: 0 40px 80px -50px rgb(0 0 0 / 0.7);
+}
+
+.panel .viz {
+  padding: 2.75rem 1.25rem 1.25rem;
+}
+
+.viz__caption {
+  position: absolute;
+  top: 0.95rem;
+  left: 1.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* line ------------------------------------------------------------------- */
+
+/* The frame follows its column's width, not the viewport height: the chart is
+   drawn with preserveAspectRatio "meet", so a vh-based height letterboxed it
+   on short, wide screens. 578/414 is the 1440x900 frame, which leaves the
+   480x300 chart width-bound once the caption and padding are taken out. */
+.panel .viz--line {
+  aspect-ratio: 578 / 414;
+  max-height: 86vh;
+}
+
+.line {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.line__grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.line__ghost,
+.line__trace,
+.line__tail {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The faint full copy keeps the chart readable while the bright trace
+   redraws over it. */
+.line__ghost {
+  opacity: 0.35;
+}
+
+.line__tail {
+  stroke-dasharray: 4 4;
+  stroke-linecap: butt;
+}
+
+.mcard .line__ghost,
+.mcard .line__trace,
+.mcard .line__tail {
+  stroke-width: 2;
+}
+
+/* bars ------------------------------------------------------------------- */
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 100%;
+  padding: 1rem 0.75rem 0.75rem;
+}
+
+.bar {
+  flex: 1;
+  height: var(--h);
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 0.55;
+  transform-origin: 50% 100%;
+}
+
+.bar--low {
+  background: var(--fg-3);
+  opacity: 0.95;
+}
+
+.panel .viz--bars .bars {
+  max-width: 46rem;
+  margin: 0 auto;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  padding: 0.5rem 0 0;
+}
+
+/* Paint containment on the bar row. The breathing bars are composited over
+   the ghost of project 3, and without a clip of their own they rasterised a
+   hairline differently in the stage and inside the clipped 4->5 halves (the
+   swap showed a 1px step along their bottom edge). Contained, both paint the
+   same pixels. The row grows 1.5rem upward (negative margin, extra padding,
+   same content box) so a bar at the top of its breath is never clipped. */
+.seq-live .panel .viz--bars .bars {
+  contain: paint;
+  height: calc(100% + 1.5rem);
+  margin-top: -1.5rem;
+  padding-top: 2rem;
+}
+
+.panel .bar {
+  border-radius: 6px 6px 2px 2px;
+  opacity: 0.62;
+}
+
+.panel .bar--low {
+  opacity: 0.95;
+}
+
+/* chat ------------------------------------------------------------------- */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.55rem;
+  height: 100%;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.chat__q,
+.chat__a,
+.chat__typing {
+  padding: 0.55rem 0.95rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--fg);
+}
+
+.chat__q {
+  align-self: flex-end;
+  max-width: 78%;
+  border-radius: 1rem 1rem 0.3rem 1rem;
+  /* A whisper of accent on the same dark surface every other viz uses, not a
+     saturated fill: at 38% this bubble was the brightest thing in the whole
+     sequence, and it made the panel read as more important than the rest. */
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.chat__route {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.chat__route-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* The typing dots and the answer share one grid cell, so the loop can swap
+   one for the other without the thread jumping. */
+.chat__slot {
+  display: grid;
+  justify-items: start;
+  align-items: start;
+}
+
+.chat__slot > * {
+  grid-area: 1 / 1;
+}
+
+.chat__a {
+  max-width: 86%;
+  border-radius: 1rem 1rem 1rem 0.3rem;
+  background: rgb(255 255 255 / 0.09);
+}
+
+.chat__typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: calc(0.9375rem * 1.35 + 1.1rem);
+  border-radius: 1rem 1rem 1rem 0.3rem;
+  background: rgb(255 255 255 / 0.06);
+  opacity: 0;
+}
+
+.chat__typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fg-3);
+}
+
+.panel .chat {
+  max-width: 42rem;
+  gap: 0.6rem;
+}
+
+.panel .chat__q,
+.panel .chat__a {
+  font-size: 1rem;
+}
+
+.panel .chat__typing {
+  height: calc(1rem * 1.35 + 1.1rem);
+}
+
+.mcard .chat {
+  gap: 0.3rem;
+  padding: 0 0.6rem;
+}
+
+.mcard .chat__q,
+.mcard .chat__a,
+.mcard .chat__typing {
+  padding: 0.22rem 0.55rem;
+  font-size: 0.65rem;
+  line-height: 1.3;
+}
+
+.mcard .chat__a {
+  max-width: 100%;
+}
+
+.mcard .chat__typing {
+  height: calc(0.65rem * 1.3 + 0.44rem);
+}
+
+.mcard .chat__typing i {
+  width: 4px;
+  height: 4px;
+}
+
+.mcard .chat__route {
+  font-size: 0.5625rem;
+  gap: 0.35rem;
+}
+
+.mcard .chat__route-dot {
+  width: 4px;
+  height: 4px;
+}
+
+/* ---------------------------------------------------------------------------
+   Static layouts (also the resting geometry the live stage reuses)
+--------------------------------------------------------------------------- */
+
+@media (min-width: 780px) {
+  .panel--cols .panel__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+  }
+
+  .panel--cols.panel--viz-first .panel__inner {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+
+  .panel--cols .panel__viz {
+    margin-top: 0;
+  }
+
+  .panel--viz-first .panel__viz {
+    order: -1;
+  }
+
+  /* Stacked rows: headline block on the left, the two figures and the call
+     to action bottom-aligned on the right, so the text row stays short and
+     the viz row gets the height. */
+  .panel--rows .panel__inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.25rem, 4.5vh, 2.75rem);
+  }
+
+  .panel--rows .panel__viz {
+    margin-top: 0;
+  }
+
+  .panel--rows .panel__text {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: clamp(2rem, 5vw, 4rem);
+    align-items: end;
+  }
+
+  .panel--rows .panel__kicker,
+  .panel--rows .panel__title,
+  .panel--rows .panel__hook {
+    grid-column: 1;
+  }
+
+  .panel--rows .panel__title {
+    max-width: none;
+  }
+
+  .panel--rows .panel__hook {
+    max-width: 52ch;
+  }
+
+  .panel--rows .panel__foot {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: end;
+    align-items: flex-end;
+    margin-top: 0;
+    gap: 1.5rem;
+  }
+
+  .panel--rows .viz {
+    height: clamp(190px, 30vh, 300px);
+  }
+}
+
+@media (max-width: 779.98px) {
+  /* A fixed height here; the aspect ratio has to go, or with a definite
+     height it would size the width instead (wider than a small phone). */
+  .panel .viz--line {
+    aspect-ratio: auto;
+    height: 240px;
+  }
+
+  .panel--rows .viz {
+    height: 230px;
+  }
+
+  .panel.panel--finale {
+    margin-inline: 0.75rem;
+    padding-inline: 1rem;
+  }
+
+  .panel.panel--finale .viz {
+    height: auto;
+    min-height: 12rem;
+    padding: 0.95rem 1rem 1rem;
+  }
+
+  /* The caption wraps on small phones, so it takes its own row instead of
+     floating over the chat bubbles. */
+  .panel.panel--finale .viz__caption {
+    position: static;
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+}
+
+@media (max-width: 419.98px) {
+  .panel.panel--finale {
+    margin-inline: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .panel.panel--finale .viz {
+    padding-inline: 0.75rem;
+  }
+}
+
+/* The finale as a static block: a framed card in normal flow. Same ground
+   colour as every other panel's background (there is none; --ground shows
+   through) — an accent-tinted glow here read as "more important than the
+   other four", which is not the point of the framing. The border and
+   rounded corners stay: the live version scales this card to fill the
+   screen, and it needs a visible edge for that to read as a card at all. */
+.panel--finale {
+  margin-block: clamp(2rem, 6vh, 4rem);
+  margin-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2 - var(--gutter)));
+  border: 1px solid var(--line-strong);
+  border-radius: 2rem;
+  background: var(--ground);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.panel + .panel--finale {
+  border-top: 1px solid var(--line-strong);
+}
+
+.panel--finale .panel__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 760px;
+}
+
+.panel--finale .panel__kicker {
+  justify-content: center;
+}
+
+.panel--finale .panel__title {
+  max-width: none;
+  font-size: clamp(2rem, 1rem + 2.2vw, 3rem);
+}
+
+/* Centered lines read best balanced. sequence.js splits the hook into lines
+   by measuring the words while they are laid out with this rule, so the
+   balanced breaks carry over into the .hook-line blocks. */
+.panel--finale .panel__hook {
+  margin-top: 1rem;
+  text-wrap: balance;
+}
+
+.panel--finale .panel__stats {
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.panel--finale .stat {
+  align-items: center;
+}
+
+.panel--finale .panel__viz {
+  margin-top: 1.5rem;
+  width: min(100%, 32rem);
+  text-align: left;
+}
+
+/* Three lines now (question, answer, "waiting on your OK"), where the old
+   ledger mockup fit in one tight block — 9rem was sized for that and had
+   the first bubble overlapping the caption above it. */
+.panel--finale .viz {
+  height: 13rem;
+  padding: 2.4rem 1.4rem 1.2rem;
+}
+
+.panel--finale .panel__cta {
+  margin-top: 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Live mode: one shared sticky stage with layered absolute panels
+--------------------------------------------------------------------------- */
+
+.seq-live .sequence {
+  /* Five projects, 2.2 screens of scroll each plus the pinned screen itself.
+     Round 4: was 700vh (1.2 screens per project), which made every piece land
+     within a couple of turns of the wheel. */
+  height: 1200vh;
+}
+
+.seq-live .sequence__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.seq-live .panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: clamp(1.5rem, 7vh, 5rem) clamp(1.5rem, 5vw, 5rem);
+  border: 0;
+}
+
+.seq-live .panel__inner {
+  width: 100%;
+}
+
+/* The "Selected work" intro as the stage's title card: it is what the stage
+   shows when it scrolls in and pins, then sequence.js scrubs it out as
+   project 1 arrives. Its box lines up with the panels' content column, and
+   sequence.js sets --intro-y so it sits in the band above project 1's
+   content block (the fallback is only for the first frame). */
+.seq-live .work__intro {
+  position: absolute;
+  top: var(--intro-y, 6vh);
+  left: 0;
+  right: 0;
+  z-index: 0;
+  max-width: calc(var(--page-max) + 2 * clamp(1.5rem, 5vw, 5rem));
+  padding: 0 clamp(1.5rem, 5vw, 5rem);
+}
+
+.seq-live .work__intro .section-label {
+  margin-bottom: 1rem;
+}
+
+/* Two lines instead of three, so the card fits the band above project 1
+   even at 1280x720. */
+.seq-live .work__lede {
+  max-width: 56rem;
+}
+
+/* Set by sequence.js when the viewport is too short for the paragraph to fit
+   above project 1: the label alone introduces the section. */
+/* Short viewport: the intro tightens rather than dropping to its label. The
+   label alone left the pinned stage looking like a page that had failed to
+   load, which is the whole thing the title card is there to prevent. */
+.seq-live .work__intro--compact .work__lede {
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  max-width: none;
+  /* One line: the title card is competing with the first project for a very
+     short band here, and a second line costs more than the words are worth. */
+  white-space: nowrap;
+}
+
+.seq-live .work__intro--compact .section-label {
+  margin-bottom: 0;
+}
+
+/* Last resort, on a very short window: the label alone. */
+.seq-live .work__intro--label-only .work__lede {
+  display: none;
+}
+
+/* Later projects sit on top; the halves sit above the finale they reveal. */
+.seq-live .panel[data-index="0"] { z-index: 1; }
+.seq-live .panel[data-index="1"] { z-index: 2; }
+.seq-live .panel[data-index="2"] { z-index: 3; }
+.seq-live .panel[data-index="3"] { z-index: 4; }
+.seq-live .panel[data-index="4"] { z-index: 5; }
+
+/* `.seq-live .panel` drops the stacked-block borders; the finale keeps its
+   framed-card border. At local 0 the card is fully transparent, so this adds
+   nothing to the 4->5 swap. Flat var(--ground) rather than the static
+   block's old accent tint: same reasoning as the static rule above (no glow
+   that reads as "more important"), and flat is also the cheapest possible
+   fill for a card that repaints on every frame of its scale-up — cheaper
+   even than the flat accent tint this replaced, which was already chosen
+   over a gradient for the same reason (see the frame-time note this used to
+   carry: a re-rendered gradient at every size doubled this segment's median
+   frame time under a 6x CPU throttle). */
+.seq-live .panel--finale {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  transform-origin: 50% 50%;
+  border: 1.5px solid var(--line-strong);
+  background: var(--ground);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* Near the end of the sequence the lower part of the card surface fades to
+   the page ground (--seam, 0..1, from sequence.js), so when the stage unpins
+   its bottom edge meets the next section without a hard line. z-index -1
+   inside the card's own stacking context (it always has a transform) puts
+   this above the card's background and below all of its content, so no text,
+   figure or the CTA is ever dimmed. At scale 1.25 the stage bottom crops the
+   card at 90% of its height, hence the stops. */
+.seq-live .panel--finale::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, transparent 52%, var(--ground) 88%);
+  opacity: var(--seam, 0);
+  pointer-events: none;
+}
+
+.seq-live .panel--finale .panel__inner {
+  width: min(760px, 66vw);
+  max-width: none;
+}
+
+/* No will-change here: sequence.js promotes the halves only while they are
+   moving apart, so at the swap itself they paint exactly like project 4. */
+.seq-live .split-half {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* sequence.js rounds the seam to whole pixels via --split-at/--split-rest;
+   the percentages are the fallback. */
+.seq-live .split-half--left {
+  clip-path: inset(0 var(--split-rest, 50%) 0 0);
+}
+
+.seq-live .split-half--right {
+  clip-path: inset(0 0 0 var(--split-at, 50%));
+}
+
+/* Clones inside the halves: the dimmed project 3 underneath, project 4 on
+   top, both exactly as they look at the end of segment 4. */
+.seq-live .split-half > .panel--ghost {
+  z-index: 1;
+  transform: scale(0.88);
+  filter: grayscale(1) brightness(0.5);
+  opacity: 0.35;
+}
+
+.seq-live .split-half > .panel--clone:not(.panel--ghost) {
+  z-index: 2;
+}
+
+/* No will-change hints on the panels or their parts. A promoted layer keeps
+   the raster it was given mid-scrub, so text that scrubbed in stayed a touch
+   softer than on a fresh load, and at the 4->5 swap the fresh clones (painted
+   at rest) did not match it when arriving from above. A layer also snaps
+   subpixel edges differently from the stage it sits in. Painting at rest
+   without layers keeps every assembled frame identical however it was
+   reached, and the swap exact to the pixel. */
+
+/* ---------------------------------------------------------------------------
+   Idle viz loops: live mode only, independent of scroll
+--------------------------------------------------------------------------- */
+
+.seq-live .line__trace {
+  stroke-dasharray: 1 2;
+  animation: line-trace 3.5s ease-in-out infinite;
+}
+
+.seq-live .line__tail {
+  animation: tail-pulse 2.4s ease-in-out infinite;
+}
+
+.seq-live .bar {
+  animation: bar-breathe 2.8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.18s);
+}
+
+.seq-live .chat__q {
+  animation: chat-q 4.5s ease-out infinite;
+}
+
+.seq-live .chat__route {
+  animation: chat-route 4.5s ease-out infinite;
+}
+
+.seq-live .chat__typing {
+  animation: chat-typing 4.5s linear infinite;
+}
+
+.seq-live .chat__typing i {
+  animation: typing-dot 0.9s ease-in-out infinite;
+}
+
+.seq-live .chat__typing i:nth-child(2) { animation-delay: 0.15s; }
+.seq-live .chat__typing i:nth-child(3) { animation-delay: 0.3s; }
+
+.seq-live .chat__a {
+  animation: chat-a 4.5s ease-out infinite;
+}
+
+/* dashoffset 1 -> 0 on a pathLength="1" path draws the whole solid run; the
+   2-unit gap keeps a zero-length dash (and its round cap) off the far end
+   while hidden. Hold, fade, repeat: the faint copy underneath keeps the chart
+   whole during the reset. */
+@keyframes line-trace {
+  0% { stroke-dashoffset: 1; opacity: 1; }
+  60% { stroke-dashoffset: 0; opacity: 1; }
+  84% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes tail-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bar-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.08); }
+}
+
+@keyframes chat-q {
+  0% { opacity: 0; transform: translateY(8px); }
+  8%, 86% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: none; }
+}
+
+@keyframes chat-route {
+  0%, 13% { opacity: 0; transform: translateY(6px); }
+  20%, 86% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: none; }
+}
+
+@keyframes chat-typing {
+  0%, 22% { opacity: 0; }
+  26%, 44% { opacity: 1; }
+  47%, 100% { opacity: 0; }
+}
+
+@keyframes typing-dot {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes chat-a {
+  0%, 46% { opacity: 0; transform: translateY(8px); }
+  54%, 86% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Closing carousel: continuous drift, ported cursor spotlight + tilt
+--------------------------------------------------------------------------- */
+
+.recap {
+  padding-top: clamp(5rem, 12vh, 7rem);
+  padding-bottom: clamp(3rem, 8vh, 5rem);
+}
+
+/* The bottom padding holds a hovered card's glow (its blurred shadow fades
+   out about 5rem below the card at scale 1.02; live mode also fades the
+   row's last 2rem, see below), so the row's clip never cuts it; the negative
+   margin gives the extra 2.5rem back, so the section's layout is unchanged. */
+.marquee {
+  --gap: 20px;
+  position: relative;
+  overflow: hidden;
+  padding: 1.75rem 0 5rem;
+  margin-bottom: -2.5rem;
+}
+
+/* Row-level cursor spotlight (--mx/--my/--spot-opacity from carousel.js).
+   The vertical mask fades it out inside the row's padding, so the glow never
+   shows the .marquee box as a lighter band with straight edges. */
+.marquee::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--iris) 11%, transparent),
+    transparent 70%
+  );
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 1.75rem, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 1.75rem, #000 calc(100% - 2.5rem), transparent);
+  opacity: var(--spot-opacity, 0);
+  transition: opacity 0.3s ease;
+}
+
+.marquee__track {
+  position: relative;
+  z-index: 1;
+}
+
+.marquee__set {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--gap);
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* Static fallback: one grid, no duplicate. */
+.marquee__set[aria-hidden="true"],
+.marquee__lead {
+  display: none;
+}
+
+.mcard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 1.5rem;
+  background: var(--surface);
+}
+
+/* Per-card spotlight that follows the cursor (--cx/--cy). */
+.mcard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--cx, 50%) var(--cy, 50%),
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mcard {
+  isolation: isolate;
+}
+
+.mcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-mono);
+}
+
+.mcard__num {
+  font-size: 0.75rem;
+  color: var(--fg-3);
+}
+
+.mcard__kicker {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Every title reserves two lines, so the stats and viz rows line up across
+   the cards whether a title wraps or not. */
+.mcard__title {
+  min-height: calc(2em * 1.3);
+  margin-top: 0.9rem;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.mcard__stats {
+  margin-top: 1.1rem;
+  gap: 2rem;
+}
+
+.mcard .stat__value {
+  font-size: 1.5rem;
+}
+
+.mcard .stat__label {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.mcard__viz {
+  margin-top: 1.1rem;
+}
+
+.mcard .viz {
+  height: 6rem;
+  border-color: var(--line);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--ground) 70%, transparent);
+  box-shadow: none;
+}
+
+.mcard .viz--line .line {
+  padding: 0;
+}
+
+.mcard__hook {
+  flex: 1;
+  margin-top: 1.1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.mcard__cta {
+  margin-top: 1.25rem;
+  padding: 0.55rem 0.95rem;
+}
+
+/* Live: the two identical sets sit side by side in a max-content track.
+   Each set carries its trailing gap as padding, so -50% is exactly one set
+   plus one gap and the loop point is invisible. */
+/* The side fades, intersected with a fade over the last 2rem of the bottom
+   padding: the faint tail of a hovered card's glow thins out to nothing
+   before the row's edge instead of stopping at it. */
+.seq-live .marquee {
+  mask-image:
+    linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(180deg, #000 calc(100% - 2rem), transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(180deg, #000 calc(100% - 2rem), transparent);
+  -webkit-mask-composite: source-in;
+}
+
+/* The track starts just inside the 6% edge fade and the lead card (a copy
+   of the last one) fills the space before it. The row stays covered edge to
+   edge at every phase, and carousel.js can bring any real card fully into
+   the clear band when it takes keyboard focus, the first card included. */
+.seq-live .marquee__track {
+  display: flex;
+  width: max-content;
+  margin-left: calc(6% + 24px);
+  animation: marquee-drift 40s linear infinite;
+}
+
+.seq-live .marquee__lead {
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 100%;
+  bottom: 0;
+  padding-right: var(--gap);
+}
+
+/* Hover and focus pause while they last; the toggle (.is-paused) pauses until
+   it is pressed again, and also holds the cards' own viz loops. */
+.seq-live .marquee:hover .marquee__track,
+.seq-live .marquee:focus-within .marquee__track,
+.seq-live .marquee.is-paused .marquee__track,
+.seq-live .marquee.is-paused .viz *,
+.seq-live .marquee.is-paused .viz *::before,
+.seq-live .marquee.is-paused .viz *::after {
+  animation-play-state: paused;
+}
+
+/* Pause / play for the drift, in the small mono control style of the
+   kickers. Hidden without live mode, where nothing drifts. Only the visible
+   (aria-hidden) word is uppercased, so the accessible name keeps its case. */
+.marquee-toggle {
+  display: none;
+  flex: none;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.seq-live .marquee-toggle {
+  display: inline-flex;
+}
+
+.marquee-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line-strong));
+  color: var(--fg);
+}
+
+/* The width of "PAUSE", so the button keeps its size as the label changes. */
+.marquee-toggle__label {
+  display: inline-block;
+  min-width: 3.6em;
+  text-transform: uppercase;
+}
+
+/* Paused: the control lights up in the accent and offers "Play". */
+.marquee-toggle.is-paused {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: color-mix(in srgb, var(--accent) 70%, var(--fg));
+}
+
+/* Two bars (pause), drawn with borders, or a triangle (play) while paused,
+   clipped from a filled box; both 8x9 and in the text colour. */
+.marquee-toggle__icon {
+  width: 8px;
+  height: 9px;
+  border-inline: 2.5px solid currentColor;
+}
+
+.marquee-toggle.is-paused .marquee-toggle__icon {
+  border: 0;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.seq-live .marquee__set,
+.seq-live .marquee__set[aria-hidden="true"] {
+  display: flex;
+  gap: var(--gap);
+  max-width: none;
+  margin: 0;
+  padding: 0 var(--gap) 0 0;
+}
+
+.seq-live .mcard {
+  flex: none;
+  width: 340px;
+  transform-style: preserve-3d;
+  transform: perspective(700px) rotateX(var(--ry, 0deg)) rotateY(var(--rx, 0deg)) scale(var(--s, 1));
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease,
+    box-shadow 0.35s ease,
+    opacity 0.3s ease;
+}
+
+/* carousel.js hit-tests by geometry and toggles these, because the duplicate
+   set is inert and so never matches :hover. */
+.seq-live .mcard.is-hover {
+  --s: 1.02;
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line-strong));
+  box-shadow: 0 26px 54px -26px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.seq-live .mcard.is-hover::after {
+  opacity: 1;
+}
+
+.seq-live .marquee.has-hover .mcard:not(.is-hover) {
+  opacity: 0.6;
+}
+
+@keyframes marquee-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ---------------------------------------------------------------------------
+   Contact stub
+--------------------------------------------------------------------------- */
+
+.contact {
+  padding-block: clamp(3rem, 8vh, 5rem) clamp(4rem, 10vh, 6rem);
+  border-top: 1px solid var(--line);
+}
+
+.contact__loc {
+  margin-top: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-3);
+}
+
+/* ?debug HUD */
+.seq-hud {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 50;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: rgb(5 6 14 / 0.85);
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* Belt and braces: the loops and the drift are already scoped to .seq-live,
+   which sequence.js never sets under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .viz *,
+  .viz *::before,
+  .viz *::after,
+  .marquee__track {
+    animation: none !important;
+  }
+
+  .mcard,
+  .marquee::before,
+  .marquee-toggle {
+    transition: none;
+  }
+}
+
+/* ===========================================================================
+   Round 4. Review changes: hero artwork, the page actions, the scroll cue,
+   two new project pictures, the contact row, and the paint work that keeps
+   all of it cheap on a low-end machine.
+=========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Hero artwork. The flow-field image from the live site with the neural field
+   drawn over it, both scoped to the hero: the canvas used to be fixed behind
+   the whole document, repainting 150 nodes every frame all the way down.
+--------------------------------------------------------------------------- */
+
+.hero__art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  /* Its own layer, so the hero scrolls away as one bitmap instead of
+     repainting the artwork while the sequence runs. */
+  contain: strict;
+}
+
+.hero__art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 72% center;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+}
+
+/* Absolutely positioned the height of the whole document (body is its
+   containing block, see body's own position: relative above), so it takes
+   no layout space and can hold a sticky child stuck for the entire page,
+   not just one screen of it. Carries the z-index/pointer-events tokens.css
+   put on #brain-canvas itself when the canvas was position: fixed. */
+.brain-track {
+  position: absolute;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+}
+
+/* Overrides tokens.css's #brain-canvas (position: fixed, inset: 0, width/
+   height: 100%) — sticky instead of fixed is what gives brain.js's
+   two-phase behaviour: ordinary scrolling (margin-top, set by resize(),
+   anchors its un-stuck position next to "Selected work") until it would
+   scroll above top: 0, then stuck there for the rest of .brain-track's
+   height. height: 100% would follow .brain-track's own height (the whole
+   document) here, not the viewport, so it has to be spelled out as 100vh. */
+#brain-canvas {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  margin-top: var(--brain-anchor, 0px);
+  opacity: 0.9;
+}
+
+/* The artwork resolves into the page ground at the left and the bottom, so
+   the hero has no hard edge and the headline keeps its contrast. A
+   translucent version of this existed briefly so the neural field's canvas
+   could show through here — the field's resting point has since moved out
+   of the hero entirely (see brain.js), so this is back to solid, its
+   original design. */
+.hero__art-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, var(--ground) 0%, color-mix(in srgb, var(--ground) 80%, transparent) 40%, transparent 70%),
+    linear-gradient(180deg, transparent 55%, var(--ground) 100%);
+}
+
+@media (max-width: 779.98px) {
+  .hero__art img {
+    opacity: 0.38;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Page actions: the pair in the hero, and the slim bar that takes over once
+   the hero's copy has scrolled away (chrome.js sets data-shown).
+--------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn::after {
+  content: "\2192";
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.btn:hover::after {
+  transform: translateX(2px);
+}
+
+/* The highlight: a tinted fill and a soft accent glow, not a solid slab. */
+.btn--accent {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 55%, transparent);
+  background: color-mix(in srgb, var(--iris) 16%, transparent);
+  box-shadow: 0 8px 24px -14px color-mix(in srgb, var(--iris) 80%, transparent);
+}
+
+.btn--accent:hover {
+  border-color: var(--iris);
+  background: color-mix(in srgb, var(--iris) 26%, transparent);
+}
+
+.btn--ghost {
+  color: var(--fg-2);
+  border-color: var(--line-strong);
+}
+
+.btn--ghost:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 60%, var(--line-strong));
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.25rem;
+}
+
+/* Present from the first frame to the last: a recruiter should be able to
+   reach "Contact me" at any point in the page, not only once the hero has
+   scrolled past. chrome.js measures its own height into --topbar-h so the
+   page can reserve room for it instead of sitting underneath it. */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--line);
+  /* A tinted bar rather than backdrop-filter: blurring a full-width strip on
+     every frame of a scroll is one of the most expensive things a weak GPU
+     can be asked to do. */
+  background: color-mix(in srgb, var(--ground) 92%, transparent);
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.6rem;
+}
+
+.topbar__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.topbar__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.topbar .btn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 559.98px) {
+  .topbar__name {
+    display: none;
+  }
+
+  .topbar__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   "Keep scrolling" cue under the intro title card (live mode only): the first
+   project assembles from nothing, so without it the stage reads as a page
+   that failed to load.
+--------------------------------------------------------------------------- */
+
+.work__cue {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.seq-live .work__cue {
+  display: flex;
+}
+
+/* On a short viewport the intro drops to its label alone (see placeIntro);
+   the cue goes with the paragraph, or it eats the clearance the first
+   project's kicker needs below it. */
+.seq-live .work__intro--compact .work__cue {
+  display: none;
+}
+
+.work__cue-arrow {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.seq-live .work__cue-arrow {
+  animation: cue-nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes cue-nudge {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: rotate(45deg) translate(3px, 3px);
+    opacity: 1;
+  }
+}
+
+/* The divider between measured weeks and forecast weeks, and its labels.
+   Shared by project 1's chart and project 2's below. */
+.line__split {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.line__mark {
+  fill: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mcard .line__mark,
+.mcard .line__split {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Project 2: drawn exactly like project 1's line (grid, gradient fill,
+   ghost/trace/tail — see .line, .line__area etc. above), plus a flat
+   reference for today's internal price and a corner verdict.
+--------------------------------------------------------------------------- */
+
+.panel .viz--market {
+  aspect-ratio: 578 / 414;
+  max-height: 86vh;
+}
+
+.mkt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Today's internal price: its own colour (the site's blue, not the
+   project's pink accent) rather than plain grey, so it reads as a second
+   real series and not an undercooked afterthought. Thinner than the market
+   line and solid rather than the market's ghost/trace treatment, so it
+   still stays secondary next to it. */
+.mkt__internal {
+  fill: none;
+  stroke: var(--iris);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+/* The stretch past the split: what is being paid now, held flat rather
+   than forecast, so the dash reads as "this is known" against the market
+   line's "this is projected" dash on the other series. */
+.mkt__internal--flat {
+  stroke-dasharray: 5 4;
+}
+
+.mkt__legend {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mkt__legend--market {
+  fill: var(--accent);
+}
+
+.mkt__legend--internal {
+  fill: var(--fg-3);
+}
+
+.mcard .mkt__legend {
+  display: none;
+}
+
+/* The AI's own one-word reading of the chart, tucked in the corner rather
+   than a full-width bar: a small badge, not a second thing competing with
+   the chart for the eye. The fuller reason lives in its title tooltip. */
+.mkt__insight {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.mkt__insight-dot {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.seq-live .mkt__insight-dot {
+  animation: mkt-dot-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes mkt-dot-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+   Project 4: stock crossing from the surplus store to the short ones. Plain
+   boxes on a dashed lane; the fill height of each store is its cover.
+--------------------------------------------------------------------------- */
+
+/* The picture is sized from its own frame rather than in fixed rem: the frame
+   is 190-300px tall depending on the window, and at 720px the two stores on
+   the right were being clipped by it. `cqh` needs the size containment that
+   the rule below establishes. */
+.panel .viz--flow {
+  container-type: size;
+}
+
+.flow {
+  --u: 4.6cqh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  width: 100%;
+  /* The frame is as wide as the panel; the shapes are not. Without a cap the
+     stores end up as specks at either end of a very long lane. */
+  max-width: 48rem;
+  height: 100%;
+  margin-inline: auto;
+}
+
+.flow__store {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+}
+
+/* .flow's align-items: center centers every store's own box at the row's
+   true centre — including the SURPLUS store's, and including the SHORT
+   stores' (its .flow__to wrapper is centred the same way, which is why the
+   dashed fork above lines up with it without any special-casing). But a
+   store's box is roof + body + label, and it is only symmetric around the
+   body if the roof above and the label below are the same height — they
+   were not (the roof scales with the picture; the label is fixed-size
+   text), so the SURPLUS store's centred box put its body a few pixels off
+   the line the lane and the SHORT stores share. Matching the label's
+   rendered height to the roof's makes the box symmetric, so centring the
+   box also centres the body, with no extra offset math to keep in sync
+   with the picture's scale. */
+.panel .flow__label {
+  height: calc(var(--u) * 1.05);
+  display: flex;
+  align-items: center;
+}
+
+.flow__roof {
+  width: calc(var(--u) * 5.8);
+  height: 0;
+  border-bottom: calc(var(--u) * 1.05) solid color-mix(in srgb, var(--accent) 70%, transparent);
+  border-left: calc(var(--u) * 0.75) solid transparent;
+  border-right: calc(var(--u) * 0.75) solid transparent;
+}
+
+.flow__body {
+  position: relative;
+  width: calc(var(--u) * 4.8);
+  height: calc(var(--u) * 5.6);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-strong));
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  overflow: hidden;
+}
+
+.flow__level {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--lv) * 1%);
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* The cover each store is supposed to hold, so a short store reads as short
+   rather than just small. */
+.flow__body::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 62%;
+  border-top: 1px dashed color-mix(in srgb, var(--fg-3) 55%, transparent);
+}
+
+.flow__store--to .flow__level {
+  background: color-mix(in srgb, var(--fg-3) 70%, transparent);
+}
+
+.flow__label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.flow__lane {
+  /* A query container of its own inline size, so the box below can travel
+     the lane's actual width (in cqw) instead of a percentage of its own
+     tiny size, which barely moved it at all. */
+  container-type: inline-size;
+  position: relative;
+  flex: 1 1 auto;
+  align-self: center;
+  height: 1.6rem;
+  min-width: 4rem;
+  max-width: 20rem;
+}
+
+.flow__lane::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.flow__box {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: calc(var(--u) * 1.15);
+  height: calc(var(--u) * 1.15);
+  margin-top: calc(var(--u) * -0.575);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 85%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ground) 45%, transparent);
+  /* Static, the boxes sit still near the start of the lane; the picture
+     still reads as stock waiting to move. cqw (the lane's own width, see
+     .flow__lane) rather than % (the box's own tiny width) so this lines up
+     with the animation below, which needs the same unit to travel for real. */
+  transform: translateX(12cqw);
+}
+
+.seq-live .flow__box {
+  animation: flow-cross 3.2s linear infinite;
+  animation-delay: calc(var(--i) * 1.05s);
+}
+
+.flow__to {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 1.3);
+  flex: 0 0 auto;
+  padding-left: calc(var(--u) * 1.7);
+}
+
+/* The vertical centre of a store's body, measured from the top of its own
+   .flow__store--to box: the roof's rendered height, the gap below it, then
+   half the body. (Same formula both contexts use, since --u carries the
+   scale: cqh in the panel, a fixed rem in the card.) A fraction of the
+   store's total height would drift off-centre whenever the label's own
+   height changed the total, which is what put these dashes up near the roof
+   instead of level with the body. */
+.flow__to {
+  --to-mid: calc(var(--u) * 1.05 + 0.3rem + var(--u) * 2.8);
+}
+
+/* The fork: one vertical run between the two stores... */
+.flow__to::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: var(--to-mid);
+  bottom: var(--to-mid);
+  border-left: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ...and a stub into each of them, level with the middle of its body. */
+.flow__store--to {
+  position: relative;
+}
+
+.flow__store--to::before {
+  content: "";
+  position: absolute;
+  top: var(--to-mid);
+  left: calc(var(--u) * -1.7);
+  width: calc(var(--u) * 1.7);
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* Left to right: the surplus store sits at the start of the lane (0cqw) and
+   the short stores at the end (100cqw), same reading order as the markup. */
+@keyframes flow-cross {
+  0% {
+    transform: translateX(0cqw) scale(0.7);
+    opacity: 0;
+  }
+  12% {
+    transform: translateX(12cqw) scale(1);
+    opacity: 1;
+  }
+  88% {
+    transform: translateX(88cqw) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100cqw) scale(0.7);
+    opacity: 0;
+  }
+}
+
+.mcard .flow__roof {
+  width: 1.9rem;
+  border-bottom-width: 0.42rem;
+}
+
+/* Present for the same symmetry reason as .panel .flow__label, but there is
+   no room to actually show a caption at this size, so only its height (not
+   its text) is kept. */
+.mcard .flow__label {
+  height: calc(var(--u) * 1.05);
+  display: flex;
+  align-items: center;
+  color: transparent;
+}
+
+.mcard .flow__body {
+  width: 1.6rem;
+  height: 1.8rem;
+}
+
+.mcard .flow__box {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: -0.25rem;
+}
+
+.mcard .flow__to {
+  gap: 0.35rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Project 3: the assistant answers with figures, not with a sentence about
+   having answered.
+--------------------------------------------------------------------------- */
+
+.chat__lead {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.chat__rows {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.chat__rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  color: var(--fg-2);
+}
+
+.chat__rows b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.chat__row--low b {
+  color: var(--fg-3);
+}
+
+.chat__src {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* Card scale: the recap cards get a 96px-tall box, so the conversation shows
+   the question and the headline figure only, and the stores and their lane
+   shrink to fit inside the frame. */
+.mcard .chat__rows,
+.mcard .chat__src {
+  display: none;
+}
+
+.mcard .chat__lead {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.mcard .flow {
+  --u: 0.62rem;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding-inline: 0.2rem;
+}
+
+.mcard .flow__lane {
+  min-width: 1.5rem;
+  max-width: 5rem;
+  height: 1rem;
+}
+
+.mcard .flow__to {
+  padding-left: 0.85rem;
+  gap: 0.45rem;
+}
+
+.mcard .flow__store--to::before {
+  left: -0.85rem;
+  width: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Contact row: marks and the two CVs on one line.
+--------------------------------------------------------------------------- */
+
+.contact__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem 2rem;
+}
+
+.contact__links {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Box size unchanged from the original (2.6rem) — only the mark inside it
+   grows. A bigger box was tried and reverted: the request was to fill more
+   of this box, not to make the box itself bigger. */
+.contact__links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.6rem;
+  color: var(--fg-2);
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.contact__links a:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 60%, var(--line-strong));
+  background: color-mix(in srgb, var(--iris) 12%, transparent);
+}
+
+/* GitHub's size (this base rule, unmodified) is confirmed right. LinkedIn
+   and Gmail below are their own classes now, not this one — they needed to
+   keep shrinking after GitHub was already correct, and could not move on
+   their own while all three shared this rule. */
+.ico {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.ico--linkedin {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* The Gmail mark's own viewBox (88x66) is wider than it is tall, so at the
+   same box size it would sit smaller than the square LinkedIn/GitHub marks.
+   Scaling past the square keeps its visual weight equal to theirs; its
+   rendered height (66/88 of this) still clears the box. */
+.ico--gmail {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.contact__cvs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.contact__cvs a {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8125rem;
+  color: var(--fg-2);
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.contact__cvs a:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--iris) 60%, var(--line-strong));
+}
+
+.contact__loc {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-3);
+}
+
+@media (max-width: 559.98px) {
+  .contact__loc {
+    margin-left: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Paint and CPU work.
+
+   Idle loops only run where they can be seen: chrome.js marks any section
+   that is off-screen with `data-idle`, and everything inside it stops. On a
+   two-core office machine the eleven carousel cards alone, each with its own
+   looping picture, were enough to keep a core busy while the user was still
+   up in the sequence.
+--------------------------------------------------------------------------- */
+
+[data-idle="1"] .viz *,
+[data-idle="1"] .viz,
+[data-idle="1"] .marquee__track {
+  animation-play-state: paused !important;
+}
+
+/* Cards are independent boxes: the browser can skip laying out and painting
+   the ones that are off-screen, and does not have to re-check their subtree
+   when a neighbour changes. */
+.mcard {
+  contain: layout paint style;
+}
+
+.seq-live .panel__inner {
+  contain: layout style;
+}
+
+/* The pinned stage never affects the rest of the document's layout. */
+.seq-live .sequence__stage {
+  contain: layout paint;
+}
+
+/* ---------------------------------------------------------------------------
+   Narrow static layout: the text-based pictures (the conversation, the
+   ledger) need to grow rather than be cropped, and their caption cannot float
+   over the first bubble once it wraps.
+--------------------------------------------------------------------------- */
+
+@media (max-width: 779.98px) {
+  .panel .viz--chat {
+    height: auto;
+    min-height: 12rem;
+  }
+
+  .panel .viz--chat .viz__caption {
+    position: static;
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+
+  .panel .chat__q {
+    max-width: 88%;
+  }
+}
