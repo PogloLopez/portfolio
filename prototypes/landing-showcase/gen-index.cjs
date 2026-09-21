@@ -51,7 +51,7 @@ const OVERRIDES = {
     // pre-wrote for.
     cardStats: [
       { value: "Zero", label: "Numbers the model makes up" },
-      { value: "Golden queries", label: "Plus a live path for the rest" },
+      { value: "Embedded/Vector DB", label: "Powers the live path" },
     ],
   },
   "operations-platform": {
@@ -73,6 +73,15 @@ const OVERRIDES = {
     // ledger-diff mockup this replaced; the new picture is just a question
     // and an answer, so the caption says that instead.
     visual: { caption: "Ask it something, in your own words" },
+    // "4 gates required in CI" and the spend ceiling were both true, but the
+    // first is a fact about the test suite, not about what the assistant is
+    // for. Its real pitch — you don't come home to a surprise transfer — is
+    // one plain sentence, matched to the "Zero" pattern the other projects
+    // already use for a trust stat.
+    cardStats: [
+      { value: "Zero", label: "Irreversible actions without approval" },
+      { value: "< $20/mo", label: "Total cloud spend" },
+    ],
   },
 };
 
@@ -105,66 +114,58 @@ function lineGeometry(points, w, h, pad) {
 }
 
 /**
- * Project 2's chart: the market price against what the buying team is
- * paying today, both forecast, with the AI reading of the gap between them.
+ * Project 2's chart: the market price, same drawing as project 1's (grid,
+ * gradient fill, ghost/trace/tail), plus a flat reference for what the
+ * buying team pays today and the AI's one-word reading of the gap.
  *
- * Two rounds of trying to make this "a range, not a line" (bars, then bars
- * with a connecting line) never read as clearly as the thing the project
- * actually does: compare a public price to an internal one and tell the
- * buyer what to do about the gap. A second line does the comparison
- * directly, and the insight chip is what a bar chart could never show.
+ * Two earlier attempts (range bars, then bars with a connecting line) tried
+ * to look different from project 1 by looking rougher, which just read as
+ * worse, not as a different system. This round's brief: build project 2's
+ * picture like project 1's — clean line, one accent colour, nothing has to
+ * be literally accurate — and let the second, flatter line and the corner
+ * verdict be what tells the two systems apart, not the line quality.
  */
 function marketViz(p, ctx, ind) {
   const pts = p.visual.points;
   const big = ctx === "panel";
   const [w, h, pad] = big ? [480, 300, 18] : [300, 96, 10];
+  const g = lineGeometry(pts, w, h, pad);
   const split = Math.floor((pts.length - 1) * 0.66);
+  const sx = pad + (split / (pts.length - 1)) * (w - pad * 2);
 
-  // The internal (negotiated) price the buying team pays today: a trailing
-  // 3-week average of the market series, standing in for a real internal
-  // price feed the content file does not carry. Deterministic, so it does
-  // not change on every generation, and it only has to be a plausible,
-  // steadier counter-line to the volatile market one.
-  const internalAt = (i) => {
-    const from = Math.max(0, i - 2);
-    const slice = pts.slice(from, i + 1);
-    return slice.reduce((a, b) => a + b, 0) / slice.length;
-  };
-  const internalPts = pts.slice(0, split + 1).map((_, i) => internalAt(i));
-  const flatValue = internalPts[internalPts.length - 1];
-
-  const lo = Math.min(...pts, ...internalPts);
-  const hi = Math.max(...pts, ...internalPts);
-  const x = (i) => pad + (i / (pts.length - 1)) * (w - pad * 2);
-  const y = (v) => h - pad - ((v - lo) / (hi - lo || 1)) * (h - pad * 2);
-  const seg = (arr, from) =>
-    arr.map((v, k) => `${k === 0 ? "M" : "L"} ${x(from + k).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
-
-  const marketSolid = seg(pts.slice(0, split + 1), 0);
-  const marketForecast = seg(pts.slice(split), split);
-  const internalSolid = seg(internalPts, 0);
-  const internalFlat =
-    `M ${x(split).toFixed(1)} ${y(flatValue).toFixed(1)} L ${x(pts.length - 1).toFixed(1)} ${y(flatValue).toFixed(1)}`;
-
-  // The gap the insight is about: shaded between the market forecast and
-  // today's internal price, wherever they differ.
-  const gapArea =
-    `${seg(pts.slice(split), split)} L ${x(pts.length - 1).toFixed(1)} ${y(flatValue).toFixed(1)}` +
-    ` L ${x(split).toFixed(1)} ${y(flatValue).toFixed(1)} Z`;
+  // The internal (negotiated) price the buying team pays today: a flat
+  // reference at the recent average, standing in for a real internal price
+  // feed the content file does not carry. Flat and full-width so it reads
+  // as a reference the market line is being measured against, rather than
+  // a second, competing forecast.
+  const recent = pts.slice(-3);
+  const flatValue = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const lo = Math.min(...pts);
+  const hi = Math.max(...pts);
+  const fy = (h - pad - ((flatValue - lo) / (hi - lo || 1)) * (h - pad * 2)).toFixed(1);
+  const internalFlat = `M ${pad} ${fy} L ${w - pad} ${fy}`;
   const risesAboveToday = pts[pts.length - 1] > flatValue;
 
-  const divider = `${ind}    <line class="line__split" x1="${x(split).toFixed(1)}" x2="${x(split).toFixed(1)}" y1="${pad}" y2="${h - pad}" />`;
+  const grid = big
+    ? `${ind}    <g class="line__grid">${[0.25, 0.5, 0.75]
+        .map((f) => `<line x1="0" x2="${w}" y1="${(h * f).toFixed(0)}" y2="${(h * f).toFixed(0)}" />`)
+        .join("")}</g>\n`
+    : "";
+  const marks = big
+    ? `${ind}    <line class="line__split" x1="${sx.toFixed(1)}" x2="${sx.toFixed(1)}" y1="${pad}" y2="${h - pad}" />\n` +
+      `${ind}    <text class="line__mark line__mark--a" text-anchor="end" x="${(sx - 8).toFixed(1)}" y="${pad + 12}">actuals</text>\n` +
+      `${ind}    <text class="line__mark" x="${(sx + 8).toFixed(1)}" y="${pad + 12}">forecast</text>\n`
+    : "";
   const legend = big
-    ? `${ind}    <text class="mkt__legend mkt__legend--market" x="${pad}" y="${pad - 5}">Market</text>\n` +
-      `${ind}    <text class="mkt__legend mkt__legend--internal" x="${pad + 58}" y="${pad - 5}">Internal, today</text>\n`
+    ? `${ind}    <text class="mkt__legend mkt__legend--market" x="${pad}" y="${h - 8}">Market</text>\n` +
+      `${ind}    <text class="mkt__legend mkt__legend--internal" x="${pad + 54}" y="${h - 8}">Internal, today</text>\n`
     : "";
   const insight = big
-    ? `${ind}  <div class="mkt__insight">\n` +
+    ? `${ind}  <div class="mkt__insight" title="${esc(
+        risesAboveToday ? "Forecast climbs past today’s price" : "Forecast stays under today’s price",
+      )}">\n` +
       `${ind}    <span class="mkt__insight-dot" aria-hidden="true"></span>\n` +
       `${ind}    <span class="mkt__insight-verdict">${risesAboveToday ? "Buy now" : "Hold"}</span>\n` +
-      `${ind}    <span class="mkt__insight-reason">${
-        risesAboveToday ? "forecast climbs past today’s price" : "forecast stays under today’s price"
-      }</span>\n` +
       `${ind}  </div>\n`
     : "";
 
@@ -172,13 +173,14 @@ function marketViz(p, ctx, ind) {
     `${ind}<div class="viz viz--market" role="img" aria-label="${esc(p.visual.caption)}">\n` +
     (big ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
     `${ind}  <svg class="mkt" viewBox="0 0 ${w} ${h}" aria-hidden="true" focusable="false">\n` +
-    `${ind}    <path class="mkt__gap" d="${gapArea}" />\n` +
-    divider + "\n" +
+    grid +
+    `${ind}    <path class="line__area" d="${g.area}" fill="url(#fill-${p.accent})" />\n` +
+    marks +
+    `${ind}    <path class="mkt__internal" d="${internalFlat}" />\n` +
     legend +
-    `${ind}    <path class="mkt__internal mkt__internal--solid" d="${internalSolid}" />\n` +
-    `${ind}    <path class="mkt__internal mkt__internal--flat" d="${internalFlat}" />\n` +
-    `${ind}    <path class="mkt__market mkt__market--solid" d="${marketSolid}" />\n` +
-    `${ind}    <path class="mkt__market mkt__market--forecast" d="${marketForecast}" />\n` +
+    `${ind}    <path class="line__ghost" d="${g.solid}" />\n` +
+    `${ind}    <path class="line__trace" d="${g.solid}" pathLength="1" />\n` +
+    `${ind}    <path class="line__tail" d="${g.tail}" />\n` +
     `${ind}  </svg>\n` +
     insight +
     `${ind}</div>`
@@ -314,17 +316,16 @@ function chatViz(p, ctx, ind) {
 }
 
 /**
- * Project 5's picture: one plain exchange with the assistant, nothing else.
+ * Project 5's picture: a plain, everyday exchange, plus the one thing that
+ * makes this assistant different — it says what it is about to do and
+ * waits, rather than just doing it.
  *
  * The real ledger diff and its "approval required" chip are what the gate
  * actually looks like, but that is a term of art from the project's own
  * README, meaningless on a first look. A home-page card is not where that
- * gets explained — the case study page is — so this shows the one thing
- * that needs no explanation: you ask it something, in your own words, and
- * it answers. No typing indicator, no routing line, no footer: the other
- * four cards already carry that texture, and this project's whole pitch is
- * that the interesting part (it asks before doing anything irreversible) is
- * one plain sentence, not a mechanism to diagram.
+ * gets explained — the case study page is. Reusing .chat__route (built for
+ * project 3's "checking real data" status line) for "waiting on your OK"
+ * says the same thing the gate does, in a sentence anyone reads instantly.
  */
 function assistantChatViz(p, ctx, ind) {
   const big = ctx === "panel";
@@ -332,8 +333,9 @@ function assistantChatViz(p, ctx, ind) {
     `${ind}<div class="viz viz--chat" role="img" aria-label="${esc(p.visual.caption)}">\n` +
     (big ? `${ind}  <span class="viz__caption" aria-hidden="true">${esc(p.visual.caption)}</span>\n` : "") +
     `${ind}  <div class="chat" aria-hidden="true">\n` +
-    `${ind}    <p class="chat__q">Move $200 from savings to checking.</p>\n` +
-    `${ind}    <p class="chat__a">Sure — want me to go ahead, or just get it ready for you to confirm?</p>\n` +
+    `${ind}    <p class="chat__q">Spent $50 at the movies tonight.</p>\n` +
+    `${ind}    <p class="chat__a">Got it — update your Entertainment budget by $50 too?</p>\n` +
+    `${ind}    <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>\n` +
     `${ind}  </div>\n` +
     `${ind}</div>`
   );
@@ -466,11 +468,14 @@ const WORK_LEDE = WORK_LEDE_MAIN + " " + WORK_LEDE_REST;
 
 // Brand glyphs for the contact row, so the addresses stop shouting their full
 // length at the bottom of the page. Single-path marks, sized by the button.
+// Simple Icons' path data (simpleicons.org, CC0), not hand-plotted: at the
+// size these now render (see .ico), a hand-approximated curve shows every
+// place it was approximate.
 const ICONS = {
   linkedin:
-    "M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.76V21h-4v-5.6c0-1.34-.03-3.07-1.9-3.07-1.9 0-2.2 1.46-2.2 2.97V21H9z",
+    "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
   github:
-    "M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z",
+    "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
 };
 
 // The Gmail mark (Google's 2020 four-colour envelope), used verbatim rather

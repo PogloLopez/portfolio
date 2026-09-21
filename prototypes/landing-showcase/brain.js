@@ -139,13 +139,18 @@
     const knot = HOME_R * scale;
 
     const pts = nodes.slice(0, visibleCount).map(function (n) {
-      const bob = reduced ? 0 : Math.sin(t * 0.0004 + n.phase) * (2 + 5 * e);
+      // Faster and wider than before: at rest (e near 0, the resting
+      // cluster in the hero) the old 2px/15.7s drift was too slow and too
+      // small to read as motion at a glance, which is what made the field
+      // look static before you had scrolled at all.
+      const bobY = reduced ? 0 : Math.sin(t * 0.00085 + n.phase) * (3.5 + 6 * e);
+      const bobX = reduced ? 0 : Math.cos(t * 0.00065 + n.phase * 1.3) * (2 + 4 * e);
       const ei = Math.min(1, e * n.lag);
       const hx = homeX + n.hx * knot;
       const hy = homeY + n.hy * knot;
       return {
-        x: hx + (n.tx * width - hx) * ei,
-        y: hy + (n.ty * height - hy) * ei + bob,
+        x: hx + (n.tx * width - hx) * ei + bobX,
+        y: hy + (n.ty * height - hy) * ei + bobY,
         r: n.r * scale * (0.62 + 0.95 * ei),
       };
     });

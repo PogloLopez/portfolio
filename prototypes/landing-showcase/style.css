@@ -313,7 +313,8 @@ a {
 
 .stat__label {
   margin-top: 0.5rem;
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
   color: var(--fg-3);
 }
 
@@ -704,7 +705,7 @@ a {
 
   .panel.panel--finale .viz {
     height: auto;
-    min-height: 9rem;
+    min-height: 12rem;
     padding: 0.95rem 1rem 1rem;
   }
 
@@ -783,13 +784,16 @@ a {
 
 .panel--finale .panel__viz {
   margin-top: 1.5rem;
-  width: min(100%, 30rem);
+  width: min(100%, 32rem);
   text-align: left;
 }
 
+/* Three lines now (question, answer, "waiting on your OK"), where the old
+   ledger mockup fit in one tight block — 9rem was sized for that and had
+   the first bubble overlapping the caption above it. */
 .panel--finale .viz {
-  height: 9rem;
-  padding: 2.4rem 1.4rem 1rem;
+  height: 13rem;
+  padding: 2.4rem 1.4rem 1.2rem;
 }
 
 .panel--finale .panel__cta {
@@ -1701,8 +1705,9 @@ a {
 }
 
 /* ---------------------------------------------------------------------------
-   Project 2: the market price against today's internal price, both forecast,
-   with the AI reading of the gap between them.
+   Project 2: drawn exactly like project 1's line (grid, gradient fill,
+   ghost/trace/tail — see .line, .line__area etc. above), plus a flat
+   reference for today's internal price and a corner verdict.
 --------------------------------------------------------------------------- */
 
 .panel .viz--market {
@@ -1717,40 +1722,15 @@ a {
   overflow: visible;
 }
 
-.mkt__market {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.mkt__market--forecast {
-  stroke-dasharray: 5 5;
-}
-
-.seq-live .mkt__market--forecast {
-  animation: mkt-forecast 2.8s ease-in-out infinite;
-}
-
-/* The internal price: a steadier, secondary line, so it reads as the
-   reference the market line is being measured against rather than a
-   second forecast competing with it. */
+/* Today's internal price: a flat, quiet reference the market line moves
+   against, not a second line competing with it for attention. */
 .mkt__internal {
   fill: none;
   stroke: var(--fg-3);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.mkt__internal--flat {
+  stroke-width: 1.5;
   stroke-dasharray: 1 4;
-  opacity: 0.85;
-}
-
-.mkt__gap {
-  fill: color-mix(in srgb, var(--accent) 14%, transparent);
-  stroke: none;
+  stroke-linecap: round;
+  opacity: 0.8;
 }
 
 .mkt__legend {
@@ -1772,56 +1752,35 @@ a {
   display: none;
 }
 
-/* The AI's own reading of the chart: a verdict plus the one-line reason,
-   the thing a bar or a range could never say on its own. */
+/* The AI's own one-word reading of the chart, tucked in the corner rather
+   than a full-width bar: a small badge, not a second thing competing with
+   the chart for the eye. The fuller reason lives in its title tooltip. */
 .mkt__insight {
   position: absolute;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  left: 1.25rem;
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.6rem 0.85rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 0.6rem;
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  font-size: 0.8125rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--fg);
 }
 
 .mkt__insight-dot {
-  align-self: center;
   flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--accent);
 }
 
 .seq-live .mkt__insight-dot {
   animation: mkt-dot-pulse 2.2s ease-in-out infinite;
-}
-
-.mkt__insight-verdict {
-  font-weight: 700;
-  color: var(--fg);
-}
-
-.mkt__insight-reason {
-  color: var(--fg-3);
-}
-
-@media (max-width: 559.98px) {
-  .mkt__insight {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.2rem;
-  }
-}
-
-@keyframes mkt-forecast {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
 }
 
 @keyframes mkt-dot-pulse {
@@ -2162,14 +2121,17 @@ a {
   gap: 0.5rem;
 }
 
+/* Box size unchanged from the original (2.6rem) — only the mark inside it
+   grows. A bigger box was tried and reverted: the request was to fill more
+   of this box, not to make the box itself bigger. */
 .contact__links a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border: 1px solid var(--line-strong);
-  border-radius: 0.7rem;
+  border-radius: 0.6rem;
   color: var(--fg-2);
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
@@ -2180,19 +2142,21 @@ a {
   background: color-mix(in srgb, var(--iris) 12%, transparent);
 }
 
-/* The mark, not a glyph inside it: as close to the box's own size as the
-   border can spare, rather than a small icon with room around it. */
+/* The mark, not a glyph inside it: as close to the 2.6rem box's own size as
+   the border can spare (about 2px of breathing room per side), rather than
+   a small icon with visible room around it. */
 .ico {
-  width: 3rem;
-  height: 3rem;
+  width: 2.3rem;
+  height: 2.3rem;
 }
 
 /* The Gmail mark's own viewBox (88x66) is wider than it is tall, so at the
    same box size it would sit smaller than the square LinkedIn/GitHub marks.
-   Scaling past the square keeps its visual weight equal to theirs. */
+   Scaling past the square keeps its visual weight equal to theirs; its
+   rendered height (66/88 of this) still clears the box. */
 .ico--gmail {
-  width: 3.35rem;
-  height: 3.35rem;
+  width: 2.55rem;
+  height: 2.55rem;
 }
 
 .contact__cvs {

@@ -33,7 +33,49 @@ content. Edit the generator, not the HTML.
 | `hero.webp` | The flow-field artwork, copied from `public/hero/` |
 | `verify.cjs` | `node verify.cjs` — drives the page in Chromium and checks the things that break by accident |
 
-## Round 6 (this round): the review changes
+## Round 7 (this round): the review changes
+
+Neural field. Its idle drift at rest (2px, a 15.7s cycle) was too slow and
+too small to read as motion — which is what made the field look static
+before you had scrolled at all, not the scroll-linked dispersion itself
+(that part already worked; confirmed by scripting real scroll, since the
+methodology that first suggested otherwise turned out to be an artifact of
+how the screenshot was taken, not the page). Now 3.5-6px on Y, a matching
+X wobble, and roughly twice the speed.
+
+Project 2's picture, redrawn. Not "make the bars nicer" — built the same way
+project 1's chart is (same `lineGeometry`, same grid/ghost/trace/tail
+classes, same gradient fill), because that chart was the example of "clean"
+to build toward. The internal-price line is now a single flat dashed
+reference instead of a second jagged series threading through the market
+line — two independently-drawn angular lines crossing was most of what read
+as messy. The "Buy now" verdict moved into a small pill in the corner
+(right/bottom, auto width) instead of a bar spanning the chart's full width,
+which had been overlapping the lines above it; the longer reason is now a
+title tooltip instead of a second line inside the chip.
+
+Project 3. "Golden queries" is now "Embedded/Vector DB" — a different real
+component, not a rewording of the same idea. `.stat__label` is up from
+0.8125rem to 0.9375rem, sitewide (every project's KPI subtext, not just this
+one, since they all share the class).
+
+Project 5. Its two card stats were still engineering metrics ("4 gates
+required in CI"); now "Zero / Irreversible actions without approval" and
+"< $20/mo / Total cloud spend", matching the "Zero" pattern project 3 already
+uses for a trust stat. Its picture is a different exchange (spent $50 at the
+movies, assistant offers to update the budget, "waiting on your OK" status
+line) instead of the bank-transfer one, and its frame is taller (9rem to
+13rem): three rows no longer fit the box sized for the old ledger mockup's
+one tight block, and the top bubble was overlapping the caption above it.
+
+Contact marks. The box goes back to 2.6rem — round 6 grew the box itself,
+which was not the ask (fill more of the existing box). The icon inside it is
+now 2.3rem (2.55rem for Gmail), most of the box rather than half of it.
+LinkedIn's and GitHub's paths are Simple Icons' (CC0), not the hand-plotted
+approximation from the original build: at the size these render now, the
+approximation's imprecision was what read as "low quality", not the size.
+
+## Round 6: the review changes
 
 Correction. Round 5's "personal AI assistant" fixes (background, KPIs, natural
 copy) went to project 3 (the business-data assistant); the actual target,
