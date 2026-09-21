@@ -23,11 +23,32 @@
   const NODE_COUNT = CORES <= 4 || window.innerWidth < 900 ? 84 : 132;
   // Where the field rests, and when it starts coming apart: just left of the
   // "Selected work" lede, not before that section is a quarter of the way
-  // down the viewport. Both targets are normal-flow content above the
-  // pinned sequence's pin point, so their document position is stable and
-  // safe to measure once per resize(), not something read every frame.
-  const homeTarget = document.querySelector(".work__lede");
-  const triggerTarget = document.getElementById("work-title");
+  // down the viewport.
+  //
+  // Bug fixed here: #work-title and .work__lede live INSIDE the pinned
+  // sequence's sticky stage, which sequence.js actively scrubs — it sets
+  // .work__intro to display: none once the pin has moved past it, and even
+  // while shown, its position is relative to the sticky stage's current
+  // on-screen position, not a fixed document offset. getBoundingClientRect()
+  // on either element reflects whichever of those states happens to be true
+  // at the moment resize() runs, so a reload deep in the page — or even a
+  // resize while scrolled — measured garbage (0,0 once hidden, or a
+  // viewport-relative offset re-added to scrollY as if it were a document
+  // offset once stuck), which is exactly why the field's rest position used
+  // to drift with wherever the page happened to be scrolled on load.
+  //
+  // .sequence itself is never hidden or repositioned by any of that — it is
+  // the plain, normal-flow block that the sticky stage and everything
+  // inside it live in — so its document top is the one stable thing safe to
+  // read regardless of scroll position or load state. The offsets below are
+  // fixed pixel measurements (title ~59px, lede ~96px below .sequence's own
+  // top, at a 1440px-wide viewport) rather than a live measurement of the
+  // scrubbed elements themselves; HOME_X is a plain left-margin fraction for
+  // the same reason, not the lede's own measured edge.
+  const seqTarget = document.querySelector(".sequence");
+  const TITLE_OFFSET = 59;
+  const LEDE_OFFSET = 96;
+  const HOME_X_FRACTION = 0.06;
   const HOME_R = 78;
   const LINK_NEAR = 0.036;
   const LINK_FAR = 0.15;
@@ -121,29 +142,25 @@
     // changes with the viewport (the pinned sequence is defined in vh).
     span = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
 
-    // triggerY: the scrollY at which #work-title's top reaches a quarter of
-    // the way down the viewport. Its document position (getBoundingClientRect
-    // plus the current scroll) is scroll-invariant, so this is correct
-    // however far the page happens to be scrolled when resize() runs. It
-    // doubles as #brain-canvas's margin-top (--brain-anchor in style.css):
-    // .brain-track starts at document y0, so a sticky child's natural,
-    // un-stuck top sits at margin-top, and with `top: 0` it sticks exactly
-    // once scrollY passes that — the same instant JS starts the dispersal
-    // below, so the canvas locks to the screen and the field starts coming
-    // apart on the same frame.
-    if (triggerTarget) {
-      const titleDocTop = triggerTarget.getBoundingClientRect().top + window.scrollY;
+    // triggerY: the scrollY at which "Selected work" reaches a quarter of
+    // the way down the viewport, derived from .sequence's stable document
+    // top (see the comment above) plus the fixed TITLE_OFFSET rather than
+    // measuring the scrubbed title directly. It doubles as #brain-canvas's
+    // margin-top (--brain-anchor in style.css): .brain-track starts at
+    // document y0, so a sticky child's natural, un-stuck top sits at
+    // margin-top, and with `top: 0` it sticks exactly once scrollY passes
+    // that — the same instant JS starts the dispersal below, so the canvas
+    // locks to the screen and the field starts coming apart on the same
+    // frame.
+    if (seqTarget) {
+      const seqDocTop = seqTarget.getBoundingClientRect().top + window.scrollY;
+      const titleDocTop = seqDocTop + TITLE_OFFSET;
       triggerY = titleDocTop - height * 0.25;
       canvas.style.setProperty("--brain-anchor", Math.max(0, triggerY) + "px");
-      // homeY: level with the lede, expressed as where the lede would sit in
-      // the viewport at the moment of the trigger above — the offset between
-      // the two document positions is fixed, so this holds at any scroll.
-      if (homeTarget) {
-        const ledeRect = homeTarget.getBoundingClientRect();
-        const ledeDocTop = ledeRect.top + window.scrollY;
-        homeX = Math.max(0.02, (ledeRect.left * 0.5) / width);
-        homeY = Math.min(0.85, Math.max(0.05, (ledeDocTop - titleDocTop + height * 0.25) / height));
-      }
+      // homeY: level with the lede, at the moment of the trigger above —
+      // same fixed-offset approach as triggerY, for the same reason.
+      homeX = HOME_X_FRACTION;
+      homeY = Math.min(0.85, Math.max(0.05, (seqDocTop + LEDE_OFFSET - titleDocTop + height * 0.25) / height));
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     scale = Math.min(1, Math.max(0.55, width / 1100));

@@ -33,7 +33,26 @@ content. Edit the generator, not the HTML.
 | `hero.webp` | The flow-field artwork, copied from `public/hero/` |
 | `verify.cjs` | `node verify.cjs` — drives the page in Chromium and checks the things that break by accident |
 
-## Round 11 (this round): the review changes
+## Round 12 (this round): the review changes
+
+Neural field, a real bug in round 11's trigger measurement. It read
+`#work-title` and `.work__lede`'s position with `getBoundingClientRect()`,
+which is only a stable document offset for ordinary, normal-flow elements —
+these two live inside the pinned sequence's sticky stage, which sequence.js
+actively scrubs: past a certain scroll point `.work__intro` is set to
+`display: none` (a hidden element's rect is `(0,0,0,0)`), and even while
+shown, its position is relative to the sticky stage's *current* on-screen
+spot, not a fixed place in the document. Either way, `rect.top + scrollY`
+came out different depending on where the page happened to be scrolled on
+load or resize — which is exactly the bug reported: the field's rest point
+drifted with wherever a reload landed. Fixed by reading `.sequence` instead
+(the plain, always-normal-flow, never-hidden wrapper the whole pinned
+system lives inside) and using fixed pixel offsets from its top for the
+title and lede positions, rather than measuring the scrubbed elements
+directly. Confirmed by reloading mid-scroll and near the end of the page:
+`--brain-anchor` now computes to the identical value every time.
+
+## Round 11: the review changes
 
 Neural field, confirmed in writing before building it this time (round 10's
 version scrolled with the page correctly, but was already fixed and on
