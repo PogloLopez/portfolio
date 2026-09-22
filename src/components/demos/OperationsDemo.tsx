@@ -7,11 +7,11 @@ import { status } from "./palette";
 
 /**
  * The inter-store transfer planner, reduced to its actual job: show where cover
- * is short, where it is long, and propose the moves that even it out — with the
- * quantities editable, because the point of the real tool is that operations
- * drives it rather than requesting a report.
+ * is short, where it is long, and propose the moves that even it out.
  *
- * Stores, stock levels and sales rates are invented.
+ * Stores, stock levels and sales rates are invented, at the scale a store
+ * really carries: a few hundred units of a product at most, and moves of a
+ * few dozen.
  */
 
 type ProductId = "detergent" | "rice" | "soda";
@@ -23,43 +23,43 @@ const CATALOGUE: Record<ProductId, { name: string; unit: string; rows: StoreRow[
     name: "Powder detergent 2kg",
     unit: "units",
     rows: [
-      { store: "Centro", onHand: 940, daily: 11 },
-      { store: "Palermo", onHand: 128, daily: 24 },
-      { store: "La Enea", onHand: 610, daily: 9 },
-      { store: "Versalles", onHand: 74, daily: 18 },
-      { store: "Chipre", onHand: 305, daily: 13 },
-      { store: "Fátima", onHand: 156, daily: 21 },
+      { store: "Centro", onHand: 196, daily: 4.2 },
+      { store: "Palermo", onHand: 48, daily: 3.4 },
+      { store: "La Enea", onHand: 138, daily: 3.1 },
+      { store: "Versalles", onHand: 16, daily: 2.9 },
+      { store: "Chipre", onHand: 112, daily: 3.6 },
+      { store: "Fátima", onHand: 38, daily: 3.3 },
     ],
   },
   rice: {
     name: "White rice 500g",
     unit: "units",
     rows: [
-      { store: "Centro", onHand: 1420, daily: 46 },
-      { store: "Palermo", onHand: 2180, daily: 31 },
-      { store: "La Enea", onHand: 390, daily: 38 },
-      { store: "Versalles", onHand: 810, daily: 22 },
-      { store: "Chipre", onHand: 265, daily: 29 },
-      { store: "Fátima", onHand: 1640, daily: 25 },
+      { store: "Centro", onHand: 286, daily: 9.4 },
+      { store: "Palermo", onHand: 372, daily: 6.2 },
+      { store: "La Enea", onHand: 64, daily: 4.8 },
+      { store: "Versalles", onHand: 164, daily: 4.4 },
+      { store: "Chipre", onHand: 46, daily: 4.2 },
+      { store: "Fátima", onHand: 300, daily: 5 },
     ],
   },
   soda: {
     name: "Soda 1.5L",
     unit: "units",
     rows: [
-      { store: "Centro", onHand: 2260, daily: 34 },
-      { store: "Palermo", onHand: 540, daily: 41 },
-      { store: "La Enea", onHand: 1180, daily: 16 },
-      { store: "Versalles", onHand: 210, daily: 27 },
-      { store: "Chipre", onHand: 96, daily: 19 },
-      { store: "Fátima", onHand: 880, daily: 30 },
+      { store: "Centro", onHand: 340, daily: 5.2 },
+      { store: "Palermo", onHand: 108, daily: 6.4 },
+      { store: "La Enea", onHand: 210, daily: 3.1 },
+      { store: "Versalles", onHand: 42, daily: 4.1 },
+      { store: "Chipre", onHand: 27, daily: 2.8 },
+      { store: "Fátima", onHand: 168, daily: 5.6 },
     ],
   },
 };
 
 const TARGET_DAYS = 30;
 /** Below this a move costs more to handle than the stock it shifts is worth. */
-const MIN_MOVE = 24;
+const MIN_MOVE = 12;
 
 type Move = { from: string; to: string; units: number };
 
@@ -84,19 +84,17 @@ function planTransfers(rows: StoreRow[]): Move[] {
 
   for (const d of deficit) {
     let need = Math.round(d.delta);
-    while (need > 0 && si < surplus.length) {
+    // A remainder too small to be worth a truck stays where it is: neither
+    // the rest of this need nor the rest of a surplus store is moved.
+    while (need >= MIN_MOVE && si < surplus.length) {
       const s = surplus[si];
       const give = Math.min(need, Math.round(s.delta));
       if (give >= MIN_MOVE) {
         moves.push({ from: s.store, to: d.store, units: Math.round(give / 6) * 6 });
         s.delta -= give;
         need -= give;
-      } else {
-        // Too small to be worth a truck; leave it with the surplus store.
-        s.delta = 0;
       }
       if (s.delta < MIN_MOVE) si++;
-      else break;
     }
   }
 
@@ -114,7 +112,6 @@ const CRITICAL_DAYS = 20;
 
 export function OperationsDemo() {
   const [productId, setProductId] = useState<ProductId>("detergent");
-  const [edits, setEdits] = useState<Record<number, number>>({});
   /**
    * The moves are the tool's output, so they are not on screen before anyone
    * asks for them. Showing them by default made the plan look like part of the
@@ -126,9 +123,7 @@ export function OperationsDemo() {
   // Cheap enough (six rows) to recompute; the React compiler memoises it.
   const suggested = planTransfers(product.rows);
 
-  const moves = generated
-    ? suggested.map((m, i) => ({ ...m, units: edits[i] ?? m.units }))
-    : [];
+  const moves = generated ? suggested : [];
   const totalUnits = moves.reduce((n, m) => n + m.units, 0);
 
   const coverAfter: Record<string, number> = {};
@@ -151,7 +146,6 @@ export function OperationsDemo() {
 
   const change = (id: ProductId) => {
     setProductId(id);
-    setEdits({});
     setGenerated(false);
   };
 
@@ -161,8 +155,8 @@ export function OperationsDemo() {
   return (
     <DemoFrame
       title="Inter-store transfer planner"
-      subtitle="mercaldas-data · demo build"
-      note="The real tool runs against live inventory and sales, handles pack sizes and route constraints, and is operated by the purchasing team rather than by me. Stores, stock and sales rates here are invented, and nothing is submitted anywhere."
+      subtitle="stock-rebalancing · demo build"
+      note="The real tool runs against real inventory and sales, handles pack sizes and route constraints, and is operated by the purchasing team rather than by me. Stores, stock and sales rates here are invented, and nothing is submitted anywhere."
     >
       <ControlRow>
         <Field label="Product">
@@ -240,8 +234,8 @@ export function OperationsDemo() {
             <p className="mt-3 rounded-lg border border-dashed border-line-strong bg-surface-2/30 p-4 text-sm leading-relaxed text-fg-3">
               No plan yet. The solver matches every surplus store against every short one
               against a {TARGET_DAYS}-day cover target, drops the moves too small to be worth a
-              truck, and returns what is left. Generate it below, then edit any quantity and
-              watch the After column move.
+              truck, and returns what is left. Generate it below and watch the After column
+              move.
             </p>
           ) : moves.length === 0 ? (
             <p className="mt-3 rounded-lg border border-line bg-surface-2/40 p-4 text-sm text-fg-3">
@@ -249,7 +243,7 @@ export function OperationsDemo() {
             </p>
           ) : (
             <ul className="mt-3 space-y-2.5">
-              {moves.map((m, i) => (
+              {moves.map((m) => (
                 <li
                   key={`${m.from}-${m.to}`}
                   className="flex items-center gap-3 rounded-lg border border-line bg-surface-2/40 px-3.5 py-3"
@@ -261,26 +255,9 @@ export function OperationsDemo() {
                     </span>
                     <span className="text-fg">{m.to}</span>
                   </span>
-                  <label className="flex items-center gap-2">
-                    <span className="sr-only">
-                      Units to move from {m.from} to {m.to}
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      step={6}
-                      value={m.units}
-                      onChange={(e) => {
-                        setEdits((prev) => ({
-                          ...prev,
-                          [i]: Math.max(0, Number(e.target.value) || 0),
-                        }));
-                      }}
-                      style={{ outlineColor: "var(--accent, var(--color-iris))" }}
-                      className="w-24 rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-right text-sm text-fg tabular-nums focus:outline-2"
-                    />
-                    <span className="font-mono text-[0.625rem] text-fg-3">u</span>
-                  </label>
+                  <span className="text-sm font-semibold text-fg tabular-nums">
+                    {m.units} <span className="font-mono text-[0.625rem] font-normal text-fg-3">units</span>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -303,10 +280,7 @@ export function OperationsDemo() {
             ) : (
               <Button
                 variant="ghost"
-                onClick={() => {
-                  setEdits({});
-                  setGenerated(false);
-                }}
+                onClick={() => setGenerated(false)}
               >
                 Clear plan
               </Button>

@@ -28,7 +28,7 @@ const OVERRIDES = {
     // "per series" read as though every one of the 100k+ series gets its own
     // model; the routing policy actually decides per demand cluster.
     hook:
-      "Over 100,000 product and store combinations, forecast weekly by a routing policy that picks a model per cluster.",
+      "Over 100,000 SKU+Store combinations, forecast weekly by a routing policy that picks a model per cluster.",
     visual: { caption: "Forecast" },
   },
   "market-prices": {
@@ -73,7 +73,7 @@ const OVERRIDES = {
     hook:
       "Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.",
     cardStats: [
-      { value: "4h to 5min", label: "Per transfer plan" },
+      { value: "4h → 5min", label: "Per transfer plan" },
       { value: "Self-serve", label: "Run by the analysts" },
     ],
     visual: { caption: "Stock moving from a surplus store to the short ones" },

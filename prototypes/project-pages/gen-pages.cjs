@@ -46,19 +46,17 @@ function diagramFor(slug) {
   const caption = (saved.match(/^<!-- ([\s\S]*?) -->/) || [])[1] || "";
   let svg = saved.slice(saved.indexOf("<svg")).trim();
   for (const [from, to] of DIAGRAM_EDITS[slug] || []) svg = svg.split(from).join(to);
-  return { svg, caption };
+  return { svg, caption: NO_CAPTION.has(slug) ? "" : caption };
 }
 
-// Wording in the site's diagrams (src/content/diagrams.ts) that the review
-// corrected: the analysts planned transfers themselves, they did not queue
-// behind me. Applied to the extracted copy here; the same edit is listed in
-// NOTES.md for diagrams.ts when the pages move into the app.
-const DIAGRAM_EDITS = {
-  "operations-platform": [
-    [">Operations &amp; planning<", ">Purchasing analysts<"],
-    [">used to queue behind me<", ">planned transfers by hand<"],
-  ],
-};
+// Wording in the extracted diagrams to correct on the way in, as [from, to]
+// pairs per slug. Empty now: the corrections are made in
+// src/content/diagrams.ts itself.
+const DIAGRAM_EDITS = {};
+
+// Diagrams shown without a caption. The caption is the diagram's title, and
+// on these two the review asked for it gone; the SVG keeps it as its <title>.
+const NO_CAPTION = new Set(["forecast", "operations-platform"]);
 
 /* ---------------------------------------------------------------------------
    Pieces
@@ -163,9 +161,11 @@ function sheet(p, i, c, d) {
   const numbers = c.numbers
     .map(
       (n) =>
-        `${I}  <div class="pp-num"><dt class="pp-num__label">${esc(n.label)}</dt><dd class="pp-num__value">${esc(n.value)}</dd></div>`,
+        `${I}  <div class="pp-num${n.wide ? " pp-num--wide" : ""}"><dt class="pp-num__label">${esc(n.label)}</dt><dd class="pp-num__value">${esc(n.value)}</dd></div>`,
     )
     .join("\n");
+  // One grid column per card and two for a wide one, so the row is always full.
+  const cols = c.numbers.reduce((n, x) => n + (x.wide ? 2 : 1), 0);
   return `    <!-- The technical panel. A native <dialog>: it traps focus, closes on
          Escape and hands focus back to "See more" on its own; page.js only adds
          the open and close animation and the click-outside. -->
@@ -182,8 +182,7 @@ function sheet(p, i, c, d) {
         <dl class="pp-meta">
           <div><dt>Role</dt><dd>${esc(c.meta.role)}</dd></div>
           <div><dt>Running</dt><dd>${esc(c.meta.running)}</dd></div>
-          <div><dt>Repo</dt><dd>${esc(c.meta.repo)}</dd></div>
-        </dl>
+${c.meta.repo ? `          <div><dt>Repo</dt><dd>${esc(c.meta.repo)}</dd></div>\n` : ""}        </dl>
 
         <section class="pp-block" aria-labelledby="tools-title">
           <h3 class="pp-block__title" id="tools-title">Built with</h3>
@@ -198,13 +197,12 @@ ${tools}
             <div class="pp-diagram__scroll" tabindex="0" role="region" aria-label="Architecture diagram, scrolls sideways on small screens">
               ${d.svg}
             </div>
-            <figcaption>${esc(d.caption)}</figcaption>
-          </figure>
+${d.caption ? `            <figcaption>${esc(d.caption)}</figcaption>\n` : ""}          </figure>
         </section>
 
         <section class="pp-block" aria-labelledby="numbers-title">
           <h3 class="pp-block__title" id="numbers-title">By the numbers</h3>
-          <dl class="pp-nums">
+          <dl class="pp-nums" style="--cols: ${cols}">
 ${numbers}
           </dl>
         </section>

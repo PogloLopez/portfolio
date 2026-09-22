@@ -17,7 +17,7 @@ export function DemoFrame({
 }: {
   title: string;
   subtitle: string;
-  note: string;
+  note?: string;
   children: ReactNode;
 }) {
   return (
@@ -53,7 +53,7 @@ export function DemoFrame({
         <div className="p-4 sm:p-6">{children}</div>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-fg-3">{note}</p>
+      {note && <p className="mt-3 text-sm leading-relaxed text-fg-3">{note}</p>}
     </section>
   );
 }

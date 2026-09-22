@@ -123,14 +123,45 @@ passes 15/15.
   more than three screens away, instead of smooth-scrolling across the whole
   pinned sequence.
 
+## Second review round (feedback.md)
+
+Wording changes are in `content.cjs`, plus two landing card lines that the
+page openings share: the forecast hook says "SKU+Store combinations" and the
+transfer stat says "4h → 5min". The other changes are made in the site's own
+sources, so they reach the live site when this merges:
+
+- **`ForecastDemo.tsx`:** the policy text box and the note under the demo are
+  gone. The footer reads "Orchestrated weekly in Dagster" followed by
+  Dagster's own mark (`DagsterMark.tsx`, copied from dagster-io/dagster). The
+  LightGBM row says "one model per cluster". `DemoFrame`'s `note` is now
+  optional.
+- **`OperationsDemo.tsx`:**
+  - The quantity inputs (the spinner arrows) are gone, and the plan is
+    static.
+  - Stock is at a real store's scale: 16 to 372 units on hand, and moves of
+    18 to 84 units.
+  - The solver no longer throws away a whole surplus store over a 1-unit
+    leftover.
+  - The note says "real inventory".
+- **`diagrams.ts`:**
+  - Forecast: "one per cluster".
+  - Stock engine: redrawn without the Gmail API, the inboxes or the
+    standalone scripts, and "Web app" in place of "plain JS". Its old title,
+    "One API where separate scripts used to be", is replaced.
+  - Cortana: "Automatic backups" in place of "restore drill".
+- **Captions:** the forecast and stock-engine diagrams are shown without one
+  (`NO_CAPTION` in `gen-pages.cjs`).
+- **Repo line:** it shows only when the repo is public, so only Cortana has
+  one.
+- **Numbers:** a number marked `wide` takes two columns, so
+  "30% → 70–82%" stays on one line.
+
 ## To do when these move into the app
 
 - **Demo subtitles and notes still name the employer.** They are renamed only
   in the stills, so change the React sources:
-  - `ForecastDemo.tsx:273` `mercaldas-forecast` → `demand-forecast`
   - `MarketPricesDemo.tsx:333` `mercaldas-precios-mercado` → `market-prices`
   - `MarketPricesDemo.tsx:334` "from DANE or from Mercaldas" → "…or from the company"
-  - `OperationsDemo.tsx:164` `mercaldas-data` → `stock-rebalancing`
   - `RagDemo.tsx:178` `mercaldas-rag` → `business-data-assistant`
 - **The site's demos have five small contrast shortfalls,** ratios of 3.98 to
   4.43 against the 4.5 required. They are on the live site today, and the
@@ -142,14 +173,14 @@ passes 15/15.
   - the red line in the Cortana diff.
 
   The fix is to lighten each text colour slightly.
-- **`src/content/diagrams.ts:188`**: "Operations & planning / used to queue
-  behind me" → "Purchasing analysts / planned transfers by hand".
 - **The rest of the site still names the employer:**
   - the confidentiality line on the project page (`[slug]/page.tsx:247`);
   - the home intro (`page.tsx:88`);
   - `site.ts:13`.
-- **Repo names contain the employer's name,** so the panel says "Private
-  repository" for the four work projects. Cortana shows its real repo names.
+- **Repo names contain the employer's name,** so the four work projects show
+  no repo line. Cortana shows its real repo names.
+- **`projects.ts` still has the old wording:** "4h to 5min", the Gmail API,
+  and "product and store".
 - **The long MDX write-ups are replaced.** Their content is condensed into
   `content.cjs` and they stay in git history.
 

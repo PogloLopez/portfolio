@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DagsterMark } from "./DagsterMark";
 import { DemoFrame } from "./DemoFrame";
 import { LineChart, type Series } from "./LineChart";
 import { Segmented } from "./controls";
@@ -51,12 +52,11 @@ type Pattern = {
    * reason the guardrail can be shown to earn its place.
    */
   target: Record<ModelId, number>;
-  why: string;
 };
 
 const MODELS: { id: ModelId; name: string; note: string }[] = [
   { id: "champion", name: "Routing + guardrail", note: "the policy in production" },
-  { id: "lgbm", name: "LightGBM Tweedie", note: "one model per category" },
+  { id: "lgbm", name: "LightGBM Tweedie", note: "one model per cluster" },
   { id: "sma4", name: "SMA-4", note: "four-week moving average" },
   { id: "prev", name: "Previous pipeline", note: "what this replaced" },
 ];
@@ -74,7 +74,6 @@ const PATTERNS: Pattern[] = [
     sparsity: 0,
     seed: 4021,
     target: { champion: 16, lgbm: 19.75, sma4: 40, prev: 33.75 },
-    why: "Dense history and a stable rhythm is where gradient boosting is strongest: it reads price, promotion and calendar effects that a moving average cannot. The G1 cap still sits on top, trimming the occasional runaway prediction.",
   },
   {
     id: "seasonal",
@@ -88,7 +87,6 @@ const PATTERNS: Pattern[] = [
     sparsity: 0,
     seed: 9134,
     target: { champion: 29, lgbm: 39.5, sma4: 46.25, prev: 41.5 },
-    why: "The peak shifts a little each year and calendar features track that shift, which a moving average cannot. Accuracy is lower than on smooth demand, which is the shape of the series rather than a defect.",
   },
   {
     id: "intermittent",
@@ -102,7 +100,6 @@ const PATTERNS: Pattern[] = [
     sparsity: 0.62,
     seed: 5577,
     target: { champion: 43.75, lgbm: 74, sma4: 46.5, prev: 61.5 },
-    why: "A tree trained on a mostly-zero series learns to predict near zero, which is technically accurate and operationally useless. Shipping the model that wins beats shipping the clever one.",
   },
 ];
 
@@ -211,23 +208,6 @@ export function ForecastDemo() {
   const shown = selected ?? data.champion;
   const shownScore = data.scores.find((s) => s.id === shown)!;
   const worst = Math.max(...data.scores.map((s) => s.wmape));
-  /*
-   * Two comparisons matter, and they are different arguments.
-   *
-   * Against the branch the routing DID take: the gap is what the guardrail
-   * buys on top of the raw model, which is why the policy is scored as its own
-   * candidate rather than inheriting the branch's number.
-   *
-   * Against the branch it did NOT take: on intermittent demand that is the
-   * tree model, and the gap there is the whole argument for routing at all.
-   */
-  const routedName = pattern.sparsity > 0.4 ? "SMA-4" : "LightGBM Tweedie";
-  const avoidedName = pattern.sparsity > 0.4 ? "LightGBM Tweedie" : "SMA-4";
-  const avoided = data.scores.find((m) => m.name === avoidedName);
-  const routed = data.scores.find((m) => m.name === routedName);
-  const champion = data.scores.find((m) => m.id === "champion");
-  const gap = avoided && routed ? avoided.wmape - routed.wmape : 0;
-  const guardrailGap = routed && champion ? routed.wmape - champion.wmape : 0;
 
   const series: Series[] = [
     { id: "actual", name: "What actually sold", color: seriesColor.primary, values: data.actual },
@@ -270,8 +250,7 @@ export function ForecastDemo() {
   return (
     <DemoFrame
       title="Forecast explorer"
-      subtitle="mercaldas-forecast · demo build"
-      note="The real pipeline runs this every week over more than 100,000 product and store combinations across 14 stores. These three series are synthetic, so the page ships without company data: the scoring code is the same one, the numbers are illustrative, and the production band is 70% to 82% accuracy by cluster."
+      subtitle="demand-forecast · demo build"
     >
       <div className="mb-6">
         <p className="mb-3 text-sm font-medium text-fg-2">Pick a demand pattern</p>
@@ -402,19 +381,6 @@ export function ForecastDemo() {
               );
             })}
           </ul>
-
-          <div
-            className="mt-4 rounded-lg border-l-2 bg-surface-2/40 py-3 pr-3 pl-4"
-            style={{ borderColor: "var(--accent, var(--color-iris))" }}
-          >
-            <p className="text-xs leading-relaxed text-fg-2">
-              <span className="font-semibold text-fg">
-                {`The policy routes this series to ${routedName} and caps what comes out of it. `}
-              </span>
-              {`That guardrail is worth ${guardrailGap.toFixed(1)} WMAPE points over the raw branch here. The alternative the routing rejected, ${avoidedName}, scores ${avoided?.wmape.toFixed(1)}%, ${Math.round(gap)} points worse than the branch it picked. `}
-              {pattern.why}
-            </p>
-          </div>
         </div>
       </div>
 
@@ -438,9 +404,9 @@ export function ForecastDemo() {
             </li>
           ))}
         </ol>
-        <p className="mt-4 text-xs leading-relaxed text-fg-3">
-          Orchestrated weekly in Dagster. Every run scores all four models on held-out weeks and
-          promotes the winner per cluster, so the choice stays measured rather than assumed.
+        <p className="mt-4 flex items-center gap-2 text-xs text-fg-3">
+          Orchestrated weekly in Dagster
+          <DagsterMark className="h-5 w-5 shrink-0" />
         </p>
       </div>
     </DemoFrame>

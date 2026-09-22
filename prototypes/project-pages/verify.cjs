@@ -167,8 +167,11 @@ function checkFigures() {
       const c = CONTENT[p.slug];
       check(`${tag}: See more opens the panel, focus moves in, page is locked`, opened.open && opened.focusInside && opened.locked, opened);
       check(
-        `${tag}: the panel carries tools, numbers, role/running/repo`,
-        opened.tools === c.tools.length && opened.numbers === c.numbers.length && opened.meta === 3,
+        // The repo line shows only for a public repo.
+        `${tag}: the panel carries tools, numbers, role/running (and repo if public)`,
+        opened.tools === c.tools.length &&
+          opened.numbers === c.numbers.length &&
+          opened.meta === (c.meta.repo ? 3 : 2),
         opened,
       );
       for (let t = 0; t < 12; t++) await page.keyboard.press("Tab");

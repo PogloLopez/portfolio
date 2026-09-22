@@ -14,39 +14,39 @@
 module.exports = {
   forecast: {
     story: [
-      "A retail chain with 14 stores reorders stock every week, for over 100,000 product and store combinations. That decision used to come from a black box inside the ERP: it produced a number, never a reason, and nobody could make it better.",
+      "A retail chain with 14 supermarkets reorders stock every week, for over 100,000 SKU+Store combinations. That decision used to come from a black box inside the ERP: it produced a number, never a reason, and nobody could make it better.",
       // Accuracy figures are the author's: about 30% with the ERP's forecast,
       // 70-82% now. (A "19% less error" claim in projects.ts and forecast.mdx
       // was dropped on review.)
-      "The replacement forecasts every combination weekly and feeds reordering directly. It sends each product to the method that suits how it actually sells: machine-learning models for the steady sellers, a simpler rule for the long tail that barely moves. Accuracy went from about 30% with the ERP's forecast to 70–82% today, depending on how steadily a product sells.",
+      "The replacement forecasts every combination weekly and feeds reordering directly. It sends each product to the method that suits how it actually sells: machine-learning models for the steady sellers, a simpler rule for the long tail that barely moves. Accuracy went from about 30% with the ERP's forecast to 70–82% today, depending on the cluster.",
     ],
     tools: [
       ["Python", "The whole pipeline"],
-      ["LightGBM", "Demand models, one per product category"],
+      ["LightGBM", "Demand models, one per cluster"],
       ["statsforecast", "Baseline models to beat"],
       ["Polars", "Fast data processing"],
-      ["Delta Lake", "Versioned data lake on local disk"],
+      ["Delta Lake", "Versioned on-prem data lake"],
       ["Dagster", "Pipeline orchestration and scheduling"],
       ["MLflow", "Experiment tracking and model promotion"],
       ["SQL Server", "Source sales and stock data"],
     ],
     numbers: [
-      { value: "30% → 70–82%", label: "Accuracy, the ERP's forecast against today's, by demand pattern" },
-      { value: "100k+", label: "Product and store combinations, forecast weekly" },
+      // The headline figure, so its card is drawn twice as wide.
+      { value: "30% → 70–82%", label: "Accuracy, the ERP's forecast against today's, by cluster", wide: true },
+      { value: "100k+", label: "SKU+Store combinations, forecast weekly" },
       { value: "370+", label: "Automated tests, green before every deploy" },
-      { value: "8", label: "Models, one per product category" },
+      { value: "8", label: "Models, one per cluster" },
     ],
     meta: {
       role: "Architecture and data engineering; modelling with the team's data scientist",
       running: "In production since 2026",
-      repo: "Private repository",
     },
   },
 
   "market-prices": {
     story: [
       "Colombia's statistics office publishes wholesale food prices every week, in files made for people to read: layouts shift between releases, units change from sheet to sheet, and there is no API. Meanwhile the buying team negotiated with suppliers with no outside reference for what the market was doing.",
-      "The platform reads every release reliably, keeps years of history for hundreds of products, forecasts each price 52 weeks ahead, and has an AI model write a short reading of each one. It started as an internal tool and is now a secure web app the buyers take into supplier negotiations.",
+      "The platform reads every release reliably, keeps years of history for hundreds of products, forecasts each price 52 weeks ahead, and has an AI model generate automated insights. It started as an internal tool and is now a secure web app the buyers take into supplier negotiations.",
     ],
     tools: [
       ["Python", "Ingestion, models and the web app"],
@@ -55,79 +55,76 @@ module.exports = {
       ["XGBoost · LightGBM", "Price forecasting"],
       ["FastAPI", "The web app's backend"],
       ["HTMX", "Interactive pages without a heavy front end"],
-      ["Anthropic API", "Writes each price reading, once"],
+      ["Anthropic API", "Generates the automated insights"],
     ],
     numbers: [
       { value: "52 wk", label: "Forecast horizon for every product" },
       { value: "100s", label: "Products, with years of history each" },
       { value: "100s", label: "Automated tests running in CI" },
-      { value: "Once", label: "Each AI reading is written once, then reused" },
+      { value: "Reused", label: "AI-generated insights, whenever the input data is the same" },
     ],
     meta: {
-      role: "Sole engineer, from design to operation",
+      role: "End-to-end engineer, from design to operation",
       running: "In production since 2026",
-      repo: "Private repository",
     },
   },
 
   rag: {
     story: [
-      "Every question about sales, inventory or purchasing used to wait for the one person who could write the database query. Putting an AI model in front of the data is the obvious fix, and the obvious risk: a model that invents a plausible number looks exactly like one that got it right.",
-      "So the rule came first: the model never produces a figure. Common questions run prepared, reviewed queries; anything new gets a query written by the model, which is checked and test-run before it touches real data. Answers arrive in Telegram, and every number in them comes from a query that actually ran.",
+      "Every question about sales, inventory or purchasing used to wait for the one person who could write the SQL query. Putting an AI model in front of the data is the obvious fix, and the obvious risk: a model that invents a plausible number looks exactly like one that got it right.",
+      "So the rule came first: the model never produces a figure. Every answer comes from the company's data warehouse, where the business data is already modelled and documented. Common questions run prepared, reviewed queries. Anything new goes through NL2SQL: the model writes the SQL, which is parsed into a syntax tree and validated, then dry-run against the warehouse, so a malformed or unsafe query is rejected before it touches real data. Answers arrive in Telegram, and every number in them comes from a query that actually ran.",
     ],
     tools: [
       ["Python", "The assistant's core, with no outside dependencies"],
+      ["Model-agnostic LLM layer", "Any provider, picked by measured accuracy and latency"],
       ["Groq", "Fast, low-cost model hosting"],
-      ["Open-weight LLMs", "Write queries for questions nobody prepared"],
-      ["Vector search", "Matches a question to a prepared query"],
-      ["SQL Server", "The business data"],
+      ["Open-weight LLMs", "NL2SQL for questions nobody prepared"],
+      ["Embeddings", "Match a question to the right prepared query"],
+      ["Vector search", "Finds the closest query by meaning, not keywords"],
+      ["SQL AST validation", "Every generated query parsed and checked before it runs"],
+      ["Dry run", "Proves the query executes before it touches real data"],
+      ["SQL Server", "The data warehouse"],
       ["Telegram", "Where people ask"],
     ],
     numbers: [
       { value: "Zero", label: "Figures the model makes up" },
-      { value: "120", label: "Automated tests, from query checks to spend limits" },
-      { value: "2", label: "Answer paths: prepared queries and checked new ones" },
-      { value: "1", label: "Way to reach the paid model, enforced by a test" },
+      { value: "2", label: "Answer paths: prepared queries and NL2SQL" },
+      { value: "1", label: "Way to reach the paid model, enforced by multiple tests" },
+      { value: "Robust", label: "Test suite, from SQL validation to spend limits" },
     ],
     meta: {
       role: "Sole engineer",
-      running: "In active development",
-      repo: "Private repository",
+      running: "In pilot testing",
     },
   },
 
   "operations-platform": {
     story: [
-      "Purchasing analysts worked out every inter-store stock transfer by hand, a plan that took around four hours. Recurring sales and inventory reports were also assembled manually, from a set of scripts with no shared interface.",
-      "The engine now proposes which products should move from stores with surplus to stores running short, and the analysts review and run the plan themselves in a web app, in two to five minutes. Two reports build and send themselves on a schedule, and all of it moved onto one platform without the stores' operations ever stopping.",
+      "Purchasing analysts worked out every inter-store stock transfer by hand: which store had too much of a product, which had too little, and how much to move. A single plan took around four hours to elaborate.",
+      "The engine now proposes which products should move from stores with surplus to stores running short, checked against real inventory and sales. The analysts review the plan and run it themselves in a web app, in two to five minutes.",
     ],
     tools: [
-      ["Python", "The transfer and report logic"],
-      ["FastAPI", "One API for all the operational tools"],
+      ["Python", "The transfer logic"],
+      ["FastAPI", "The engine's API"],
       ["pandas", "Stock-cover and transfer calculations"],
-      ["SQL Server", "Stores, stock and sales data"],
-      ["Dagster", "Scheduled reports"],
+      ["SQL Server", "Real inventory and sales data"],
+      ["Dagster", "Scheduled runs"],
       ["Docker", "Packaged deployment"],
-      ["Gmail API", "Report delivery, no stored passwords"],
-      ["Plain JavaScript", "The analysts' web app, no framework"],
+      ["JavaScript web app", "Where the analysts review and run each plan"],
     ],
     numbers: [
-      { value: "4h → 5min", label: "Time to produce a transfer plan" },
-      { value: "3", label: "Scheduled report runs a week, hands-off" },
-      { value: "1", label: "API where separate scripts used to be" },
-      { value: "0", label: "Outages while it was migrated" },
+      { value: "4h → 5min", label: "Time to produce a transfer plan", wide: true },
     ],
     meta: {
       role: "Sole engineer",
       running: "In production since 2025",
-      repo: "Private repository",
     },
   },
 
   cortana: {
     story: [
-      "My own assistant for memory, notes, personal finances and calendar, which I talk to over Telegram. Assistants that advertise memory keep it somewhere you cannot read or take with you. I wanted the opposite: delete the app tomorrow and everything it knows still opens in a text editor.",
-      "So its memory is a folder of plain-text notes kept in Git, and the application is a replaceable layer on top. Anything it cannot undo, like changing a financial record or sending a message, waits for my approval first. Backups run on their own and have been restored for real, and it all costs under $20 a month.",
+      "My own assistant for memory, notes, personal finances and calendar, which I talk to over Telegram and a web interface. Assistants that advertise memory keep it somewhere you cannot read or take with you. I wanted the opposite: delete the app tomorrow and everything it knows still opens in a text editor.",
+      "So its memory is a folder of markdown notes kept in Git, and the application is a replaceable layer on top. Anything it cannot undo, like changing a financial record or sending a message, waits for my approval first. Backups run on their own, and it all costs under $20 a month.",
     ],
     tools: [
       ["Python", "The assistant's logic"],
@@ -143,7 +140,6 @@ module.exports = {
       { value: "4", label: "Checks every change must pass before it merges" },
       { value: "100s", label: "Automated tests that have caught real regressions" },
       { value: "< $20", label: "Monthly cloud spend, by design" },
-      { value: "Tested", label: "Backups restored from scratch, not just taken" },
     ],
     meta: {
       role: "Sole engineer, architect and only user",

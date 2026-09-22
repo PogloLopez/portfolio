@@ -12,7 +12,7 @@ export const diagrams: Record<string, DiagramSpec> = {
   forecast: {
     title: "Weekly forecast pipeline, from ERP extract to replenishment",
     description:
-      "The ERP feeds a daily ingest into a Bronze layer, refined into Silver features and Gold training frames. Series are split into eight taxonomic categories, each with its own LightGBM Tweedie model. A Syntetos-Boylan routing policy then decides per series whether to use that model or a four-week moving average, a guardrail caps the daily prediction, and the result feeds replenishment. A horizon audit checks the served forecast every week.",
+      "The ERP feeds a daily ingest into a Bronze layer, refined into Silver features and Gold training frames. Series are split into eight clusters, each with its own LightGBM Tweedie model. A Syntetos-Boylan routing policy then decides per series whether to use that model or a four-week moving average, a guardrail caps the daily prediction, and the result feeds replenishment. A horizon audit checks the served forecast every week.",
     lanes: ["source", "ingest", "lake", "modelling", "serving"],
     nodes: [
       { id: "erp", col: 0, row: 0, label: "ERP", sub: "sales · stock · master data" },
@@ -33,7 +33,7 @@ export const diagrams: Record<string, DiagramSpec> = {
         col: 3,
         row: 1,
         label: "8 LightGBM Tweedie",
-        sub: "one per category",
+        sub: "one per cluster",
         tone: "accent",
       },
       { id: "sma", col: 3, row: 2, label: "SMA-4", sub: "intermittent · lumpy · new" },
@@ -180,41 +180,28 @@ export const diagrams: Record<string, DiagramSpec> = {
   },
 
   "operations-platform": {
-    title: "One API where separate scripts used to be",
+    title: "Transfer plans the analysts run themselves",
     description:
-      "The operations team works in a plain-JavaScript web UI backed by a single FastAPI core that holds the transfer, buying-factor and reporting logic previously spread across standalone scripts. Dagster drives the recurring report runs, delivery goes out over the Gmail API with OAuth2, and SQL Server remains the transactional source.",
-    lanes: ["users", "interface", "platform", "delivery", "systems"],
+      "Purchasing analysts work in a web app backed by a single FastAPI core that holds the transfer logic: it reads real inventory and sales from SQL Server, works out each store's stock cover and proposes the moves that even it out. Dagster runs the recurring jobs.",
+    lanes: ["users", "interface", "platform", "systems"],
     nodes: [
-      { id: "ops", col: 0, row: 1, label: "Operations & planning", sub: "used to queue behind me" },
+      { id: "ops", col: 0, row: 1, label: "Purchasing analysts", sub: "review and run the plan" },
       { id: "dagster", col: 1, row: 0, label: "Dagster", sub: "recurring schedules" },
-      { id: "ui", col: 1, row: 1, label: "Web UI", sub: "plain JS, no build step" },
+      { id: "ui", col: 1, row: 1, label: "Web app", sub: "the transfer planner" },
       {
         id: "api",
         col: 2,
         row: 1,
         label: "FastAPI core",
-        sub: "transfers · factors · reports",
+        sub: "stock cover · transfers",
         tone: "accent",
       },
-      {
-        id: "legacy",
-        col: 2,
-        row: 2,
-        label: "Standalone scripts",
-        sub: "absorbed one at a time",
-        tone: "ghost",
-      },
-      { id: "gmail", col: 3, row: 0, label: "Gmail API", sub: "OAuth2, not SMTP" },
-      { id: "inbox", col: 4, row: 0, label: "Inboxes", sub: "no human in the loop", tone: "accent" },
-      { id: "db", col: 4, row: 1, label: "SQL Server", sub: "transactional source", tone: "store" },
+      { id: "db", col: 3, row: 1, label: "SQL Server", sub: "real inventory and sales", tone: "store" },
     ],
     edges: [
       { from: "ops", to: "ui" },
       { from: "ui", to: "api" },
       { from: "dagster", to: "api", route: "hv" },
-      { from: "legacy", to: "api", route: "v", dashed: true, label: "migrated" },
-      { from: "api", to: "gmail", route: "hvh" },
-      { from: "gmail", to: "inbox" },
       { from: "api", to: "db" },
     ],
   },
@@ -222,7 +209,7 @@ export const diagrams: Record<string, DiagramSpec> = {
   cortana: {
     title: "Memory and runtime, split on purpose",
     description:
-      "Requests arrive over Telegram or the web UI into a FastAPI runtime that dispatches to a lane per domain: memory, finance and calendar. Every lane's irreversible actions pass through a human-in-the-loop gate before touching persistence. Long-term memory is a Git-versioned Markdown vault the runtime reconciles with rather than overwrites; transactional state is Postgres, guarded by restore-tested backups.",
+      "Requests arrive over Telegram or the web UI into a FastAPI runtime that dispatches to a lane per domain: memory, finance and calendar. Every lane's irreversible actions pass through a human-in-the-loop gate before touching persistence. Long-term memory is a Git-versioned Markdown vault the runtime reconciles with rather than overwrites; transactional state is Postgres, with automatic backups.",
     groups: [
       { label: "runtime", cols: [1, 3], rows: [0, 2] },
       { label: "persistence", cols: [4, 4], rows: [0, 2] },
@@ -254,7 +241,7 @@ export const diagrams: Record<string, DiagramSpec> = {
         id: "backup",
         col: 4,
         row: 2,
-        label: "Backups + restore drill",
+        label: "Automatic backups",
         sub: "destructive ops blocked",
         tone: "gate",
       },
