@@ -176,7 +176,7 @@ export function RagDemo() {
     <DemoFrame
       title="Ask the data assistant"
       subtitle="business-data-assistant · demo build"
-      note="The real assistant runs over Telegram against a documented data warehouse. Here the three questions, the SQL and the answers are fixed and nothing is executed, but the routing, the validation steps and the counter below reproduce how the real one behaves."
+      note="The real assistant runs over Telegram against a documented data warehouse. Here the three questions, the SQL and the answers are fixed and nothing is executed, but the routing, the validation steps and the counter above reproduce how the real one behaves."
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_17rem]">
         <div className="min-w-0">

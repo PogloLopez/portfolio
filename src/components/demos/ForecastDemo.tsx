@@ -106,6 +106,9 @@ const PATTERNS: Pattern[] = [
 const HISTORY = 40;
 const HORIZON = 12;
 
+/** "a seasonal series", but "an intermittent series". */
+const article = (word: string) => ("aeiou".includes(word[0].toLowerCase()) ? "an" : "a");
+
 function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -279,7 +282,7 @@ export function ForecastDemo() {
             format={(n) => `${Math.round(n)}`}
             divider={{ at: HISTORY - 1, label: "forecast" }}
             height={260}
-            caption={`Weekly units for a ${pattern.label.toLowerCase()} series: 40 weeks of history, then the ${shownScore.name} forecast against what actually sold. Synthetic values.`}
+            caption={`Weekly units for ${article(pattern.label)} ${pattern.label.toLowerCase()} series: 40 weeks of history, then the ${shownScore.name} forecast against what actually sold. Synthetic values.`}
           />
 
           {/* How the selected model is actually judged. Error alone hides a

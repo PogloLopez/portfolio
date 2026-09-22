@@ -189,10 +189,10 @@ export const projects: Project[] = [
     accent: "a5",
     title: "Personal AI operating system",
     kicker: "Multi-agent · Local-first",
-    hook: "The memory is plain text in Git, so it outlives the runtime that reads it.",
+    hook: "The memory is markdown in Git, so it outlives the runtime that reads it.",
     cardStats: [
       { value: "Asks first", label: "Before anything it can't undo" },
-      { value: "Plain text", label: "Git is the source of truth" },
+      { value: "Markdown", label: "Git is the source of truth" },
     ],
     visual: { kind: "assistant", caption: "Ask it something, in your own words" },
     story: [

@@ -7,6 +7,20 @@ import type { NextConfig } from "next";
  * is no app/page.tsx.
  */
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // The files behind the rewrites, so a page is not reachable at two
+      // addresses. Redirects are applied before the rewrites below, and a
+      // rewritten request does not go through them again.
+      { source: "/site/index.html", destination: "/", permanent: true },
+      { source: "/site/projects/:slug.html", destination: "/projects/:slug", permanent: true },
+      // Browsers that ask for /favicon.ico anyway. The icon is a Next
+      // metadata route, and an app/favicon.ico file would take precedence
+      // over it.
+      { source: "/favicon.ico", destination: "/icon.png", permanent: true },
+    ];
+  },
+
   async rewrites() {
     return {
       beforeFiles: [

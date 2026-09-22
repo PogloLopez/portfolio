@@ -8,7 +8,7 @@ import { accent, status } from "./palette";
  * The human-in-the-loop gate, and what sits behind it.
  *
  * Two things this demonstrates that prose cannot: an irreversible action stops
- * and waits for a person, and the thing it is about to change is a plain-text
+ * and waits for a person, and the thing it is about to change is a markdown
  * file whose change can be read as a diff before it happens. Approving commits
  * it; rejecting writes nothing.
  *
@@ -120,7 +120,7 @@ export function CortanaDemo() {
     <DemoFrame
       title="Cortana, the human-in-the-loop gate"
       subtitle="cortana-app · demo build"
-      note="The real assistant runs over Telegram against a Git-versioned Markdown vault, with Postgres for transactional state. The notes, balances and commit hashes below are invented, and nothing is written anywhere."
+      note="The real assistant runs over Telegram and a web interface, against a Git-versioned Markdown vault, with Postgres for transactional state. The notes, balances and commit hashes above are invented, and nothing is written anywhere."
     >
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
         <div className="min-w-0">
@@ -261,9 +261,9 @@ export function CortanaDemo() {
                         {request.target}
                       </p>
                       <p className="mt-3 text-xs leading-relaxed text-fg-3">
-                        The change lives in a text file in a Git repository. I can read it, diff
-                        it, revert it, or take the whole vault somewhere else. That is the reason
-                        the memory is plain text in the first place.
+                        The change lives in a markdown file in a Git repository. I can read it,
+                        diff it, revert it, or take the whole vault somewhere else. That is the
+                        reason the memory is markdown in the first place.
                       </p>
                     </div>
                   )}

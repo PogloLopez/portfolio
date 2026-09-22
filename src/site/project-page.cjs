@@ -92,7 +92,7 @@ function demo(p) {
                still inside is only what shows without JavaScript; the demo
                replaces it as soon as it mounts. -->
           <div class="pp-demo__live" data-demo="${p.slug}">
-            <img class="pp-demo__still" src="${urls.asset(`demos/${p.slug}.jpg`)}" alt="The ${esc(p.title.toLowerCase())} demo (interactive with JavaScript on)" loading="lazy" decoding="async" />
+            <img class="pp-demo__still" src="${urls.asset(`demos/${p.slug}.jpg`)}" alt="The ${esc(p.title)} demo (interactive with JavaScript on)" loading="lazy" decoding="async" />
           </div>
           <script src="${urls.asset(`demos/${p.slug}.js`)}" defer></script>
         </div>

@@ -6,6 +6,10 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = "Case study";
 
+// Only the five projects have a card; any other slug is a 404 rather than a
+// generic image for a page that does not exist.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
