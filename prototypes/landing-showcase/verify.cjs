@@ -199,7 +199,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
         }),
       );
     }
-    const ctas = stops.filter((s) => s.href && s.href.startsWith("#case-"));
+    const ctas = stops.filter((s) => s.href && s.href.startsWith("../project-pages/"));
     check("every project is reachable by keyboard, fully visible", ctas.length === 5 && ctas.every((s) => s.opacity > 0.95 && s.onScreen), ctas);
     if (SHOTS) {
       fs.mkdirSync(SHOTS, { recursive: true });

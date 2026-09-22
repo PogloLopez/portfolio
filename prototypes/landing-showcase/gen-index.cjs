@@ -427,7 +427,10 @@ const ctaLabel = (p) =>
   `<span class="sr-only">View full case study: ${esc(p.title)}</span>` +
   `<span aria-hidden="true">${ARROW}</span>`;
 
-const cta = (p, ind) => `${ind}<a class="panel__cta" data-part="cta" href="#case-${p.slug}">${ctaLabel(p)}</a>`;
+// Where a project's case study lives: the project-pages prototype, next door.
+const caseHref = (p) => `../project-pages/${p.slug}.html`;
+
+const cta = (p, ind) => `${ind}<a class="panel__cta" data-part="cta" href="${caseHref(p)}">${ctaLabel(p)}</a>`;
 
 // Ids name each article after its title. Only real content gets them: the
 // duplicate marquee cards and the split-half clones must not repeat an id.
@@ -475,7 +478,9 @@ function panel(p, i) {
 
 // `real` is false for the inert copies (the duplicate set and the lead card):
 // they carry no ids and no aria-labelledby.
-function card(p, i, real) {
+// `href` lets another page (a project page's carousel) point the cards
+// somewhere relative to itself.
+function card(p, i, real, href = caseHref) {
   const I = "            ";
   return (
     `          <article class="mcard" data-accent="${p.accent}"${real ? ` aria-labelledby="${cardTitleId(p)}"` : ""}>\n` +
@@ -484,7 +489,7 @@ function card(p, i, real) {
     stats(p, "mcard__stats", I, false) + "\n" +
     `${I}<div class="mcard__viz">\n${viz(p, "card", `${I}  `)}\n${I}</div>\n` +
     `${I}<p class="mcard__hook">${esc(p.hook)}</p>\n` +
-    `${I}<a class="mcard__cta" href="#case-${p.slug}">${ctaLabel(p)}</a>\n` +
+    `${I}<a class="mcard__cta" href="${href(p)}">${ctaLabel(p)}</a>\n` +
     `          </article>`
   );
 }
@@ -746,5 +751,11 @@ ${projects.map((p, i) => card(p, i, false)).join("\n")}
 </html>
 `;
 
-fs.writeFileSync(OUT, html);
-console.log("wrote", OUT, html.length, "bytes");
+// The project-pages prototype builds on these: the same pictures, cards,
+// contact marks and gradients, so the two can never drift apart.
+module.exports = { projects, viz, stats, card, kicker, ctaLabel, icon, gradients, esc, num2, ARROW };
+
+if (require.main === module) {
+  fs.writeFileSync(OUT, html);
+  console.log("wrote", OUT, html.length, "bytes");
+}
