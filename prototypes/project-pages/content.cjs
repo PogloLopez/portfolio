@@ -15,7 +15,10 @@ module.exports = {
   forecast: {
     story: [
       "A retail chain with 14 stores reorders stock every week, for over 100,000 product and store combinations. That decision used to come from a black box inside the ERP: it produced a number, never a reason, and nobody could make it better.",
-      "The replacement forecasts every combination weekly and feeds reordering directly. It sends each product to the method that suits how it actually sells: machine-learning models for the steady sellers, a simpler rule for the long tail that barely moves. Forecast error fell by 19% against the pipeline it replaced.",
+      // Accuracy figures are the author's: about 30% with the ERP's forecast,
+      // 70-82% now. (A "19% less error" claim in projects.ts and forecast.mdx
+      // was dropped on review.)
+      "The replacement forecasts every combination weekly and feeds reordering directly. It sends each product to the method that suits how it actually sells: machine-learning models for the steady sellers, a simpler rule for the long tail that barely moves. Accuracy went from about 30% with the ERP's forecast to 70–82% today, depending on how steadily a product sells.",
     ],
     tools: [
       ["Python", "The whole pipeline"],
@@ -28,10 +31,10 @@ module.exports = {
       ["SQL Server", "Source sales and stock data"],
     ],
     numbers: [
-      { value: "19%", label: "Less forecast error than the pipeline it replaced" },
+      { value: "30% → 70–82%", label: "Accuracy, the ERP's forecast against today's, by demand pattern" },
+      { value: "100k+", label: "Product and store combinations, forecast weekly" },
       { value: "370+", label: "Automated tests, green before every deploy" },
       { value: "8", label: "Models, one per product category" },
-      { value: "70–82%", label: "Accuracy, by demand pattern" },
     ],
     meta: {
       role: "Architecture and data engineering; modelling with the team's data scientist",

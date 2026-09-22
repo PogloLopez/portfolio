@@ -10,6 +10,16 @@
    and every pinned/stage/split rule and every idle loop is scoped under it.
 --------------------------------------------------------------------------- */
 
+/* Dark native controls and scrollbars: the site is dark-only, and without
+   this the browser draws a light scrollbar beside a dark page. */
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scrollbar-color: color-mix(in srgb, var(--iris) 38%, var(--surface-2)) var(--ground);
+}
+
 :root {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;

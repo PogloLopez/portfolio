@@ -44,6 +44,11 @@ html.pp-locked {
 .pp-hero {
   position: relative;
   isolation: isolate;
+  /* The arrival slides pieces in from the side (64px on projects 1 and 2).
+     Unclipped, that brief overhang made a phone widen the whole page to fit
+     it, and the page stayed wider (and scrollable sideways) afterwards.
+     `clip` rather than `hidden`: it does not create a scroll container. */
+  overflow-x: clip;
   display: flex;
   align-items: center;
   min-height: min(52rem, calc(100svh - var(--topbar-h, 3.75rem)));
@@ -280,24 +285,19 @@ html.pp-locked {
   50% { opacity: 0.3; }
 }
 
-.pp-demo__frame {
-  margin: 0;
-}
-
-.pp-demo__frame img {
+/* The live demo keeps its own chrome (DemoFrame: window bar, simulation
+   badge, note). Only the no-JavaScript still needs framing here. */
+.pp-demo__still {
   display: block;
   width: 100%;
   height: auto;
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line-strong));
   border-radius: 1rem;
-  box-shadow: 0 40px 80px -50px rgb(0 0 0 / 0.7);
 }
 
-.pp-demo__frame figcaption {
+/* The demo's own note under its frame sits on this page's ground. */
+.pp-demo__live > section > p {
   margin-top: 0.9rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--fg-3);
 }
 
 /* ---------------------------------------------------------------------------
@@ -730,4 +730,41 @@ html.pp-locked {
    gen-pages.cjs): only the drift needs it. */
 html:not(.seq-live) .marquee__pad {
   display: none !important; /* beats its inline display: contents */
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars in the site's palette. The panel's own scroll area had the
+   browser's default light scrollbar, a bright slab against the dark panel.
+   A slim thumb in the project's colour on a transparent track, the page's
+   scrollbar in the ground's tones, and dark native controls everywhere else
+   (color-scheme, set in the landing's stylesheet).
+--------------------------------------------------------------------------- */
+
+.pp-sheet__body,
+.pp-diagram__scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 55%, var(--surface-2)) transparent;
+}
+
+.pp-sheet__body:hover {
+  scrollbar-color: color-mix(in srgb, var(--accent) 80%, var(--surface-2)) transparent;
+}
+
+/* Safari and older Chromium, which ignore scrollbar-color. */
+.pp-sheet__body::-webkit-scrollbar,
+.pp-diagram__scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.pp-sheet__body::-webkit-scrollbar-track,
+.pp-diagram__scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pp-sheet__body::-webkit-scrollbar-thumb,
+.pp-diagram__scroll::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface-2)) padding-box;
 }

@@ -122,7 +122,7 @@ export function CortanaDemo() {
       subtitle="cortana-app · demo build"
       note="The real assistant runs over Telegram against a Git-versioned Markdown vault, with Postgres for transactional state. The notes, balances and commit hashes below are invented, and nothing is written anywhere."
     >
-      <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
         <div className="min-w-0">
           <p
             className="font-mono text-[0.6875rem] tracking-[0.14em] uppercase"

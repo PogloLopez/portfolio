@@ -178,7 +178,7 @@ export function OperationsDemo() {
         <span className="font-mono text-xs text-fg-3">target cover · {TARGET_DAYS} days</span>
       </ControlRow>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_1fr]">
         <div>
           <p className="font-mono text-[0.6875rem] tracking-[0.14em] text-fg-3 uppercase">
             Current position

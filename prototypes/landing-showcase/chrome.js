@@ -80,7 +80,11 @@
     e.preventDefault();
     var bar = topbar ? topbar.offsetHeight : 0;
     var y = Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - bar - 8);
-    window.scrollTo({ top: y, behavior: reduced.matches ? "auto" : "smooth" });
+    // Smooth only for a short hop. "Contact me" from the top of the landing
+    // is a jump across the whole pinned sequence (12 screens): animated, it
+    // takes seconds and flashes every project past on the way.
+    var far = Math.abs(y - window.pageYOffset) > window.innerHeight * 3;
+    window.scrollTo({ top: y, behavior: reduced.matches || far ? "auto" : "smooth" });
     // Keep the keyboard with the pointer: the target owns focus after the jump.
     if (target.tabIndex < 0) target.tabIndex = -1;
     target.focus({ preventScroll: true });

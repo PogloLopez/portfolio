@@ -128,13 +128,14 @@ function demo(p) {
             <span class="pp-pill"><span class="pp-pill__dot" aria-hidden="true"></span>Interactive</span>
             <span class="rule-accent" aria-hidden="true"></span>
           </div>
-          <!-- A still of the real demo (src/components/demos), captured from the
-               built app by capture-demos.cjs. It is interactive on the real
-               site; this prototype has no React to run it. -->
-          <figure class="pp-demo__frame">
-            <img src="demos/${p.slug}.jpg" alt="The interactive ${esc(p.title.toLowerCase())} demo, as it appears on the site" loading="lazy" decoding="async" />
-            <figcaption>Still of the live demo. On the real site you can click through it.</figcaption>
-          </figure>
+          <!-- The site's real, interactive demo (src/components/demos), bundled
+               by build-demos.cjs and mounted here by demos/${p.slug}.js. The
+               still inside is only what shows without JavaScript; the demo
+               replaces it as soon as it mounts. -->
+          <div class="pp-demo__live" data-demo="${p.slug}">
+            <img class="pp-demo__still" src="demos/${p.slug}.jpg" alt="The ${esc(p.title.toLowerCase())} demo (interactive with JavaScript on)" loading="lazy" decoding="async" />
+          </div>
+          <script src="demos/${p.slug}.js" defer></script>
         </div>
       </section>`;
 }
@@ -229,20 +230,21 @@ function others(p) {
         </div>
         <div class="marquee" id="recap-marquee">
           <div class="marquee__track">
-            <div class="marquee__lead" aria-hidden="true" inert>
+            <div class="marquee__lead" aria-hidden="true">
 ${card(last.q, last.i, false, here)}
             </div>
             <div class="marquee__set">
 ${rest.map(({ q, i }) => card(q, i, true, here)).join("\n")}
               <!-- Four cards are narrower than a wide screen, so the drift
                    would open a gap before the loop comes round. Each set
-                   carries the four twice; the copy is invisible to assistive
-                   tech and focus, and gone in the static layout. -->
-              <div class="marquee__pad" aria-hidden="true" inert style="display: contents">
+                   carries the four twice; the copy is hidden from assistive
+                   tech and the tab order (but clickable), and gone in the
+                   static layout. -->
+              <div class="marquee__pad" aria-hidden="true" style="display: contents">
 ${rest.map(({ q, i }) => card(q, i, false, here)).join("\n")}
               </div>
             </div>
-            <div class="marquee__set" aria-hidden="true" inert>
+            <div class="marquee__set" aria-hidden="true">
 ${rest.map(({ q, i }) => card(q, i, false, here)).join("\n")}
 ${rest.map(({ q, i }) => card(q, i, false, here)).join("\n")}
             </div>
@@ -300,6 +302,7 @@ function page(p, i) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="${LANDING}/style.css" />
     <link rel="stylesheet" href="pages.css" />
+    <link rel="stylesheet" href="demos/demos.css" />
     <!-- Decides live vs static before first paint, exactly as the landing does. -->
     <script src="mode.js"></script>
   </head>

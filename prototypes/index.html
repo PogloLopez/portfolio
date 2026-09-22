@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pablo López · Portfolio</title>
+    <!-- The prototypes live in subfolders; the root address goes straight to
+         the landing. Served by a static host, a folder URL shows its
+         index.html, and without this one the root would be a directory
+         listing (or a 404). Dark from the first frame, so the redirect never
+         flashes white. -->
+    <meta http-equiv="refresh" content="0; url=landing-showcase/" />
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #05060e; color: #c7ced9; }
+      body { display: grid; place-items: center; min-height: 100vh; font: 15px/1.5 system-ui, sans-serif; }
+      a { color: #6c8cff; }
+    </style>
+    <script>
+      window.location.replace("landing-showcase/" + window.location.hash);
+    </script>
+  </head>
+  <body>
+    <p><a href="landing-showcase/">Open the portfolio</a></p>
+  </body>
+</html>

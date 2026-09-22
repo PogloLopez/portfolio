@@ -7,10 +7,10 @@
  * file writes --mx/--my/--spot-opacity on the row and --rx/--ry/--cx/--cy on
  * the card under the cursor, batched into one requestAnimationFrame.
  *
- * Hit-testing is by geometry rather than event.target. The duplicate set is
- * inert, so assistive tech and the tab order meet each project once, but inert
- * content also never receives pointer events: for half of what is on screen
- * the target would be the row itself.
+ * Hit-testing is by geometry rather than event.target, so the tilt follows the
+ * card under the cursor whichever copy it is. The copies are aria-hidden with
+ * their links out of the tab order, so assistive tech and the keyboard meet
+ * each project once, but they stay clickable.
  *
  * Keyboard focus on a real card moves the drift to the phase where that card
  * sits fully inside the row's clear band (the :focus-within pause then holds
@@ -102,18 +102,12 @@
 
   row.addEventListener("mouseleave", releaseAll);
 
-  // A click on a duplicate card's call to action lands on the row (inert
-  // content is not hit-testable); send it where the real link would go.
-  row.addEventListener("click", function (e) {
-    if (!live() || e.defaultPrevented) return;
-    if (e.target.closest && e.target.closest(".mcard")) return;
-    var hit = cardAt(e.clientX, e.clientY);
-    if (!hit) return;
-    var link = hit.card.querySelector(".mcard__cta");
-    if (link && inside(e.clientX, e.clientY, link.getBoundingClientRect())) {
-      window.location.hash = link.getAttribute("href").replace(/^#/, "");
-    }
-  });
+  // No click handling here. The copies used to be inert, which made them
+  // unclickable, and a handler tried to forward their clicks by setting
+  // location.hash: that only ever produced "#../project-pages/…" (or a
+  // missing #case- anchor), so every other pass of the carousel was dead.
+  // The copies are ordinary links now (aria-hidden, out of the tab order),
+  // and the browser handles their clicks like any other.
 
   document.addEventListener("seq:mode", function (e) {
     if (e.detail && e.detail.mode === "static") releaseAll();

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="../landing-showcase/style.css" />
     <link rel="stylesheet" href="pages.css" />
+    <link rel="stylesheet" href="demos/demos.css" />
     <!-- Decides live vs static before first paint, exactly as the landing does. -->
     <script src="mode.js"></script>
   </head>
@@ -86,7 +87,7 @@
           </div>
           <div class="pp-story__body">
             <p>A retail chain with 14 stores reorders stock every week, for over 100,000 product and store combinations. That decision used to come from a black box inside the ERP: it produced a number, never a reason, and nobody could make it better.</p>
-            <p>The replacement forecasts every combination weekly and feeds reordering directly. It sends each product to the method that suits how it actually sells: machine-learning models for the steady sellers, a simpler rule for the long tail that barely moves. Forecast error fell by 19% against the pipeline it replaced.</p>
+            <p>The replacement forecasts every combination weekly and feeds reordering directly. It sends each product to the method that suits how it actually sells: machine-learning models for the steady sellers, a simpler rule for the long tail that barely moves. Accuracy went from about 30% with the ERP's forecast to 70–82% today, depending on how steadily a product sells.</p>
           </div>
         </div>
       </section>
@@ -98,13 +99,14 @@
             <span class="pp-pill"><span class="pp-pill__dot" aria-hidden="true"></span>Interactive</span>
             <span class="rule-accent" aria-hidden="true"></span>
           </div>
-          <!-- A still of the real demo (src/components/demos), captured from the
-               built app by capture-demos.cjs. It is interactive on the real
-               site; this prototype has no React to run it. -->
-          <figure class="pp-demo__frame">
-            <img src="demos/forecast.jpg" alt="The interactive ml demand forecasting in production demo, as it appears on the site" loading="lazy" decoding="async" />
-            <figcaption>Still of the live demo. On the real site you can click through it.</figcaption>
-          </figure>
+          <!-- The site's real, interactive demo (src/components/demos), bundled
+               by build-demos.cjs and mounted here by demos/forecast.js. The
+               still inside is only what shows without JavaScript; the demo
+               replaces it as soon as it mounts. -->
+          <div class="pp-demo__live" data-demo="forecast">
+            <img class="pp-demo__still" src="demos/forecast.jpg" alt="The ml demand forecasting in production demo (interactive with JavaScript on)" loading="lazy" decoding="async" />
+          </div>
+          <script src="demos/forecast.js" defer></script>
         </div>
       </section>
 
@@ -130,7 +132,7 @@
         </div>
         <div class="marquee" id="recap-marquee">
           <div class="marquee__track">
-            <div class="marquee__lead" aria-hidden="true" inert>
+            <div class="marquee__lead" aria-hidden="true">
           <article class="mcard" data-accent="a5">
             <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
             <h3 class="mcard__title">Personal AI operating system</h3>
@@ -148,7 +150,7 @@
               </div>
             </div>
             <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
-            <a class="mcard__cta" href="cortana.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="cortana.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
           </article>
             </div>
             <div class="marquee__set">
@@ -263,9 +265,10 @@
           </article>
               <!-- Four cards are narrower than a wide screen, so the drift
                    would open a gap before the loop comes round. Each set
-                   carries the four twice; the copy is invisible to assistive
-                   tech and focus, and gone in the static layout. -->
-              <div class="marquee__pad" aria-hidden="true" inert style="display: contents">
+                   carries the four twice; the copy is hidden from assistive
+                   tech and the tab order (but clickable), and gone in the
+                   static layout. -->
+              <div class="marquee__pad" aria-hidden="true" style="display: contents">
           <article class="mcard" data-accent="a2">
             <p class="mcard__head"><span class="mcard__num">02</span><span class="mcard__kicker">Data platform · Generative AI</span></p>
             <h3 class="mcard__title">Market price intelligence platform</h3>
@@ -286,7 +289,7 @@
               </div>
             </div>
             <p class="mcard__hook">Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations.</p>
-            <a class="mcard__cta" href="market-prices.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Market price intelligence platform</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="market-prices.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Market price intelligence platform</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a3">
             <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
@@ -316,7 +319,7 @@
               </div>
             </div>
             <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
-            <a class="mcard__cta" href="rag.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="rag.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a4">
             <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
@@ -354,7 +357,7 @@
               </div>
             </div>
             <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
-            <a class="mcard__cta" href="operations-platform.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="operations-platform.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a5">
             <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
@@ -373,11 +376,11 @@
               </div>
             </div>
             <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
-            <a class="mcard__cta" href="cortana.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="cortana.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
           </article>
               </div>
             </div>
-            <div class="marquee__set" aria-hidden="true" inert>
+            <div class="marquee__set" aria-hidden="true">
           <article class="mcard" data-accent="a2">
             <p class="mcard__head"><span class="mcard__num">02</span><span class="mcard__kicker">Data platform · Generative AI</span></p>
             <h3 class="mcard__title">Market price intelligence platform</h3>
@@ -398,7 +401,7 @@
               </div>
             </div>
             <p class="mcard__hook">Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations.</p>
-            <a class="mcard__cta" href="market-prices.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Market price intelligence platform</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="market-prices.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Market price intelligence platform</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a3">
             <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
@@ -428,7 +431,7 @@
               </div>
             </div>
             <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
-            <a class="mcard__cta" href="rag.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="rag.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a4">
             <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
@@ -466,7 +469,7 @@
               </div>
             </div>
             <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
-            <a class="mcard__cta" href="operations-platform.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="operations-platform.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a5">
             <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
@@ -485,7 +488,7 @@
               </div>
             </div>
             <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
-            <a class="mcard__cta" href="cortana.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="cortana.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a2">
             <p class="mcard__head"><span class="mcard__num">02</span><span class="mcard__kicker">Data platform · Generative AI</span></p>
@@ -507,7 +510,7 @@
               </div>
             </div>
             <p class="mcard__hook">Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations.</p>
-            <a class="mcard__cta" href="market-prices.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Market price intelligence platform</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="market-prices.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Market price intelligence platform</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a3">
             <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
@@ -537,7 +540,7 @@
               </div>
             </div>
             <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
-            <a class="mcard__cta" href="rag.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="rag.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a4">
             <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
@@ -575,7 +578,7 @@
               </div>
             </div>
             <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
-            <a class="mcard__cta" href="operations-platform.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="operations-platform.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
           </article>
           <article class="mcard" data-accent="a5">
             <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
@@ -594,7 +597,7 @@
               </div>
             </div>
             <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
-            <a class="mcard__cta" href="cortana.html"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+            <a class="mcard__cta" href="cortana.html" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
           </article>
             </div>
           </div>
@@ -681,10 +684,10 @@
         <section class="pp-block" aria-labelledby="numbers-title">
           <h3 class="pp-block__title" id="numbers-title">By the numbers</h3>
           <dl class="pp-nums">
-              <div class="pp-num"><dt class="pp-num__label">Less forecast error than the pipeline it replaced</dt><dd class="pp-num__value">19%</dd></div>
+              <div class="pp-num"><dt class="pp-num__label">Accuracy, the ERP's forecast against today's, by demand pattern</dt><dd class="pp-num__value">30% → 70–82%</dd></div>
+              <div class="pp-num"><dt class="pp-num__label">Product and store combinations, forecast weekly</dt><dd class="pp-num__value">100k+</dd></div>
               <div class="pp-num"><dt class="pp-num__label">Automated tests, green before every deploy</dt><dd class="pp-num__value">370+</dd></div>
               <div class="pp-num"><dt class="pp-num__label">Models, one per product category</dt><dd class="pp-num__value">8</dd></div>
-              <div class="pp-num"><dt class="pp-num__label">Accuracy, by demand pattern</dt><dd class="pp-num__value">70–82%</dd></div>
           </dl>
         </section>
       </div>

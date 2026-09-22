@@ -476,8 +476,11 @@ function panel(p, i) {
   );
 }
 
-// `real` is false for the inert copies (the duplicate set and the lead card):
-// they carry no ids and no aria-labelledby.
+// `real` is false for the copies (the duplicate set and the lead card): they
+// carry no ids and no aria-labelledby, and their link is out of the tab
+// order. They are NOT inert: they are what the drift shows half the time, and
+// an inert copy cannot be clicked, which left every other pass of the
+// carousel dead.
 // `href` lets another page (a project page's carousel) point the cards
 // somewhere relative to itself.
 function card(p, i, real, href = caseHref) {
@@ -489,7 +492,7 @@ function card(p, i, real, href = caseHref) {
     stats(p, "mcard__stats", I, false) + "\n" +
     `${I}<div class="mcard__viz">\n${viz(p, "card", `${I}  `)}\n${I}</div>\n` +
     `${I}<p class="mcard__hook">${esc(p.hook)}</p>\n` +
-    `${I}<a class="mcard__cta" href="${href(p)}">${ctaLabel(p)}</a>\n` +
+    `${I}<a class="mcard__cta" href="${href(p)}"${real ? "" : ' tabindex="-1"'}>${ctaLabel(p)}</a>\n` +
     `          </article>`
   );
 }
@@ -695,13 +698,13 @@ ${projects.map(panel).join("\n")}
             <!-- A copy of the last card just left of the first, so the track
                  can sit far enough right for the first real card to be brought
                  fully into the clear band when it takes keyboard focus. -->
-            <div class="marquee__lead" aria-hidden="true" inert>
+            <div class="marquee__lead" aria-hidden="true">
 ${card(projects[4], 4, false)}
             </div>
             <div class="marquee__set">
 ${projects.map((p, i) => card(p, i, true)).join("\n")}
             </div>
-            <div class="marquee__set" aria-hidden="true" inert>
+            <div class="marquee__set" aria-hidden="true">
 ${projects.map((p, i) => card(p, i, false)).join("\n")}
             </div>
           </div>
