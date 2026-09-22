@@ -13,42 +13,19 @@ import path from "node:path";
 import sharp from "sharp";
 
 const SRC = path.join("assets", "source", "flow-field.png");
-const OUT = path.join("public", "hero");
+const HERO = path.join("public", "site", "hero.webp");
 
 if (!fs.existsSync(SRC)) {
   console.error(`missing source art: ${SRC}`);
   process.exit(1);
 }
 
-fs.mkdirSync(OUT, { recursive: true });
-
 const base = sharp(SRC);
 const { width, height } = await base.metadata();
 console.log(`source ${width}x${height}`);
 
-// Wide hero plate. Two widths so small screens do not pull 2400px of art.
-for (const w of [1600, 2400]) {
-  await sharp(SRC)
-    .resize({ width: w })
-    .webp({ quality: 74, effort: 6 })
-    .toFile(path.join(OUT, `flow-${w}.webp`));
-}
-
-// The burst itself, squared, for the icon and for narrow-viewport crops.
-// Centre taken from the source art, not guessed at render time.
-const burst = { cx: 1942, cy: 700, r: 430 };
-const square = sharp(SRC).extract({
-  left: burst.cx - burst.r,
-  top: burst.cy - burst.r,
-  width: burst.r * 2,
-  height: burst.r * 2,
-});
-
-await square
-  .clone()
-  .resize({ width: 900 })
-  .webp({ quality: 80, effort: 6 })
-  .toFile(path.join(OUT, "burst.webp"));
+// The landing's hero plate (public/site/hero.webp).
+await sharp(SRC).resize({ width: 2400 }).webp({ quality: 74, effort: 6 }).toFile(HERO);
 
 /* -------------------------------------------------------------------------
    The brand mark.
@@ -124,10 +101,7 @@ async function keyOut(file) {
 if (fs.existsSync(LOGO)) {
   const cut = await keyOut(LOGO);
 
-  for (const [size, target] of [
-    [512, path.join("public", "mark.png")],
-    [256, path.join("src", "app", "icon.png")],
-  ]) {
+  for (const [size, target] of [[256, path.join("src", "app", "icon.png")]]) {
     await sharp(cut)
       .resize({
         width: size,
@@ -142,10 +116,7 @@ if (fs.existsSync(LOGO)) {
   // Note: there must be no `src/app/favicon.ico`. Next gives favicon.ico
   // precedence over icon.png, so a stale one silently wins in the tab.
 
-  console.log("mark.png + icon.png written from the maieutik mark");
+  console.log("icon.png written from the maieutik mark");
 }
 
-for (const f of fs.readdirSync(OUT)) {
-  const { size } = fs.statSync(path.join(OUT, f));
-  console.log(`${f.padEnd(18)} ${(size / 1024).toFixed(0)} KB`);
-}
+console.log(`${HERO} ${(fs.statSync(HERO).size / 1024).toFixed(0)} KB`);

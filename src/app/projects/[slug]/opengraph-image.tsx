@@ -14,8 +14,8 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const project = projectBySlug(slug);
   return ogCard({
-    eyebrow: project?.repo ?? "Case study",
+    eyebrow: project?.kicker ?? "Case study",
     title: project?.title ?? "Case study",
-    footer: `${site.shortName} · ${project?.kicker ?? ""}`,
+    footer: site.shortName,
   });
 }

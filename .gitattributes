@@ -1,0 +1,5 @@
+# The generated pages and bundles are compared byte for byte with a fresh
+# build (npm run site:check), so they keep LF line endings on every checkout.
+public/site/** text eol=lf
+public/site/**/*.webp binary
+public/site/**/*.jpg binary

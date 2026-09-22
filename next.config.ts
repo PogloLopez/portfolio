@@ -1,19 +1,22 @@
-import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 
+/**
+ * The pages are static HTML, built by src/site/build.cjs into public/site/.
+ * These rewrites serve them at the site's real addresses. They run before the
+ * filesystem check (beforeFiles), so / reaches the landing even though there
+ * is no app/page.tsx.
+ */
 const nextConfig: NextConfig = {
-  pageExtensions: ["ts", "tsx", "mdx"],
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/", destination: "/site/index.html" },
+        { source: "/projects/:slug", destination: "/site/projects/:slug.html" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
 };
 
-/**
- * Plugins are named as strings, not imported: Turbopack requires the loader
- * options to be serializable, and an imported function is not.
- */
-const withMDX = createMDX({
-  options: {
-    remarkPlugins: [["remark-gfm", {}]],
-    rehypePlugins: [["rehype-slug", {}]],
-  },
-});
-
-export default withMDX(nextConfig);
+export default nextConfig;

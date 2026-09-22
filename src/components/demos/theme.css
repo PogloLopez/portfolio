@@ -1,0 +1,47 @@
+/*
+ * The site's theme tokens, for the Tailwind utilities the demos use. build.cjs
+ * compiles the demos' stylesheet (public/site/demos/demos.css) against them.
+ */
+@theme {
+  --color-ground: #05060e;
+  --color-surface: #0a0c18;
+  --color-surface-2: #101324;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-strong: rgba(255, 255, 255, 0.16);
+
+  --color-fg: #f4f6fa;
+  --color-fg-2: #c7ced9;
+  --color-fg-3: #939cad;
+
+  --color-iris: #6c8cff;
+  --color-violet: #a78bfa;
+  --color-glow: #5b2be0;
+  --color-deep: #351891;
+
+  /* ------------------------------------------------------------------
+     Per-project accents.
+
+     The site used one accent for everything, which made five distinct
+     systems read as one undifferentiated block. Each case study now owns a
+     hue, carried through its card, its page header, its diagram and its
+     demo, so the work is legible as a portfolio rather than a wall.
+
+     The five were searched for rather than picked: all sit inside the dark
+     lightness band L 0.48–0.67, clear the chroma floor, and separate by
+     ΔE 14.2 at worst under simulated colour-vision deficiency (target ≥ 8),
+     measured against this site's own surface with the dataviz validator.
+     Order matters — it is the order the checks were run against.
+  ------------------------------------------------------------------ */
+  --color-a1: #6480f0;
+  --color-a2: #c8558f;
+  --color-a3: #8b6be8;
+  --color-a4: #c07e2e;
+  --color-a5: #12a5b8;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", Menlo,
+    monospace;
+
+  --breakpoint-xs: 30rem;
+}

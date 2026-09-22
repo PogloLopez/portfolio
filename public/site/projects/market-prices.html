@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Market price intelligence platform · Pablo López</title>
+    <meta name="description" content="Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations." />
+    <link rel="canonical" href="https://pablo.maieutik-data.com/projects/market-prices" />
+    <link rel="icon" href="/icon.png" type="image/png" />
+    <meta name="author" content="Pablo Alejandro López Sánchez" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Pablo López · Data &amp; AI Engineer" />
+    <meta property="og:locale" content="en" />
+    <meta property="og:title" content="Market price intelligence platform · Pablo López" />
+    <meta property="og:description" content="Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations." />
+    <meta property="og:url" content="https://pablo.maieutik-data.com/projects/market-prices" />
+    <meta property="og:image" content="https://pablo.maieutik-data.com/projects/market-prices/opengraph-image" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Market price intelligence platform · Pablo López" />
+    <meta name="twitter:description" content="Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations." />
+    <meta name="twitter:image" content="https://pablo.maieutik-data.com/projects/market-prices/opengraph-image" />
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+      if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+        var va = document.createElement("script");
+        va.defer = true;
+        va.src = "/_vercel/insights/script.js";
+        document.head.appendChild(va);
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="/site/style.css" />
+    <link rel="stylesheet" href="/site/pages.css" />
+    <link rel="stylesheet" href="/site/demos/demos.css" />
+    <!-- Decides live vs static before first paint, exactly as the landing does. -->
+    <script src="/site/mode.js"></script>
+  </head>
+  <body class="pp" data-accent="a2">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="fill-a1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color: var(--a1); stop-opacity: 0.28" />
+          <stop offset="1" style="stop-color: var(--a1); stop-opacity: 0" />
+        </linearGradient>
+        <linearGradient id="fill-a2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color: var(--a2); stop-opacity: 0.28" />
+          <stop offset="1" style="stop-color: var(--a2); stop-opacity: 0" />
+        </linearGradient>
+        <linearGradient id="fill-a3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color: var(--a3); stop-opacity: 0.28" />
+          <stop offset="1" style="stop-color: var(--a3); stop-opacity: 0" />
+        </linearGradient>
+        <linearGradient id="fill-a4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color: var(--a4); stop-opacity: 0.28" />
+          <stop offset="1" style="stop-color: var(--a4); stop-opacity: 0" />
+        </linearGradient>
+        <linearGradient id="fill-a5" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color: var(--a5); stop-opacity: 0.28" />
+          <stop offset="1" style="stop-color: var(--a5); stop-opacity: 0" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <nav class="topbar" aria-label="Top bar">
+      <div class="wrap topbar__inner">
+        <a class="topbar__name" href="/">Pablo A. López</a>
+        <div class="topbar__actions">
+          <a class="btn btn--ghost btn--back" href="/#work">← All work</a>
+          <a class="btn btn--accent" href="#contact">Contact me</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+    <header class="pp-hero pp-hero--cols pp-hero--viz-first" data-enter="left">
+      <div class="wrap pp-hero__inner">
+        <div class="pp-hero__text">
+          <p class="panel__kicker" data-part="kicker"><span class="panel__num">02</span><span class="panel__kicker-rule" aria-hidden="true"></span><span>Data platform · Generative AI</span></p>
+          <h1 class="panel__title pp-part" id="page-title">Market price intelligence platform</h1>
+          <p class="panel__hook pp-part">Weekly public data, parsed into a 52-week forecast the buying team takes into supplier negotiations.</p>
+          <dl class="panel__stats pp-part">
+            <div class="stat"><dt class="stat__label">Forecast horizon</dt><dd class="stat__value">52 wk</dd></div>
+            <div class="stat"><dt class="stat__label">Products covered</dt><dd class="stat__value">100s</dd></div>
+          </dl>
+        </div>
+        <div class="pp-hero__viz pp-part">
+          <div class="viz viz--market" role="img" aria-label="Market vs. internal price, forecast ahead">
+            <span class="viz__caption" aria-hidden="true">Market vs. internal price, forecast ahead</span>
+            <svg class="mkt" viewBox="0 0 480 300" aria-hidden="true" focusable="false">
+              <g class="line__grid"><line x1="0" x2="480" y1="75" y2="75" /><line x1="0" x2="480" y1="150" y2="150" /><line x1="0" x2="480" y1="225" y2="225" /></g>
+              <path class="line__area" d="M 18.0 186.0 L 67.3 42.0 L 116.7 210.0 L 166.0 99.6 L 215.3 243.6 L 264.7 147.6 L 314.0 282.0 L 363.3 128.4 L 412.7 195.6 L 462.0 18.0 L 462.0 300 L 18.0 300 Z" fill="url(#fill-a2)" />
+              <line class="line__split" x1="314.0" x2="314.0" y1="18" y2="282" />
+              <text class="line__mark line__mark--a" text-anchor="end" x="306.0" y="30">actuals</text>
+              <text class="line__mark" x="322.0" y="30">forecast</text>
+              <path class="mkt__internal" d="M 18.0 186.0 L 67.3 114.0 L 116.7 146.0 L 166.0 117.2 L 215.3 184.4 L 264.7 163.6 L 314.0 224.4" />
+              <path class="mkt__internal mkt__internal--flat" d="M 314.0 224.4 L 462.0 224.4" />
+              <text class="mkt__legend mkt__legend--market" x="18" y="292">Market</text>
+              <text class="mkt__legend mkt__legend--internal" x="72" y="292">Internal, today</text>
+              <path class="line__ghost" d="M 18.0 186.0 L 67.3 42.0 L 116.7 210.0 L 166.0 99.6 L 215.3 243.6 L 264.7 147.6 L 314.0 282.0" />
+              <path class="line__trace" d="M 18.0 186.0 L 67.3 42.0 L 116.7 210.0 L 166.0 99.6 L 215.3 243.6 L 264.7 147.6 L 314.0 282.0" pathLength="1" />
+              <path class="line__tail" d="M 314.0 282.0 L 363.3 128.4 L 412.7 195.6 L 462.0 18.0" />
+            </svg>
+            <div class="mkt__insight" title="Forecast climbs past today’s price">
+              <span class="mkt__insight-dot" aria-hidden="true"></span>
+              <span class="mkt__insight-verdict">Buy now</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+      <section class="pp-story" aria-labelledby="story-title">
+        <div class="wrap">
+          <div class="section-label">
+            <h2 id="story-title">The story</h2>
+            <span class="rule-accent" aria-hidden="true"></span>
+          </div>
+          <div class="pp-story__body">
+            <p>Colombia's statistics office publishes wholesale food prices every week, in files made for people to read: layouts shift between releases, units change from sheet to sheet, and there is no API. Meanwhile the buying team negotiated with suppliers with no outside reference for what the market was doing.</p>
+            <p>The platform reads every release reliably, keeps years of history for hundreds of products, forecasts each price 52 weeks ahead, and has an AI model generate automated insights. It started as an internal tool and is now a secure web app the buyers take into supplier negotiations.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="pp-demo" aria-labelledby="demo-title">
+        <div class="wrap">
+          <div class="section-label">
+            <h2 id="demo-title">Try it yourself</h2>
+            <span class="pp-pill"><span class="pp-pill__dot" aria-hidden="true"></span>Interactive</span>
+            <span class="rule-accent" aria-hidden="true"></span>
+          </div>
+          <!-- The site's real, interactive demo (src/components/demos), bundled
+               by build.cjs and mounted here by demos/market-prices.js. The
+               still inside is only what shows without JavaScript; the demo
+               replaces it as soon as it mounts. -->
+          <div class="pp-demo__live" data-demo="market-prices">
+            <img class="pp-demo__still" src="/site/demos/market-prices.jpg" alt="The market price intelligence platform demo (interactive with JavaScript on)" loading="lazy" decoding="async" />
+          </div>
+          <script src="/site/demos/market-prices.js" defer></script>
+        </div>
+      </section>
+
+      <section class="pp-more" aria-labelledby="more-title">
+        <div class="wrap pp-more__inner">
+          <div>
+            <h2 class="pp-more__title" id="more-title">How it's built</h2>
+            <p class="pp-more__lede">The tools, the architecture and the engineering numbers, one line each.</p>
+          </div>
+          <button type="button" class="btn btn--accent pp-more__open" aria-haspopup="dialog" aria-controls="tech">See more</button>
+        </div>
+      </section>
+
+      <section class="recap pp-others" aria-labelledby="recap-title" data-idle="0">
+        <div class="wrap">
+          <div class="section-label">
+            <h2 id="recap-title">The other four</h2>
+            <span class="rule-accent" aria-hidden="true"></span>
+            <button type="button" class="marquee-toggle" aria-controls="recap-marquee">
+              <span class="marquee-toggle__icon" aria-hidden="true"></span><span class="marquee-toggle__label" aria-hidden="true">Pause</span><span class="sr-only">Pause the carousel</span>
+            </button>
+          </div>
+        </div>
+        <div class="marquee" id="recap-marquee">
+          <div class="marquee__track">
+            <div class="marquee__lead" aria-hidden="true">
+          <article class="mcard" data-accent="a5">
+            <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
+            <h3 class="mcard__title">Personal AI operating system</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Before anything it can't undo</dt><dd class="stat__value">Asks first</dd></div>
+              <div class="stat"><dt class="stat__label">Git is the source of truth</dt><dd class="stat__value">Plain text</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Ask it something, in your own words">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">Spent $50 at the movies tonight.</p>
+                  <p class="chat__a">Logged under Entertainment — want me to top it up $50 from savings?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
+            <a class="mcard__cta" href="/projects/cortana" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+          </article>
+            </div>
+            <div class="marquee__set">
+          <article class="mcard" data-accent="a1" aria-labelledby="card-title-forecast">
+            <p class="mcard__head"><span class="mcard__num">01</span><span class="mcard__kicker">MLOps · Time series</span></p>
+            <h3 class="mcard__title" id="card-title-forecast">ML demand forecasting in production</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Series, weekly</dt><dd class="stat__value">100k+</dd></div>
+              <div class="stat"><dt class="stat__label">Accuracy by cluster</dt><dd class="stat__value">70-82%</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--line" role="img" aria-label="Forecast">
+                <svg class="line" viewBox="0 0 300 96" aria-hidden="true" focusable="false">
+                  <path class="line__area" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0 L 290.0 96 L 10.0 96 Z" fill="url(#fill-a1)" />
+                  <path class="line__ghost" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" />
+                  <path class="line__trace" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" pathLength="1" />
+                  <path class="line__tail" d="M 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0" />
+                </svg>
+              </div>
+            </div>
+            <p class="mcard__hook">Over 100,000 SKU+Store combinations, forecast weekly by a routing policy that picks a model per cluster.</p>
+            <a class="mcard__cta" href="/projects/forecast"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: ML demand forecasting in production</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a3" aria-labelledby="card-title-rag">
+            <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
+            <h3 class="mcard__title" id="card-title-rag">AI assistant for business data</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Numbers the model makes up</dt><dd class="stat__value">Zero</dd></div>
+              <div class="stat"><dt class="stat__label">Embedded/Vector DB</dt><dd class="stat__value">Golden queries</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Question, routed path, verified answer">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">What was our dairy margin last week, by store?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Checking real sales data→</p>
+                  <div class="chat__slot">
+                    <span class="chat__typing"><i></i><i></i><i></i></span>
+                    <div class="chat__a">
+                      <p class="chat__lead">21.4% overall, up 1.6 pts on the week.</p>
+                      <ul class="chat__rows">
+                        <li><span>Store 03</span><b>24.8%</b></li>
+                        <li><span>Store 07</span><b>21.0%</b></li>
+                        <li class="chat__row--low"><span>Store 11</span><b>17.3%</b></li>
+                      </ul>
+                      <p class="chat__src">Pulled straight from the database.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
+            <a class="mcard__cta" href="/projects/rag"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a4" aria-labelledby="card-title-operations-platform">
+            <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
+            <h3 class="mcard__title" id="card-title-operations-platform">Stock rebalancing engine</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Per transfer plan</dt><dd class="stat__value">4h → 5min</dd></div>
+              <div class="stat"><dt class="stat__label">Run by the analysts</dt><dd class="stat__value">Self-serve</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--flow" role="img" aria-label="Stock moving from a surplus store to the short ones">
+                <div class="flow" aria-hidden="true">
+                  <div class="flow__store flow__store--from">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 82"></span></span>
+                    <span class="flow__label">Surplus</span>
+                  </div>
+                  <div class="flow__lane">
+                    <i class="flow__box" style="--i: 0"></i>
+                    <i class="flow__box" style="--i: 1"></i>
+                    <i class="flow__box" style="--i: 2"></i>
+                  </div>
+                  <div class="flow__to">
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 18"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 26"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
+            <a class="mcard__cta" href="/projects/operations-platform"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a5" aria-labelledby="card-title-cortana">
+            <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
+            <h3 class="mcard__title" id="card-title-cortana">Personal AI operating system</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Before anything it can't undo</dt><dd class="stat__value">Asks first</dd></div>
+              <div class="stat"><dt class="stat__label">Git is the source of truth</dt><dd class="stat__value">Plain text</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Ask it something, in your own words">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">Spent $50 at the movies tonight.</p>
+                  <p class="chat__a">Logged under Entertainment — want me to top it up $50 from savings?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
+            <a class="mcard__cta" href="/projects/cortana"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+          </article>
+              <!-- Four cards are narrower than a wide screen, so the drift
+                   would open a gap before the loop comes round. Each set
+                   carries the four twice; the copy is hidden from assistive
+                   tech and the tab order (but clickable), and gone in the
+                   static layout. -->
+              <div class="marquee__pad" aria-hidden="true" style="display: contents">
+          <article class="mcard" data-accent="a1">
+            <p class="mcard__head"><span class="mcard__num">01</span><span class="mcard__kicker">MLOps · Time series</span></p>
+            <h3 class="mcard__title">ML demand forecasting in production</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Series, weekly</dt><dd class="stat__value">100k+</dd></div>
+              <div class="stat"><dt class="stat__label">Accuracy by cluster</dt><dd class="stat__value">70-82%</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--line" role="img" aria-label="Forecast">
+                <svg class="line" viewBox="0 0 300 96" aria-hidden="true" focusable="false">
+                  <path class="line__area" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0 L 290.0 96 L 10.0 96 Z" fill="url(#fill-a1)" />
+                  <path class="line__ghost" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" />
+                  <path class="line__trace" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" pathLength="1" />
+                  <path class="line__tail" d="M 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0" />
+                </svg>
+              </div>
+            </div>
+            <p class="mcard__hook">Over 100,000 SKU+Store combinations, forecast weekly by a routing policy that picks a model per cluster.</p>
+            <a class="mcard__cta" href="/projects/forecast" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: ML demand forecasting in production</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a3">
+            <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
+            <h3 class="mcard__title">AI assistant for business data</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Numbers the model makes up</dt><dd class="stat__value">Zero</dd></div>
+              <div class="stat"><dt class="stat__label">Embedded/Vector DB</dt><dd class="stat__value">Golden queries</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Question, routed path, verified answer">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">What was our dairy margin last week, by store?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Checking real sales data→</p>
+                  <div class="chat__slot">
+                    <span class="chat__typing"><i></i><i></i><i></i></span>
+                    <div class="chat__a">
+                      <p class="chat__lead">21.4% overall, up 1.6 pts on the week.</p>
+                      <ul class="chat__rows">
+                        <li><span>Store 03</span><b>24.8%</b></li>
+                        <li><span>Store 07</span><b>21.0%</b></li>
+                        <li class="chat__row--low"><span>Store 11</span><b>17.3%</b></li>
+                      </ul>
+                      <p class="chat__src">Pulled straight from the database.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
+            <a class="mcard__cta" href="/projects/rag" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a4">
+            <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
+            <h3 class="mcard__title">Stock rebalancing engine</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Per transfer plan</dt><dd class="stat__value">4h → 5min</dd></div>
+              <div class="stat"><dt class="stat__label">Run by the analysts</dt><dd class="stat__value">Self-serve</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--flow" role="img" aria-label="Stock moving from a surplus store to the short ones">
+                <div class="flow" aria-hidden="true">
+                  <div class="flow__store flow__store--from">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 82"></span></span>
+                    <span class="flow__label">Surplus</span>
+                  </div>
+                  <div class="flow__lane">
+                    <i class="flow__box" style="--i: 0"></i>
+                    <i class="flow__box" style="--i: 1"></i>
+                    <i class="flow__box" style="--i: 2"></i>
+                  </div>
+                  <div class="flow__to">
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 18"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 26"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
+            <a class="mcard__cta" href="/projects/operations-platform" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a5">
+            <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
+            <h3 class="mcard__title">Personal AI operating system</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Before anything it can't undo</dt><dd class="stat__value">Asks first</dd></div>
+              <div class="stat"><dt class="stat__label">Git is the source of truth</dt><dd class="stat__value">Plain text</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Ask it something, in your own words">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">Spent $50 at the movies tonight.</p>
+                  <p class="chat__a">Logged under Entertainment — want me to top it up $50 from savings?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
+            <a class="mcard__cta" href="/projects/cortana" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+          </article>
+              </div>
+            </div>
+            <div class="marquee__set" aria-hidden="true">
+          <article class="mcard" data-accent="a1">
+            <p class="mcard__head"><span class="mcard__num">01</span><span class="mcard__kicker">MLOps · Time series</span></p>
+            <h3 class="mcard__title">ML demand forecasting in production</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Series, weekly</dt><dd class="stat__value">100k+</dd></div>
+              <div class="stat"><dt class="stat__label">Accuracy by cluster</dt><dd class="stat__value">70-82%</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--line" role="img" aria-label="Forecast">
+                <svg class="line" viewBox="0 0 300 96" aria-hidden="true" focusable="false">
+                  <path class="line__area" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0 L 290.0 96 L 10.0 96 Z" fill="url(#fill-a1)" />
+                  <path class="line__ghost" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" />
+                  <path class="line__trace" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" pathLength="1" />
+                  <path class="line__tail" d="M 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0" />
+                </svg>
+              </div>
+            </div>
+            <p class="mcard__hook">Over 100,000 SKU+Store combinations, forecast weekly by a routing policy that picks a model per cluster.</p>
+            <a class="mcard__cta" href="/projects/forecast" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: ML demand forecasting in production</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a3">
+            <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
+            <h3 class="mcard__title">AI assistant for business data</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Numbers the model makes up</dt><dd class="stat__value">Zero</dd></div>
+              <div class="stat"><dt class="stat__label">Embedded/Vector DB</dt><dd class="stat__value">Golden queries</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Question, routed path, verified answer">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">What was our dairy margin last week, by store?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Checking real sales data→</p>
+                  <div class="chat__slot">
+                    <span class="chat__typing"><i></i><i></i><i></i></span>
+                    <div class="chat__a">
+                      <p class="chat__lead">21.4% overall, up 1.6 pts on the week.</p>
+                      <ul class="chat__rows">
+                        <li><span>Store 03</span><b>24.8%</b></li>
+                        <li><span>Store 07</span><b>21.0%</b></li>
+                        <li class="chat__row--low"><span>Store 11</span><b>17.3%</b></li>
+                      </ul>
+                      <p class="chat__src">Pulled straight from the database.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
+            <a class="mcard__cta" href="/projects/rag" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a4">
+            <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
+            <h3 class="mcard__title">Stock rebalancing engine</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Per transfer plan</dt><dd class="stat__value">4h → 5min</dd></div>
+              <div class="stat"><dt class="stat__label">Run by the analysts</dt><dd class="stat__value">Self-serve</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--flow" role="img" aria-label="Stock moving from a surplus store to the short ones">
+                <div class="flow" aria-hidden="true">
+                  <div class="flow__store flow__store--from">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 82"></span></span>
+                    <span class="flow__label">Surplus</span>
+                  </div>
+                  <div class="flow__lane">
+                    <i class="flow__box" style="--i: 0"></i>
+                    <i class="flow__box" style="--i: 1"></i>
+                    <i class="flow__box" style="--i: 2"></i>
+                  </div>
+                  <div class="flow__to">
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 18"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 26"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
+            <a class="mcard__cta" href="/projects/operations-platform" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a5">
+            <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
+            <h3 class="mcard__title">Personal AI operating system</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Before anything it can't undo</dt><dd class="stat__value">Asks first</dd></div>
+              <div class="stat"><dt class="stat__label">Git is the source of truth</dt><dd class="stat__value">Plain text</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Ask it something, in your own words">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">Spent $50 at the movies tonight.</p>
+                  <p class="chat__a">Logged under Entertainment — want me to top it up $50 from savings?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
+            <a class="mcard__cta" href="/projects/cortana" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a1">
+            <p class="mcard__head"><span class="mcard__num">01</span><span class="mcard__kicker">MLOps · Time series</span></p>
+            <h3 class="mcard__title">ML demand forecasting in production</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Series, weekly</dt><dd class="stat__value">100k+</dd></div>
+              <div class="stat"><dt class="stat__label">Accuracy by cluster</dt><dd class="stat__value">70-82%</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--line" role="img" aria-label="Forecast">
+                <svg class="line" viewBox="0 0 300 96" aria-hidden="true" focusable="false">
+                  <path class="line__area" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0 L 290.0 96 L 10.0 96 Z" fill="url(#fill-a1)" />
+                  <path class="line__ghost" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" />
+                  <path class="line__trace" d="M 10.0 78.0 L 35.5 86.0 L 60.9 74.0 L 86.4 60.0 L 111.8 70.0 L 137.3 54.0 L 162.7 40.0 L 188.2 48.0" pathLength="1" />
+                  <path class="line__tail" d="M 188.2 48.0 L 213.6 32.0 L 239.1 18.0 L 264.5 26.0 L 290.0 10.0" />
+                </svg>
+              </div>
+            </div>
+            <p class="mcard__hook">Over 100,000 SKU+Store combinations, forecast weekly by a routing policy that picks a model per cluster.</p>
+            <a class="mcard__cta" href="/projects/forecast" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: ML demand forecasting in production</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a3">
+            <p class="mcard__head"><span class="mcard__num">03</span><span class="mcard__kicker">Applied AI · Guardrails</span></p>
+            <h3 class="mcard__title">AI assistant for business data</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Numbers the model makes up</dt><dd class="stat__value">Zero</dd></div>
+              <div class="stat"><dt class="stat__label">Embedded/Vector DB</dt><dd class="stat__value">Golden queries</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Question, routed path, verified answer">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">What was our dairy margin last week, by store?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Checking real sales data→</p>
+                  <div class="chat__slot">
+                    <span class="chat__typing"><i></i><i></i><i></i></span>
+                    <div class="chat__a">
+                      <p class="chat__lead">21.4% overall, up 1.6 pts on the week.</p>
+                      <ul class="chat__rows">
+                        <li><span>Store 03</span><b>24.8%</b></li>
+                        <li><span>Store 07</span><b>21.0%</b></li>
+                        <li class="chat__row--low"><span>Store 11</span><b>17.3%</b></li>
+                      </ul>
+                      <p class="chat__src">Pulled straight from the database.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">A Telegram assistant for questions about sales, inventory and purchasing. Every figure it gives comes from a query it actually ran.</p>
+            <a class="mcard__cta" href="/projects/rag" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: AI assistant for business data</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a4">
+            <p class="mcard__head"><span class="mcard__num">04</span><span class="mcard__kicker">Full stack · Internal product</span></p>
+            <h3 class="mcard__title">Stock rebalancing engine</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Per transfer plan</dt><dd class="stat__value">4h → 5min</dd></div>
+              <div class="stat"><dt class="stat__label">Run by the analysts</dt><dd class="stat__value">Self-serve</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--flow" role="img" aria-label="Stock moving from a surplus store to the short ones">
+                <div class="flow" aria-hidden="true">
+                  <div class="flow__store flow__store--from">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 82"></span></span>
+                    <span class="flow__label">Surplus</span>
+                  </div>
+                  <div class="flow__lane">
+                    <i class="flow__box" style="--i: 0"></i>
+                    <i class="flow__box" style="--i: 1"></i>
+                    <i class="flow__box" style="--i: 2"></i>
+                  </div>
+                  <div class="flow__to">
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 18"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  <div class="flow__store flow__store--to">
+                    <span class="flow__roof"></span>
+                    <span class="flow__body"><span class="flow__level" style="--lv: 26"></span></span>
+                    <span class="flow__label">Short</span>
+                  </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">Analysts used to work out every inter-store transfer by hand. The engine proposes what moves where, and they run it themselves.</p>
+            <a class="mcard__cta" href="/projects/operations-platform" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Stock rebalancing engine</span><span aria-hidden="true">→</span></a>
+          </article>
+          <article class="mcard" data-accent="a5">
+            <p class="mcard__head"><span class="mcard__num">05</span><span class="mcard__kicker">Multi-agent · Local-first</span></p>
+            <h3 class="mcard__title">Personal AI operating system</h3>
+            <dl class="mcard__stats">
+              <div class="stat"><dt class="stat__label">Before anything it can't undo</dt><dd class="stat__value">Asks first</dd></div>
+              <div class="stat"><dt class="stat__label">Git is the source of truth</dt><dd class="stat__value">Plain text</dd></div>
+            </dl>
+            <div class="mcard__viz">
+              <div class="viz viz--chat" role="img" aria-label="Ask it something, in your own words">
+                <div class="chat" aria-hidden="true">
+                  <p class="chat__q">Spent $50 at the movies tonight.</p>
+                  <p class="chat__a">Logged under Entertainment — want me to top it up $50 from savings?</p>
+                  <p class="chat__route"><span class="chat__route-dot"></span>Waiting on your OK</p>
+                </div>
+              </div>
+            </div>
+            <p class="mcard__hook">The memory is plain text in Git, so it outlives the runtime that reads it.</p>
+            <a class="mcard__cta" href="/projects/cortana" tabindex="-1"><span aria-hidden="true">View full case study</span><span class="sr-only">View full case study: Personal AI operating system</span><span aria-hidden="true">→</span></a>
+          </article>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="contact" id="contact">
+      <div class="wrap">
+        <div class="section-label">
+          <h2>Get in touch</h2>
+          <span class="rule-accent" aria-hidden="true"></span>
+        </div>
+        <div class="contact__row">
+          <ul class="contact__links">
+            <li>
+              <a href="mailto:poglolopez@gmail.com" title="poglolopez@gmail.com">
+                <svg class="ico ico--gmail" viewBox="52 42 88 66" aria-hidden="true" focusable="false"><path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6" /><path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15" /><path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2" /><path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92" /><path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2" /></svg><span class="sr-only">Email: poglolopez@gmail.com</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://linkedin.com/in/pablo-a-lopez-s" title="linkedin.com/in/pablo-a-lopez-s">
+                <svg class="ico ico--linkedin" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg><span class="sr-only">LinkedIn: pablo-a-lopez-s</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/PogloLopez" title="github.com/PogloLopez">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg><span class="sr-only">GitHub: PogloLopez</span>
+              </a>
+            </li>
+          </ul>
+          <ul class="contact__cvs">
+            <li><a href="https://github.com/PogloLopez/PogloLopez/raw/main/assets/cv/Pablo-Lopez-CV-EN.pdf">CV English</a></li>
+            <li><a href="https://github.com/PogloLopez/PogloLopez/raw/main/assets/cv/Pablo-Lopez-CV-ES.pdf">CV Español</a></li>
+          </ul>
+          <p class="contact__loc">Manizales, Colombia</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- The technical panel. A native <dialog>: it traps focus, closes on
+         Escape and hands focus back to "See more" on its own; page.js only adds
+         the open and close animation and the click-outside. -->
+    <dialog class="pp-sheet" id="tech" aria-labelledby="tech-title">
+      <div class="pp-sheet__head">
+        <p class="pp-sheet__kicker">Market price intelligence platform</p>
+        <h2 class="pp-sheet__title" id="tech-title">How it's built</h2>
+        <button type="button" class="pp-sheet__close" data-close>
+          <span aria-hidden="true">×</span><span class="sr-only">Close</span>
+        </button>
+      </div>
+      <!-- Focusable so keyboard users can scroll it: nothing inside is a link. -->
+      <div class="pp-sheet__body" tabindex="0" role="region" aria-label="Technical details">
+        <dl class="pp-meta">
+          <div><dt>Role</dt><dd>End-to-end engineer, from design to operation</dd></div>
+          <div><dt>Running</dt><dd>In production since 2026</dd></div>
+        </dl>
+
+        <section class="pp-block" aria-labelledby="tools-title">
+          <h3 class="pp-block__title" id="tools-title">Built with</h3>
+          <ul class="pp-tools">
+              <li><span class="pp-tool__name">Python</span><span class="pp-tool__what">Ingestion, models and the web app</span></li>
+              <li><span class="pp-tool__name">Polars</span><span class="pp-tool__what">Fast, memory-light data processing</span></li>
+              <li><span class="pp-tool__name">Delta Lake</span><span class="pp-tool__what">Price history with safe weekly updates</span></li>
+              <li><span class="pp-tool__name">XGBoost · LightGBM</span><span class="pp-tool__what">Price forecasting</span></li>
+              <li><span class="pp-tool__name">FastAPI</span><span class="pp-tool__what">The web app's backend</span></li>
+              <li><span class="pp-tool__name">HTMX</span><span class="pp-tool__what">Interactive pages without a heavy front end</span></li>
+              <li><span class="pp-tool__name">Anthropic API</span><span class="pp-tool__what">Generates the automated insights</span></li>
+          </ul>
+        </section>
+
+        <section class="pp-block" aria-labelledby="arch-title">
+          <h3 class="pp-block__title" id="arch-title">How it fits together</h3>
+          <figure class="pp-diagram">
+            <div class="pp-diagram__scroll" tabindex="0" role="region" aria-label="Architecture diagram, scrolls sideways on small screens">
+              <svg viewBox="0 0 1164 344" width="100%" style="min-width:620px;height:auto" role="img" aria-label="DANE bulletins are scraped and unit-normalised into a medallion lake. A 52-week forecast runs per product with model selection by multi-horizon MAPE. A language model writes the reading of each series once into the Gold layer, and the authenticated FastAPI application serves it to the commercial team from memory."><title>From a weekly PDF bulletin to a price reading the buyers act on</title><desc>DANE bulletins are scraped and unit-normalised into a medallion lake. A 52-week forecast runs per product with model selection by multi-horizon MAPE. A language model writes the reading of each series once into the Gold layer, and the authenticated FastAPI application serves it to the commercial team from memory.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="color-mix(in srgb, var(--accent, var(--color-iris)) 75%, transparent)"></path></marker></defs><text x="106" y="30" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="var(--color-fg-3)" font-family="var(--font-mono)">SOURCE</text><text x="344" y="30" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="var(--color-fg-3)" font-family="var(--font-mono)">INGEST</text><text x="582" y="30" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="var(--color-fg-3)" font-family="var(--font-mono)">LAKE</text><text x="820" y="30" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="var(--color-fg-3)" font-family="var(--font-mono)">INTELLIGENCE</text><text x="1058" y="30" text-anchor="middle" font-size="10.5" letter-spacing="1" fill="var(--color-fg-3)" font-family="var(--font-mono)">DELIVERY</text><path d="M 194 187 L 256 187" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 344 114 L 344 134 L 344 134 L 344 154" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 432 187 L 494 187" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 582 220 L 582 240 L 582 240 L 582 260" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 670 187 L 732 187" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 820 114 L 820 134 L 820 134 L 820 154" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 820 220 L 820 240 L 820 240 L 820 260" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 908 293 L 970 293" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 1058 260 L 1058 240 L 1058 240 L 1058 220" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><g><rect x="1033" y="234" width="66" height="17" rx="4" fill="var(--color-ground)" stroke="rgba(255,255,255,0.08)"></rect><text x="1066" y="246" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">no re-run</text></g><path d="M 908 187 L 970 187" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><path d="M 1058 154 L 1058 134 L 1058 134 L 1058 114" fill="none" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 60%, transparent)" stroke-width="1.5" marker-end="url(#arrow)"></path><g><rect x="18" y="154" width="176" height="66" rx="9" fill="var(--color-surface-2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.25"></rect><text x="106" y="177.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">DANE SIPSA bulletins</text><text x="106" y="193.5" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">weekly · formatted for</text><text x="106" y="206.5" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">humans</text></g><g><rect x="256" y="48" width="176" height="66" rx="9" fill="color-mix(in srgb, var(--accent, var(--color-iris)) 10%, var(--color-surface))" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 70%, white)" stroke-width="1.25" stroke-dasharray="5 4"></rect><text x="344" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Unit normalisation</text><text x="344" y="94" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">per-sheet, not global</text></g><g><rect x="256" y="154" width="176" height="66" rx="9" fill="var(--color-surface-2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.25"></rect><text x="344" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Scrape + parse</text><text x="344" y="200" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">schema drift tolerated</text></g><g><rect x="494" y="154" width="176" height="66" rx="9" fill="var(--color-surface)" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 45%, transparent)" stroke-width="1.25"></rect><text x="582" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Medallion lake</text><text x="582" y="200" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">Delta Lake · upserts</text></g><g><rect x="494" y="260" width="176" height="66" rx="9" fill="var(--color-surface)" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 45%, transparent)" stroke-width="1.25"></rect><text x="582" y="282.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Bronze / Silver /</text><text x="582" y="297.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Gold</text><text x="582" y="313.5" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">per-product series</text></g><g><rect x="732" y="48" width="176" height="66" rx="9" fill="var(--color-surface-2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.25"></rect><text x="820" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Model selection</text><text x="820" y="94" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">multi-horizon MAPE</text></g><g><rect x="732" y="154" width="176" height="66" rx="9" fill="color-mix(in srgb, var(--accent, var(--color-iris)) 20%, var(--color-surface))" stroke="var(--accent, var(--color-iris))" stroke-width="1.25"></rect><text x="820" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">52-week forecast</text><text x="820" y="200" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">XGBoost · LightGBM</text></g><g><rect x="732" y="260" width="176" height="66" rx="9" fill="color-mix(in srgb, var(--accent, var(--color-iris)) 20%, var(--color-surface))" stroke="var(--accent, var(--color-iris))" stroke-width="1.25"></rect><text x="820" y="290" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">LLM reading</text><text x="820" y="306" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">one paragraph per series</text></g><g><rect x="970" y="48" width="176" height="66" rx="9" fill="color-mix(in srgb, var(--accent, var(--color-iris)) 20%, var(--color-surface))" stroke="var(--accent, var(--color-iris))" stroke-width="1.25"></rect><text x="1058" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Commercial team</text><text x="1058" y="94" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">supplier negotiation</text></g><g><rect x="970" y="154" width="176" height="66" rx="9" fill="var(--color-surface-2)" stroke="rgba(255,255,255,0.18)" stroke-width="1.25"></rect><text x="1058" y="177.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">FastAPI + HTMX</text><text x="1058" y="193.5" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">authenticated, on the</text><text x="1058" y="206.5" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">internet</text></g><g><rect x="970" y="260" width="176" height="66" rx="9" fill="var(--color-surface)" stroke="color-mix(in srgb, var(--accent, var(--color-iris)) 45%, transparent)" stroke-width="1.25"></rect><text x="1058" y="290" text-anchor="middle" font-size="13" font-weight="600" fill="var(--color-fg)" font-family="var(--font-sans)">Insight store</text><text x="1058" y="306" text-anchor="middle" font-size="10.5" fill="var(--color-fg-3)" font-family="var(--font-mono)">Gold table, read once</text></g></svg>
+            </div>
+            <figcaption>From a weekly PDF bulletin to a price reading the buyers act on</figcaption>
+          </figure>
+        </section>
+
+        <section class="pp-block" aria-labelledby="numbers-title">
+          <h3 class="pp-block__title" id="numbers-title">By the numbers</h3>
+          <dl class="pp-nums" style="--cols: 4">
+              <div class="pp-num"><dt class="pp-num__label">Forecast horizon for every product</dt><dd class="pp-num__value">52 wk</dd></div>
+              <div class="pp-num"><dt class="pp-num__label">Products, with years of history each</dt><dd class="pp-num__value">100s</dd></div>
+              <div class="pp-num"><dt class="pp-num__label">Automated tests running in CI</dt><dd class="pp-num__value">100s</dd></div>
+              <div class="pp-num"><dt class="pp-num__label">AI-generated insights, whenever the input data is the same</dt><dd class="pp-num__value">Reused</dd></div>
+          </dl>
+        </section>
+      </div>
+    </dialog>
+
+    <script src="/site/carousel.js"></script>
+    <script src="/site/chrome.js"></script>
+    <script src="/site/page.js"></script>
+  </body>
+</html>

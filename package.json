@@ -4,33 +4,29 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "site": "node src/site/build.cjs",
+    "site:check": "node src/site/build.cjs --check",
+    "build": "npm run site:check && next build",
     "start": "next start",
     "lint": "eslint",
-    "assets": "node scripts/build-assets.mjs",
-    "shots": "node scripts/shots.mjs",
-    "preview": "next build && next start -p 3000 -H 0.0.0.0"
+    "test": "node tests/verify-landing.cjs && node tests/verify-pages.cjs && node tests/interact.cjs",
+    "assets": "node scripts/build-assets.mjs"
   },
   "dependencies": {
-    "@mdx-js/loader": "^3.1.1",
-    "@mdx-js/react": "^3.1.1",
-    "@next/mdx": "^16.3.4",
-    "@types/mdx": "^2.0.14",
-    "@vercel/analytics": "^2.0.1",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "rehype-slug": "^6.0.0",
-    "remark-gfm": "^4.0.1"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.25.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "playwright": "^1.63.0",
+    "postcss": "^8.5.28",
     "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "typescript": "^5"

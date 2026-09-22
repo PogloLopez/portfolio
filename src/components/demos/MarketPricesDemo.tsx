@@ -330,8 +330,8 @@ export function MarketPricesDemo() {
   return (
     <DemoFrame
       title="Market price intelligence"
-      subtitle="mercaldas-precios-mercado · demo build"
-      note="The real platform covers hundreds of products with several years of history, and each AI insight is written by a language model once into the Gold layer rather than on every page view. This miniature carries three invented series; nothing here comes from DANE or from Mercaldas."
+      subtitle="market-prices · demo build"
+      note="The real platform covers hundreds of products with several years of history, and each AI insight is written by a language model once into the Gold layer rather than on every page view. This miniature carries three invented series; nothing here comes from DANE or from the company."
     >
       <ControlRow>
         <Field label="Product">
