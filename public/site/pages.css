@@ -800,8 +800,8 @@ html:not(.seq-live) .marquee__pad {
   z-index: 1;
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
+  width: 4rem;
+  height: 4rem;
   /* Decoration: never in the way of what is behind it. */
   pointer-events: none;
   opacity: 0;
@@ -829,13 +829,13 @@ html:not(.seq-live) .marquee__pad {
 
 /* Two lines meeting in a point, the same shape as the landing's cue. */
 .pp-cue__chevron {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-right: 2px solid var(--accent);
-  border-bottom: 2px solid var(--accent);
-  border-radius: 0 0 2px 0;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-right: 2.5px solid var(--accent);
+  border-bottom: 2.5px solid var(--accent);
+  border-radius: 0 0 3px 0;
   /* Half the chevron's height, so the shape sits optically centred. */
-  margin-top: -0.3rem;
+  margin-top: -0.42rem;
   transform: rotate(45deg);
 }
 
