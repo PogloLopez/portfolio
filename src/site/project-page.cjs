@@ -65,6 +65,18 @@ ${viz(p, "panel", `${I}  `)}
     </header>`;
 }
 
+// The opening fills the first screen, so without this a reader can take the
+// page for all there is. Decoration, like the landing's own cue, so it carries
+// nothing for assistive tech; page.js shows it once the arrival has settled
+// and drops it on the first scroll. It sits outside the opening because it is
+// pinned to the foot of the screen, and the opening is taller than that on a
+// phone.
+function cue() {
+  return `      <div class="pp-cue" data-cue aria-hidden="true">
+        <span class="pp-cue__chevron"></span>
+      </div>`;
+}
+
 function story(p) {
   return `      <section class="pp-story" aria-labelledby="story-title">
         <div class="wrap">
@@ -283,6 +295,8 @@ ${topbar()}
 
     <main>
 ${opening(p, i)}
+
+${cue()}
 
 ${story(p)}
 

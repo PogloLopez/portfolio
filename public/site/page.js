@@ -79,3 +79,41 @@
     btn.addEventListener("click", open);
   });
 })();
+
+/**
+ * The scroll cue.
+ *
+ * The opening fills the first screen, so a reader can take it for the whole
+ * page. The chevron appears two seconds in — after the arrival has settled,
+ * so it reads as an invitation rather than as one more piece arriving — and
+ * goes for good at the first sign of scrolling, having done its job.
+ */
+(function () {
+  "use strict";
+
+  var cue = document.querySelector("[data-cue]");
+  if (!cue) return;
+
+  var SHOW_AFTER = 2000;
+  var MOVED = 24; // px of scrolling that count as "they have started"
+  var timer = window.setTimeout(show, SHOW_AFTER);
+
+  function show() {
+    // Loading part-way down the page (a reload keeps the scroll position)
+    // means the cue has nothing to say.
+    if (window.scrollY > MOVED) return;
+    cue.classList.add("is-on");
+  }
+
+  function hide() {
+    window.clearTimeout(timer);
+    cue.classList.remove("is-on");
+    window.removeEventListener("scroll", onScroll);
+  }
+
+  function onScroll() {
+    if (window.scrollY > MOVED) hide();
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+})();

@@ -781,3 +781,78 @@ html:not(.seq-live) .marquee__pad {
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 55%, var(--surface-2)) padding-box;
 }
+
+/* ---------------------------------------------------------------------------
+   The scroll cue
+
+   A chevron at the foot of the screen, over the dark band under the opening.
+   It is hidden until page.js adds .is-on, two seconds in, so it reads as an
+   invitation once the arrival has finished rather than as part of it, and it
+   goes on the first scroll.
+
+   Pinned to the viewport rather than to the opening: on a phone the opening
+   is taller than the screen, so its own foot is out of sight.
+--------------------------------------------------------------------------- */
+.pp-cue {
+  position: fixed;
+  bottom: clamp(0.75rem, 2.4vh, 1.6rem);
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  /* Decoration: never in the way of what is behind it. */
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.6s ease;
+}
+
+.pp-cue.is-on {
+  opacity: 1;
+}
+
+/* The accent glow behind the chevron, which is what makes it read as the
+   project's own colour rather than as browser chrome, over a soft disc of the
+   page's own background: on a phone the opening's picture reaches the foot of
+   the screen, and the chevron would otherwise sit on top of it. */
+.pp-cue::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--accent) 30%, transparent), transparent),
+    radial-gradient(closest-side, color-mix(in srgb, var(--ground) 82%, transparent) 58%, transparent);
+}
+
+/* Two lines meeting in a point, the same shape as the landing's cue. */
+.pp-cue__chevron {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  border-radius: 0 0 2px 0;
+  /* Half the chevron's height, so the shape sits optically centred. */
+  margin-top: -0.3rem;
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pp-cue.is-on .pp-cue__chevron {
+    animation: pp-cue-nudge 1.9s ease-in-out infinite;
+  }
+}
+
+@keyframes pp-cue-nudge {
+  0%,
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: rotate(45deg) translate(3px, 3px);
+    opacity: 1;
+  }
+}
