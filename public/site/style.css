@@ -2311,8 +2311,10 @@ a {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: var(--gutter);
-  padding: 0.25rem var(--gutter) 1.5rem;
+  /* The row runs edge to edge, so its own padding is the page's gutter, plus
+     whatever a notch takes when the phone is held sideways. */
+  scroll-padding-inline: calc(var(--gutter) + env(safe-area-inset-left)) calc(var(--gutter) + env(safe-area-inset-right));
+  padding: 0.25rem calc(var(--gutter) + env(safe-area-inset-right)) 1.5rem calc(var(--gutter) + env(safe-area-inset-left));
   /* The row is its own scroller; a bar under it would sit in the middle of
      the page. The peeking edge of the next card is the affordance. */
   scrollbar-width: none;
@@ -2320,14 +2322,6 @@ a {
 
 .mstrip::-webkit-scrollbar {
   display: none;
-}
-
-/* The row runs edge to edge, so its own padding is the gutter, notch
-   included. */
-.mstrip {
-  padding-left: calc(var(--gutter) + env(safe-area-inset-left));
-  padding-right: calc(var(--gutter) + env(safe-area-inset-right));
-  scroll-padding-left: calc(var(--gutter) + env(safe-area-inset-left));
 }
 
 .mstrip__item {
@@ -2455,8 +2449,11 @@ a {
      down. The safe-area inset keeps it clear of a notch in landscape. */
   .topbar {
     background: var(--ground);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    /* The page is drawn under the status bar and the island
+       (viewport-fit=cover, see the markup), and the bar is what sits there.
+       Its own top padding is what keeps its actions below them; the side
+       insets are already in .wrap, which is the row inside it. */
+    padding-top: env(safe-area-inset-top);
   }
 
   .topbar__inner {
@@ -2618,6 +2615,31 @@ a {
 
   .panel .stat__value {
     font-size: clamp(1.5rem, 1.1rem + 2.4vw, 2rem);
+  }
+
+  /* The fifth project is centred on a wide screen, where it is the end of a
+     pinned sequence. Stacked in one column with the other four it just looks
+     like the odd one out, so it reads left like the rest. */
+  .panel--finale .panel__inner {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .panel--finale .panel__kicker,
+  .panel--finale .panel__stats {
+    justify-content: flex-start;
+  }
+
+  .panel--finale .panel__hook {
+    text-wrap: pretty;
+  }
+
+  .panel--finale .stat {
+    align-items: flex-start;
+  }
+
+  .panel--finale .panel__viz {
+    width: 100%;
   }
 
   /* --- The closing row -------------------------------------------------- */

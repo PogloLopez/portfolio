@@ -940,8 +940,20 @@ html:not(.seq-live) .marquee__pad {
     justify-content: center;
   }
 
-  /* The sheet covers the screen; its close button and its scroll have to
-     clear a notch and a home indicator. */
+  /* The sheet covers the screen edge to edge, so it is the one thing on the
+     page that has to keep clear of the hardware itself: its head and the
+     close button in it sit under a notch otherwise, and its last line under
+     the home indicator. */
+  .pp-sheet__head {
+    padding-top: calc(1.25rem + env(safe-area-inset-top));
+  }
+
+  .pp-sheet__close {
+    top: calc(1rem + env(safe-area-inset-top));
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
   .pp-sheet__body {
     padding-bottom: calc(2rem + env(safe-area-inset-bottom));
   }
@@ -950,12 +962,12 @@ html:not(.seq-live) .marquee__pad {
      further — the boxes carry words. It scrolls sideways here, so it says
      so, and its right edge fades instead of ending in a hard cut that reads
      as the picture being broken. */
-  .pp-diagram__scroll {
+  .pp-diagram--wide .pp-diagram__scroll {
     -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
     mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
   }
 
-  .pp-diagram::after {
+  .pp-diagram--wide::after {
     content: "Swipe the diagram sideways";
     display: block;
     margin-top: 0.5rem;

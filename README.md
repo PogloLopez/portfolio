@@ -127,6 +127,12 @@ What that adds up to:
 
 A project page runs to about five screens on a phone, where it used to be eight.
 
+Known trade-off: a phone still downloads the carousel's markup (about 22KB of the landing's
+55KB) and hides it, because the pages are one static file each and the choice between the
+carousel and the swipe row is made in CSS, at paint time. Building the carousel's duplicate
+set at runtime would save most of it; it is not worth pulling apart a carousel that is tested
+at seven drift phases for bytes that gzip well and are cached after the first visit.
+
 ## Tests
 
 All of them drive Chromium against a running server (`tests/lib.cjs`):

@@ -239,6 +239,16 @@ async function walk(page, step = 400) {
     });
     check("phone: 'See more' fills the screen and holds the page still", sheet.open && sheet.fullWidth && sheet.locked, sheet);
     check("phone: nothing in the sheet runs off the side", sheet.wider <= 0, sheet.wider);
+    const inSheet = await page.evaluate(survey);
+    check("phone: every target in the sheet is at least 44px", inSheet.small.length === 0, inSheet.small.slice(0, 4));
+    check("phone: no text on top of other text in the sheet", inSheet.overlaps.length === 0, inSheet.overlaps.slice(0, 4));
+
+    const cue = await page.evaluate(() => {
+      const fig = document.querySelector(".pp-diagram");
+      const sc = fig.querySelector(".pp-diagram__scroll");
+      return { marked: fig.classList.contains("pp-diagram--wide"), over: sc.scrollWidth - sc.clientWidth };
+    });
+    check("phone: the diagram asks for a swipe because it really overflows", cue.marked && cue.over > 4, cue);
 
     if (AXE) {
       await page.addScriptTag({ path: AXE });
@@ -251,6 +261,61 @@ async function walk(page, step = 400) {
     await page.waitForTimeout(400);
 
     await ctx.close();
+
+    /* ---- a phone with a notch ------------------------------------------ */
+    const notched = await browser.newContext({ ...devices["iPhone 13"] });
+    const notchedPage = await notched.newPage();
+    watch(notchedPage, "phone with a notch");
+    const cdp = await notched.newCDPSession(notchedPage);
+    // An iPhone 13's own insets: the island and the home indicator.
+    await cdp.send("Emulation.setSafeAreaInsetsOverride", {
+      insets: { top: 47, left: 0, bottom: 34, right: 0 },
+    });
+    await notchedPage.goto(urls.project("rag"), { waitUntil: "networkidle" });
+    const bar = await notchedPage.evaluate(() => {
+      const tops = [...document.querySelectorAll(".topbar .btn")].map((b) => b.getBoundingClientRect().top);
+      return { lowest: Math.min(...tops), inset: getComputedStyle(document.querySelector(".topbar")).paddingTop };
+    });
+    check("phone with a notch: the bar's actions sit below the status bar", bar.lowest >= 47, bar);
+
+    await notchedPage.locator(".pp-more__open").tap();
+    await notchedPage.waitForTimeout(800);
+    const sheetTop = await notchedPage.evaluate(() => {
+      const close = document.querySelector(".pp-sheet__close").getBoundingClientRect();
+      const kicker = document.querySelector(".pp-sheet__kicker").getBoundingClientRect();
+      return { close: close.top, closeSize: Math.min(close.width, close.height), kicker: kicker.top };
+    });
+    check("phone with a notch: the sheet's close button clears it, and is 44px", sheetTop.close >= 47 && sheetTop.closeSize >= 44, sheetTop);
+    check("phone with a notch: the sheet's own heading clears it", sheetTop.kicker >= 47, sheetTop);
+    await notched.close();
+
+    /* ---- a window dragged wider than the sequence's threshold ----------- */
+    const grown = await browser.newContext({ viewport: { width: 700, height: 800 } });
+    const grownPage = await grown.newPage();
+    watch(grownPage, "narrow window");
+    await grownPage.goto(urls.home, { waitUntil: "networkidle" });
+    await walk(grownPage);
+    await grownPage.setViewportSize({ width: 1280, height: 800 });
+    await grownPage.waitForTimeout(900);
+    const handedBack = await grownPage.evaluate(() => {
+      // In the sequence a panel's opacity is the stage's business: only the
+      // one being shown is opaque. What must not survive the change is this
+      // file's own state — the attribute and the stagger it set.
+      const parts = [...document.querySelectorAll(".panel [data-part]")];
+      const shown = [...document.querySelectorAll(".panel")].find((p) => Number(getComputedStyle(p).opacity) > 0.99);
+      return {
+        mode: document.documentElement.className,
+        waiting: document.querySelectorAll("[data-reveal]").length,
+        staggered: parts.filter((el) => el.style.transitionDelay).length,
+        hiddenInShownPanel: shown ? [...shown.querySelectorAll("[data-part]")].filter((el) => Number(getComputedStyle(el).opacity) < 0.99).length : -1,
+      };
+    });
+    check(
+      "a window widened past 780px hands every part back to the sequence",
+      /seq-live/.test(handedBack.mode) && handedBack.waiting === 0 && handedBack.staggered === 0 && handedBack.hiddenInShownPanel === 0,
+      handedBack,
+    );
+    await grown.close();
 
     /* ---- reduced motion ------------------------------------------------ */
     const calm = await browser.newContext({ ...devices["iPhone 13"], reducedMotion: "reduce" });

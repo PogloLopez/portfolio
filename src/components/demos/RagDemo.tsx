@@ -302,8 +302,8 @@ export function RagDemo() {
             <input
               type="text"
               disabled
-              placeholder="Free-text questions are disabled in this demo"
-              className="min-w-0 flex-1 bg-transparent text-sm text-fg-2 placeholder:text-fg-3 disabled:cursor-not-allowed"
+              placeholder="Free text is off in this demo"
+              className="min-w-0 flex-1 overflow-hidden bg-transparent text-sm text-ellipsis text-fg-2 placeholder:text-fg-3 disabled:cursor-not-allowed"
               aria-label="Message (disabled in this demo)"
             />
             <span className="font-mono text-[0.625rem] text-fg-3">demo</span>

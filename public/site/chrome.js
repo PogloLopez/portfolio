@@ -126,9 +126,28 @@
     ".panel [data-part], .pp-story__body > *, .pp-demo__live, .pp-more__inner > *, .recap .section-label, .mstrip";
   var revealObserver = null;
 
+  /* The other direction: a window dragged wider than 780px hands the page
+     back to the pinned sequence, which shows every panel at once. Anything
+     still waiting to arrive would wait for ever there — its block is inside
+     the sticky stage now and never crosses the fold again — so the sequence
+     gets the parts back the way it found them. */
+  function stopReveals() {
+    if (!revealObserver) return;
+    revealObserver.disconnect();
+    revealObserver = null;
+    [].slice.call(document.querySelectorAll("[data-reveal]")).forEach(function (el) {
+      el.removeAttribute("data-reveal");
+      el.style.transitionDelay = "";
+    });
+  }
+
   function startReveals() {
-    if (revealObserver || reduced.matches || !window.IntersectionObserver) return;
-    if (document.documentElement.classList.contains("seq-live")) return;
+    if (reduced.matches || !window.IntersectionObserver) return;
+    if (document.documentElement.classList.contains("seq-live")) {
+      stopReveals();
+      return;
+    }
+    if (revealObserver) return;
     var parts = [].slice.call(document.querySelectorAll(REVEAL));
     if (!parts.length) return;
     revealObserver = new IntersectionObserver(
@@ -158,8 +177,9 @@
   }
 
   startReveals();
-  // A window narrowed past the sequence's threshold drops to the same stacked
-  // layout, and gets the same arrivals from there on.
+  // A window crossing the sequence's threshold changes layout under the
+  // reader: narrowed, it drops to the stacked one and gets the arrivals from
+  // there on; widened, it hands them back (startReveals clears them).
   document.addEventListener("seq:mode", startReveals);
 
   /* -------------------------------------------------------------------------

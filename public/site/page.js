@@ -117,3 +117,32 @@
 
   window.addEventListener("scroll", onScroll, { passive: true });
 })();
+
+/**
+ * The architecture diagram, when it does not fit.
+ *
+ * It is 44rem wide at its narrowest — the boxes carry words, so it cannot
+ * usefully shrink further — and on a phone it scrolls sideways inside its
+ * frame. The stylesheet fades that edge and says so, but only on
+ * `.pp-diagram--wide`, which is set here: the same styles on a screen where
+ * the diagram happens to fit would fade an edge with nothing behind it and
+ * ask for a swipe that does nothing.
+ *
+ * Measured, not assumed, and re-measured when the frame changes size (a
+ * rotation, a desktop window dragged narrower).
+ */
+(function () {
+  "use strict";
+
+  var figure = document.querySelector(".pp-diagram");
+  var scroller = figure && figure.querySelector(".pp-diagram__scroll");
+  if (!scroller) return;
+
+  function sync() {
+    figure.classList.toggle("pp-diagram--wide", scroller.scrollWidth - scroller.clientWidth > 4);
+  }
+
+  sync();
+  if (window.ResizeObserver) new ResizeObserver(sync).observe(scroller);
+  else window.addEventListener("resize", sync);
+})();
