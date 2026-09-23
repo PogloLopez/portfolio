@@ -363,12 +363,79 @@ async function carouselClicks(page, pageUrl, label) {
     await phone.waitForTimeout(600);
     const pClosed = await phone.evaluate(() => !document.getElementById("tech").open);
     check("phone: 'See more' opens and closes by tap", pOpen && pClosed, { pOpen, pClosed });
-    const firstCard = phone.locator(".marquee__set:not([aria-hidden]) > .mcard .mcard__cta").first();
-    await firstCard.scrollIntoViewIfNeeded();
-    const expect = await firstCard.evaluate((a) => a.href);
-    await firstCard.tap();
+    // The closing row on a phone is the swipe strip, not the carousel: the
+    // carousel is a mouse's (see style.css, "Phones").
+    const stripShown = await phone.evaluate(() => {
+      const strip = document.querySelector(".mstrip");
+      const marquee = document.querySelector(".marquee");
+      return {
+        strip: strip && getComputedStyle(strip).display !== "none",
+        marquee: marquee && getComputedStyle(marquee).display === "none",
+      };
+    });
+    check("phone: the swipe row replaces the drifting carousel", stripShown.strip && stripShown.marquee, stripShown);
+
+    // It really swipes, and it snaps: a drag past the first card leaves a
+    // later one at the row's left edge.
+    const strip = phone.locator(".mstrip");
+    await strip.scrollIntoViewIfNeeded();
+    const swiped = await phone.evaluate(() => {
+      const el = document.querySelector(".mstrip");
+      const before = el.scrollLeft;
+      el.scrollBy({ left: el.clientWidth * 0.8 });
+      return new Promise((r) => setTimeout(() => r({ before, after: el.scrollLeft, max: el.scrollWidth - el.clientWidth }), 600));
+    });
+    check("phone: the row scrolls sideways through the projects", swiped.after > swiped.before && swiped.max > 100, swiped);
+
+    const stripCard = phone.locator(".mstrip__card").first();
+    await stripCard.scrollIntoViewIfNeeded();
+    const expect = await stripCard.evaluate((a) => a.href);
+    await stripCard.tap();
     await phone.waitForURL((u) => u.href === expect, { timeout: 5000 }).catch(() => {});
-    check("phone: a card's 'View full case study' opens its page by tap", phone.url() === expect, phone.url());
+    check("phone: a card in the row opens its page by tap", phone.url() === expect, phone.url());
+
+    // The pictures move on a phone, and only where they can be seen.
+    await phone.goto(urls.home, { waitUntil: "networkidle" });
+    await phone.evaluate(() => document.querySelectorAll(".panel")[1].scrollIntoView({ block: "center" }));
+    await phone.waitForTimeout(700);
+    const loops = await phone.evaluate(() => {
+      const running = (el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === "running").length;
+      const panels = [...document.querySelectorAll(".panel")];
+      const seen = panels.filter((p) => {
+        const r = p.getBoundingClientRect();
+        return r.bottom > 0 && r.top < innerHeight;
+      });
+      // Well away, not merely off screen: the switch wakes a block a little
+      // before it arrives (chrome.js), so its neighbour is allowed to run.
+      const away = panels.filter((p) => {
+        const r = p.getBoundingClientRect();
+        return r.top - innerHeight > 200 || -r.bottom > 200;
+      });
+      return {
+        live: document.documentElement.classList.contains("viz-live"),
+        onScreen: seen.reduce((n, p) => n + running(p), 0),
+        offScreen: away.reduce((n, p) => n + running(p), 0),
+      };
+    });
+    check("phone: the pictures animate, and only the ones on screen", loops.live && loops.onScreen > 0 && loops.offScreen === 0, loops);
+
+    // Nothing the arrival animation hides may stay hidden: a reader who
+    // scrolls past must end up with every part of every block visible.
+    for (const slug of ["forecast", "cortana"]) {
+      await phone.goto(urls.project(slug), { waitUntil: "networkidle" });
+      const h = await phone.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < h; y += 500) {
+        await phone.evaluate((v) => window.scrollTo(0, v), y);
+        await phone.waitForTimeout(90);
+      }
+      await phone.waitForTimeout(700);
+      const hidden = await phone.evaluate(() =>
+        [...document.querySelectorAll("[data-reveal]")]
+          .filter((el) => Number(getComputedStyle(el).opacity) < 0.99)
+          .map((el) => el.className || el.tagName),
+      );
+      check(`phone: ${slug} leaves nothing hidden after scrolling through it`, hidden.length === 0, hidden.slice(0, 4));
+    }
 
     // Nothing wider than the screen at any point of the arrival (the opening
     // slides in from the side), and nothing inside a demo cut off by its frame.

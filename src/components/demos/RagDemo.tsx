@@ -193,7 +193,7 @@ export function RagDemo() {
                   type="button"
                   onClick={() => ask(ex)}
                   style={accent.chip(current?.id === ex.id ? 18 : 6, current?.id === ex.id ? 100 : 40)}
-                  className="rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all hover:-translate-y-px hover:brightness-125"
+                  className="min-h-11 rounded-lg border px-3.5 py-2.5 text-left text-sm font-medium transition-all hover:-translate-y-px hover:brightness-125 sm:min-h-0"
                 >
                   {ex.question}
                 </button>
@@ -252,7 +252,7 @@ export function RagDemo() {
                     <button
                       type="button"
                       onClick={() => setShowSql((v) => !v)}
-                      className="inline-flex items-center gap-2 font-mono text-[0.6875rem] tracking-[0.1em] text-fg-3 uppercase transition-all hover:brightness-150"
+                      className="inline-flex min-h-11 items-center gap-2 font-mono text-[0.6875rem] tracking-[0.1em] text-fg-3 uppercase transition-all hover:brightness-150 sm:min-h-0"
                     >
                       <svg
                         aria-hidden

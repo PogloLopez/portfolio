@@ -856,3 +856,112 @@ html:not(.seq-live) .marquee__pad {
     opacity: 1;
   }
 }
+
+/* ===========================================================================
+   Phones: the project page
+
+   The landing's stylesheet carries the phone layer for everything both pages
+   share (the bar, the figures, the pictures, the swipe row that replaces the
+   carousel). This is what a project page adds: its opening, the cue under it,
+   and the demo.
+=========================================================================== */
+
+@media (max-width: 779.98px) {
+  /* The opening is the landing card, larger. On a phone it does not also
+     have to fill the screen: with the picture under the words it ran past
+     the fold anyway, and the empty band it added above the title just
+     pushed the words further down. */
+  .pp-hero {
+    min-height: 0;
+    padding-block: clamp(1.75rem, 5vh, 2.75rem) clamp(2rem, 6vh, 3rem);
+  }
+
+  /* About a third of the screen, like the landing's pictures. */
+  .pp-hero .viz--line,
+  .pp-hero .viz--market,
+  .pp-hero .viz--bars,
+  .pp-hero .viz--flow {
+    aspect-ratio: auto;
+    height: min(32vh, 220px);
+  }
+
+  .pp-hero .viz--chat {
+    min-height: 0;
+  }
+
+  .pp-hero--finale .viz--chat {
+    min-height: 0;
+  }
+
+  /* No cue here. It exists because the opening fills a desktop screen, so
+     without it the page can be taken for all there is; on a phone the
+     opening ends inside the first screen and the next heading is already
+     showing under it. Floating over that heading, it was only in the way. */
+  .pp-cue {
+    display: none;
+  }
+
+  .pp-story {
+    padding-block: clamp(2.25rem, 7vh, 3.25rem) clamp(1.5rem, 5vh, 2.25rem);
+  }
+
+  /* Same as the landing's mono labels: 12px is the floor on a hand-held
+     screen. */
+  .pp-pill {
+    font-size: 0.75rem;
+  }
+
+  /* A tool and what it does, one under the other. Side by side, a long name
+     ("Model-agnostic LLM layer") took most of the width and left its own
+     description wrapping in a column three words wide. */
+  .pp-tools li {
+    display: block;
+  }
+
+  .pp-tool__name {
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .pp-tool__name::after {
+    content: none;
+  }
+
+  /* The "See more" band stacks: a full-width button under its own heading is
+     a thumb's target, not a link at the end of a line. */
+  .pp-more__inner {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .pp-more__open {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  /* The sheet covers the screen; its close button and its scroll have to
+     clear a notch and a home indicator. */
+  .pp-sheet__body {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  /* The diagram is 44rem wide at its narrowest and cannot usefully shrink
+     further — the boxes carry words. It scrolls sideways here, so it says
+     so, and its right edge fades instead of ending in a hard cut that reads
+     as the picture being broken. */
+  .pp-diagram__scroll {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
+  }
+
+  .pp-diagram::after {
+    content: "Swipe the diagram sideways";
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--fg-3);
+  }
+}

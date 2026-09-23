@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: the page reaches under a notch and a home
+         indicator, and the styles keep what matters clear of them with
+         env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- The phone's own browser chrome, in the page's colour. -->
+    <meta name="theme-color" content="#05060e" />
     <title>Pablo López · Data &amp; AI Engineer</title>
     <meta name="description" content="I build forecasting systems, data pipelines and AI agents that run in production." />
     <link rel="canonical" href="https://pablo.maieutik-data.com/" />
@@ -36,6 +41,7 @@
     <!-- Loaded in <head> on purpose: it only decides live vs static mode here
          (one class on <html>) so the first paint already has the right layout.
          Everything else waits for DOMContentLoaded. -->
+    <script src="/site/mode.js" data-sequence></script>
     <script src="/site/sequence.js"></script>
   </head>
   <body>
@@ -648,6 +654,48 @@
             </div>
           </div>
         </div>
+        <ul class="mstrip">
+          <li class="mstrip__item">
+            <a class="mstrip__card" data-accent="a1" href="/projects/forecast">
+              <span class="mstrip__head"><span class="mstrip__num">01</span><span class="mstrip__kicker">MLOps · Time series</span></span>
+              <span class="mstrip__title">ML demand forecasting in production</span>
+              <span class="mstrip__stat"><b>100k+</b> Series, weekly</span>
+              <span class="mstrip__go">Case study <span aria-hidden="true">→</span></span>
+            </a>
+          </li>
+          <li class="mstrip__item">
+            <a class="mstrip__card" data-accent="a2" href="/projects/market-prices">
+              <span class="mstrip__head"><span class="mstrip__num">02</span><span class="mstrip__kicker">Data platform · Generative AI</span></span>
+              <span class="mstrip__title">Market price intelligence platform</span>
+              <span class="mstrip__stat"><b>52 wk</b> Forecast horizon</span>
+              <span class="mstrip__go">Case study <span aria-hidden="true">→</span></span>
+            </a>
+          </li>
+          <li class="mstrip__item">
+            <a class="mstrip__card" data-accent="a3" href="/projects/rag">
+              <span class="mstrip__head"><span class="mstrip__num">03</span><span class="mstrip__kicker">Applied AI · Guardrails</span></span>
+              <span class="mstrip__title">AI assistant for business data</span>
+              <span class="mstrip__stat"><b>Zero</b> Numbers the model makes up</span>
+              <span class="mstrip__go">Case study <span aria-hidden="true">→</span></span>
+            </a>
+          </li>
+          <li class="mstrip__item">
+            <a class="mstrip__card" data-accent="a4" href="/projects/operations-platform">
+              <span class="mstrip__head"><span class="mstrip__num">04</span><span class="mstrip__kicker">Full stack · Internal product</span></span>
+              <span class="mstrip__title">Stock rebalancing engine</span>
+              <span class="mstrip__stat"><b>4h → 5min</b> Per transfer plan</span>
+              <span class="mstrip__go">Case study <span aria-hidden="true">→</span></span>
+            </a>
+          </li>
+          <li class="mstrip__item">
+            <a class="mstrip__card" data-accent="a5" href="/projects/cortana">
+              <span class="mstrip__head"><span class="mstrip__num">05</span><span class="mstrip__kicker">Multi-agent · Local-first</span></span>
+              <span class="mstrip__title">Personal AI operating system</span>
+              <span class="mstrip__stat"><b>Asks first</b> Before anything it can't undo</span>
+              <span class="mstrip__go">Case study <span aria-hidden="true">→</span></span>
+            </a>
+          </li>
+        </ul>
       </section>
     </main>
 

@@ -9,7 +9,7 @@
     "build": "npm run site:check && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node tests/verify-landing.cjs && node tests/verify-pages.cjs && node tests/interact.cjs",
+    "test": "node tests/verify-landing.cjs && node tests/verify-pages.cjs && node tests/verify-mobile.cjs && node tests/interact.cjs",
     "assets": "node scripts/build-assets.mjs"
   },
   "dependencies": {

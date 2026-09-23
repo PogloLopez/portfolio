@@ -91,6 +91,42 @@ forecast's "Champion" chip, an accent button in the business data assistant, and
 in the Cortana diff. `tests/verify-pages.cjs` reports them apart when run with `AXE=<path to
 axe.min.js>`.
 
+## On a phone
+
+Under 780px the site is its own design, not the desktop one with the moving parts removed.
+`mode.js` sets two switches on `<html>`, and the difference is which one a visit gets:
+
+| | what it drives | who gets it |
+|---|---|---|
+| `seq-live` | the landing's pinned sequence, the carousel's drift, the cursor tilt | motion allowed, a fine pointer, a window 780px or wider |
+| `viz-live` | the project pictures' own loops | motion allowed — a phone included |
+
+What that adds up to:
+
+- **The pictures move.** They are the work's only moving proof, and five frozen pictures read
+  as a page that failed to load. `chrome.js` gives each project block and each card its own
+  idle switch in the stacked layout, so only the picture on screen is running.
+- **Each block arrives as it is scrolled to** (`data-reveal`, also `chrome.js`), which is the
+  sequence's move, once per part. Set from JavaScript only: without it, or with reduced motion,
+  everything is visible from the first paint.
+- **The closing carousel becomes a row you swipe** (`.mstrip`, `landing.cjs`'s `strip()`).
+  Five full project cards stacked in a column were the five project blocks over again. The
+  swap is by pointer as well as width: a touch screen of any size gets the row, because the
+  drift and the tilt need a mouse.
+- **The neural field is drawn, not run.** Clearing and repainting a full-screen canvas every
+  frame was 13% of frames over 33ms while scrolling the landing (a mid-range phone, CPU
+  throttled 6x); it keeps its shape and its dispersal on scroll, and gives up its idle drift.
+  That, and the per-block idle switch, hold the scroll at a 16.7ms median and 1–3% slow frames.
+- **Everything you tap is at least 44px** on its short side, 48px for the page's own actions,
+  and the bar carries one action per page rather than a copy of the hero's pair.
+- **The pictures are sized for a screen held in one hand** (about a third of it), the
+  conversations grow to fit their text instead of overflowing a fixed frame, and the mono
+  labels go up to 12px.
+- **A notch is accounted for**: `viewport-fit=cover` plus `env(safe-area-inset-*)` in the
+  gutters, the bar and the foot of the page.
+
+A project page runs to about five screens on a phone, where it used to be eight.
+
 ## Tests
 
 All of them drive Chromium against a running server (`tests/lib.cjs`):
@@ -99,8 +135,13 @@ All of them drive Chromium against a running server (`tests/lib.cjs`):
   motion, no JavaScript.
 - `tests/verify-pages.cjs`: each page's opening, story, demo, diagram and "See more" panel, the
   carousel, phones and reduced motion. `AXE=<path>` adds an accessibility audit.
+- `tests/verify-mobile.cjs`: the phone version at 390px and 320px — no sideways scroll, no
+  text over text, 44px targets, the pictures animating only where they can be seen, the swipe
+  row, the full-screen sheet, and reduced motion. `AXE=<path>` adds an audit, run with the page
+  at rest.
 - `tests/interact.cjs`: real mouse clicks and taps on every link, button and demo control.
-- `tests/perf.cjs` (frame times at 4x CPU throttle) and `tests/shots.cjs` (review screenshots).
+- `tests/perf.cjs` (frame times at 4x CPU throttle, or `node tests/perf.cjs home phone` for a
+  phone at 6x) and `tests/shots.cjs` (review screenshots).
 
 ## Images
 

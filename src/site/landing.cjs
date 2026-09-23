@@ -391,6 +391,47 @@ function card(p, i, real, href = caseHref) {
   );
 }
 
+/**
+ * The same set of projects as the carousel, for a phone: a row of compact
+ * cards you swipe sideways, one snapping into place at a time.
+ *
+ * A phone never gets the drifting carousel. Its cards are full project
+ * cards — title, both figures, the picture, the hook — and stacked in one
+ * column they read as the five project blocks all over again, one screenful
+ * each, which is exactly what they looked like: the page repeating itself.
+ * This is the same information as an index: number, field, title, the
+ * project's headline figure, and a link. One screen for all five, and
+ * swiping it is what a phone expects of a row that does not fit.
+ *
+ * Both are in the markup and the stylesheet shows one: the carousel from
+ * 780px up, this below it. Whichever is hidden is `display: none`, so it is
+ * out of the page for a screen reader too, and neither is a second copy of
+ * the other for anyone.
+ */
+function strip(projects, ind, href = caseHref) {
+  const I = `${ind}  `;
+  return (
+    `${ind}<ul class="mstrip">\n` +
+    projects
+      .map(({ p, i }) => {
+        const s = p.cardStats[0];
+        return (
+          `${I}<li class="mstrip__item">\n` +
+          `${I}  <a class="mstrip__card" data-accent="${p.accent}" href="${href(p)}">\n` +
+          `${I}    <span class="mstrip__head"><span class="mstrip__num">${num2(i)}</span>` +
+          `<span class="mstrip__kicker">${esc(p.kicker)}</span></span>\n` +
+          `${I}    <span class="mstrip__title">${esc(p.title)}</span>\n` +
+          `${I}    <span class="mstrip__stat"><b>${esc(s.value)}</b> ${esc(s.label)}</span>\n` +
+          `${I}    <span class="mstrip__go">Case study <span aria-hidden="true">${ARROW}</span></span>\n` +
+          `${I}  </a>\n` +
+          `${I}</li>`
+        );
+      })
+      .join("\n") +
+    `\n${ind}</ul>`
+  );
+}
+
 // The "Selected work" lede, shared by the visual intro and its assistive-tech
 // copy (see the markup below), so the two can never drift apart.
 const WORK_LEDE_MAIN = "Five systems I designed, built and operate.";
@@ -451,7 +492,12 @@ function landingPage({ projects, site }) {
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: the page reaches under a notch and a home
+         indicator, and the styles keep what matters clear of them with
+         env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- The phone's own browser chrome, in the page's colour. -->
+    <meta name="theme-color" content="#05060e" />
 ${head({
   site,
   title: `${site.shortName} · ${site.role}`,
@@ -465,6 +511,7 @@ ${head({
     <!-- Loaded in <head> on purpose: it only decides live vs static mode here
          (one class on <html>) so the first paint already has the right layout.
          Everything else waits for DOMContentLoaded. -->
+    <script src="${urls.asset("mode.js")}" data-sequence></script>
     <script src="${urls.asset("sequence.js")}"></script>
   </head>
   <body>
@@ -609,6 +656,7 @@ ${projects.map((p, i) => card(p, i, false)).join("\n")}
             </div>
           </div>
         </div>
+${strip(projects.map((p, i) => ({ p, i })), "        ")}
       </section>
     </main>
 
@@ -657,4 +705,4 @@ ${projects.map((p, i) => card(p, i, false)).join("\n")}
 
 // The project pages build on these: the same pictures, cards, contact marks
 // and gradients, so the two can never drift apart.
-module.exports = { landingPage, urls, viz, stats, card, kicker, ctaLabel, icon, gradients, esc, num2, ARROW };
+module.exports = { landingPage, urls, viz, stats, card, strip, kicker, ctaLabel, icon, gradients, esc, num2, ARROW };

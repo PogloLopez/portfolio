@@ -239,14 +239,14 @@ export function CortanaDemo() {
                         type="button"
                         onClick={() => setPhase("approved")}
                         style={accent.solid}
-                        className="rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90"
+                        className="min-h-11 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-opacity hover:opacity-90 sm:min-h-0"
                       >
                         Approve
                       </button>
                       <button
                         type="button"
                         onClick={() => setPhase("rejected")}
-                        className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-fg-3 transition-colors hover:border-white/40 hover:text-fg-2"
+                        className="min-h-11 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-fg-3 transition-colors hover:border-white/40 hover:text-fg-2 sm:min-h-0"
                       >
                         Reject
                       </button>

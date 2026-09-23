@@ -13,7 +13,7 @@
 const L = require("./landing.cjs");
 const { head } = require("./head.cjs");
 
-const { urls, viz, stats, card, kicker, icon, gradients, esc } = L;
+const { urls, viz, stats, card, strip, kicker, icon, gradients, esc } = L;
 
 // Diagrams shown without a caption. The caption is the diagram's title, and
 // on these two the review asked for it gone; the SVG keeps it as its <title>.
@@ -36,7 +36,7 @@ const LAYOUT = [
 const ARROW_LEFT = "←";
 
 function topbar() {
-  return `    <nav class="topbar" aria-label="Top bar">
+  return `    <nav class="topbar topbar--project" aria-label="Top bar">
       <div class="wrap topbar__inner">
         <a class="topbar__name" href="${urls.home}">Pablo A. López</a>
         <div class="topbar__actions">
@@ -220,6 +220,7 @@ ${rest.map(({ q, i }) => card(q, i, false)).join("\n")}
             </div>
           </div>
         </div>
+${strip(rest.map(({ q, i }) => ({ p: q, i })), "        ")}
       </section>`;
 }
 
@@ -268,7 +269,12 @@ function projectPage(p, i, { projects, site, diagram }) {
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: the page reaches under a notch and a home
+         indicator, and the styles keep what matters clear of them with
+         env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- The phone's own browser chrome, in the page's colour. -->
+    <meta name="theme-color" content="#05060e" />
 ${head({
   site,
   title: `${p.title} · ${site.shortName}`,

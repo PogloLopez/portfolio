@@ -20,7 +20,11 @@
   // capped for the same reason — the link search below is O(n^2) over the
   // node list, and once stuck it runs for the rest of the page, not less.
   const CORES = navigator.hardwareConcurrency || 4;
-  const NODE_COUNT = CORES <= 4 || window.innerWidth < 900 ? 84 : 132;
+  // Half the nodes on a phone. The field is redrawn on every scroll there
+  // (see `still` below), and the link search is O(n^2) over the list, so the
+  // count is what that redraw costs; 44 still reads as a field on a screen
+  // this size.
+  const NODE_COUNT = window.innerWidth < 780 ? 44 : CORES <= 4 || window.innerWidth < 900 ? 84 : 132;
   // Where the field rests, and when it starts coming apart: just left of the
   // "Selected work" lede, not before that section is a quarter of the way
   // down the viewport.
@@ -105,6 +109,16 @@
 
   const nodes = seedNodes();
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* A phone draws the field, but does not run it.
+
+     The canvas covers the screen, and clearing and repainting it every frame
+     is the one thing here that a phone pays for on every scroll: with the
+     loop running, 13% of the frames while scrolling the landing went over
+     33ms (a mid range phone, CPU throttled 6x); without the field at all,
+     3%. The phone's moving parts are the project pictures, which is what a
+     reader is actually looking at, so the field keeps its shape and its
+     dispersal as the page scrolls, and gives up its idle drift. */
+  const still = reduced || window.innerWidth < 780;
 
   const SPRITE = 64;
   const sprite = document.createElement("canvas");
@@ -258,7 +272,7 @@
     raf = requestAnimationFrame(loop);
   }
   function start() {
-    if (!reduced && !raf) raf = requestAnimationFrame(loop);
+    if (!still && !raf) raf = requestAnimationFrame(loop);
   }
   function stop() {
     if (raf) cancelAnimationFrame(raf);
@@ -266,7 +280,7 @@
   }
 
   resize();
-  if (reduced) draw();
+  if (still) draw();
   else start();
 
   window.addEventListener("resize", function () {
@@ -276,7 +290,7 @@
   window.addEventListener(
     "scroll",
     function () {
-      if (reduced) draw();
+      if (still) draw();
     },
     { passive: true },
   );
@@ -284,7 +298,7 @@
   let onScreen = true;
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) stop();
-    else if (onScreen && !reduced) start();
+    else if (onScreen && !still) start();
   });
 
   // Sticky, not fixed: before the trigger it scrolls like ordinary content,
@@ -296,7 +310,7 @@
       function (entries) {
         onScreen = entries[entries.length - 1].isIntersecting;
         if (!onScreen) stop();
-        else if (!document.hidden && !reduced) start();
+        else if (!document.hidden && !still) start();
       },
       { rootMargin: "80px" },
     ).observe(canvas);

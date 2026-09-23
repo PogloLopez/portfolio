@@ -85,6 +85,11 @@ a {
   max-width: var(--page-max);
   margin: 0 auto;
   padding-inline: var(--gutter);
+  /* The page reaches under a notch (viewport-fit=cover, see the markup), so
+     the gutter carries whatever the device keeps for itself — nothing on a
+     plain screen, the notch's width when a phone is held sideways. A second
+     declaration, so a browser without env() keeps the plain one above. */
+  padding-inline: calc(var(--gutter) + env(safe-area-inset-left)) calc(var(--gutter) + env(safe-area-inset-right));
 }
 
 /* Section heading, same shape as SectionLabel in the app. */
@@ -476,7 +481,7 @@ a {
    swap showed a 1px step along their bottom edge). Contained, both paint the
    same pixels. The row grows 1.5rem upward (negative margin, extra padding,
    same content box) so a bar at the top of its breath is never clipped. */
-.seq-live .panel .viz--bars .bars {
+.viz-live .panel .viz--bars .bars {
   contain: paint;
   height: calc(100% + 1.5rem);
   margin-top: -1.5rem;
@@ -986,43 +991,46 @@ a {
    reached, and the swap exact to the pixel. */
 
 /* ---------------------------------------------------------------------------
-   Idle viz loops: live mode only, independent of scroll
+   Idle viz loops: wherever motion is allowed, phones included (html.viz-live,
+   set by mode.js), and independent of scroll. These loops are the work's only
+   moving proof, and a phone that showed five frozen pictures read as a page
+   that had failed to load. chrome.js pauses whichever ones are off screen.
 --------------------------------------------------------------------------- */
 
-.seq-live .line__trace {
+.viz-live .line__trace {
   stroke-dasharray: 1 2;
   animation: line-trace 3.5s ease-in-out infinite;
 }
 
-.seq-live .line__tail {
+.viz-live .line__tail {
   animation: tail-pulse 2.4s ease-in-out infinite;
 }
 
-.seq-live .bar {
+.viz-live .bar {
   animation: bar-breathe 2.8s ease-in-out infinite;
   animation-delay: calc(var(--i) * 0.18s);
 }
 
-.seq-live .chat__q {
+.viz-live .chat__q {
   animation: chat-q 4.5s ease-out infinite;
 }
 
-.seq-live .chat__route {
+.viz-live .chat__route {
   animation: chat-route 4.5s ease-out infinite;
 }
 
-.seq-live .chat__typing {
+.viz-live .chat__typing {
   animation: chat-typing 4.5s linear infinite;
 }
 
-.seq-live .chat__typing i {
+.viz-live .chat__typing i {
   animation: typing-dot 0.9s ease-in-out infinite;
 }
 
-.seq-live .chat__typing i:nth-child(2) { animation-delay: 0.15s; }
-.seq-live .chat__typing i:nth-child(3) { animation-delay: 0.3s; }
+.viz-live .chat__typing i:nth-child(2) { animation-delay: 0.15s; }
+.viz-live .chat__typing i:nth-child(3) { animation-delay: 0.3s; }
 
-.seq-live .chat__a {
+.viz-live .chat__a {
   animation: chat-a 4.5s ease-out infinite;
 }
 
@@ -1798,7 +1806,7 @@ a {
   background: var(--accent);
 }
 
-.seq-live .mkt__insight-dot {
+.viz-live .mkt__insight-dot {
   animation: mkt-dot-pulse 2.2s ease-in-out infinite;
 }
 
@@ -1945,7 +1953,7 @@ a {
   transform: translateX(12cqw);
 }
 
-.seq-live .flow__box {
+.viz-live .flow__box {
   animation: flow-cross 3.2s linear infinite;
   animation-delay: calc(var(--i) * 1.05s);
 }
@@ -2271,5 +2279,399 @@ a {
 
   .panel .chat__q {
     max-width: 88%;
+  }
+}
+
+/* ===========================================================================
+   Phones
+
+   The sequence, the cursor tilt and the drifting carousel all belong to a
+   mouse and a wide window. What is left under 780px is a stacked document,
+   and this section is what makes that its own design rather than the desktop
+   one with the moving parts taken out:
+
+   - the five projects keep their pictures, and the pictures keep moving
+     (html.viz-live, set by mode.js; chrome.js runs only the one on screen);
+   - each block arrives as it is scrolled to, the way a panel assembles in
+     the sequence (data-reveal, also chrome.js);
+   - the closing carousel becomes a row you swipe (.mstrip below), because
+     five full cards stacked in a column are the five project blocks over
+     again;
+   - everything you can tap is at least 48px on its short side, with the two
+     page actions the first thing a thumb can reach;
+   - pictures are sized for a screen held in one hand, not scaled down from a
+     desktop layout.
+=========================================================================== */
+
+/* The swipe row: the projects as an index you push through sideways. Hidden
+   from 780px up, where the carousel does this job. */
+.mstrip {
+  display: none;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  padding: 0.25rem var(--gutter) 1.5rem;
+  /* The row is its own scroller; a bar under it would sit in the middle of
+     the page. The peeking edge of the next card is the affordance. */
+  scrollbar-width: none;
+}
+
+.mstrip::-webkit-scrollbar {
+  display: none;
+}
+
+/* The row runs edge to edge, so its own padding is the gutter, notch
+   included. */
+.mstrip {
+  padding-left: calc(var(--gutter) + env(safe-area-inset-left));
+  padding-right: calc(var(--gutter) + env(safe-area-inset-right));
+  scroll-padding-left: calc(var(--gutter) + env(safe-area-inset-left));
+}
+
+.mstrip__item {
+  flex: 0 0 min(78vw, 19rem);
+  scroll-snap-align: start;
+}
+
+.mstrip__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  height: 100%;
+  padding: 1.15rem 1.15rem 1.2rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--fg-2);
+  text-decoration: none;
+}
+
+/* The project's colour along the top edge: the same tell the cards and the
+   pages carry, and the only colour on a card this small. */
+.mstrip__card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, var(--accent), transparent 85%);
+}
+
+.mstrip__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-3);
+}
+
+.mstrip__kicker {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.mstrip__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.mstrip__stat {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--fg-3);
+}
+
+.mstrip__stat b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mstrip__go {
+  margin-top: auto;
+  padding-top: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* The arrival on scroll. Set by chrome.js, never in the markup: without the
+   script every part is simply visible. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition: opacity 0.5s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-reveal="off"] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  [data-reveal="in"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 779.98px) {
+  /* --- The page's shape ------------------------------------------------- */
+
+  /* A phone's gutter is the thumb's margin as much as the layout's. */
+  :root {
+    --gutter: 1.25rem;
+  }
+
+  /* The five projects, one under the other, with air between them rather
+     than the desktop block's padding, which was sized for a screen three
+     times as tall. */
+  .panel {
+    padding-block: clamp(2.5rem, 7vh, 3.5rem);
+  }
+
+  /* The sections' own breathing room, measured for a screen a third the
+     height: the desktop band left a phone scrolling through most of a screen
+     of nothing between the last project and the closing row. */
+  .work,
+  .recap,
+  .contact {
+    padding-block: clamp(2.25rem, 6vh, 3rem);
+  }
+
+  /* --- What you tap ----------------------------------------------------- */
+
+  /* Solid, not tinted: at 92% the page showed through the bar as it scrolled
+     under it, and on a phone the bar sits over the content the whole way
+     down. The safe-area inset keeps it clear of a notch in landscape. */
+  .topbar {
+    background: var(--ground);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .topbar__inner {
+    padding-block: 0.5rem;
+  }
+
+  /* The bar carries one action here, and the name it belongs to. Both of the
+     landing's actions in the bar were the hero's own pair over again, a few
+     hundred pixels above them, on the first screen anyone sees. The project
+     pages keep their "All work", which is navigation rather than a repeat. */
+  .topbar__name {
+    display: block;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    color: var(--fg-2);
+  }
+
+  /* The hero sets the page's tone and then gets out of the way: its foot was
+     a screenful of nothing between the location line and the first project. */
+  .hero__body {
+    padding-block: clamp(2.5rem, 8vh, 4rem) clamp(2.5rem, 8vh, 4rem);
+  }
+
+  .topbar .btn--ghost:not(.btn--back) {
+    display: none;
+  }
+
+  /* 48px on the short side, the size a thumb actually hits, with the arrow
+     dropped so both actions still fit a 320px screen. */
+  .topbar .btn,
+  .hero__actions .btn {
+    min-height: 48px;
+    padding-inline: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .topbar .btn::after {
+    content: none;
+  }
+
+  .panel__cta,
+  .mcard__cta,
+  .contact__cvs a {
+    min-height: 48px;
+    align-items: center;
+  }
+
+  .contact__links a {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* --- The pictures ----------------------------------------------------- */
+
+  /* Sized for a screen held in one hand: about a third of it, so the words
+     above and the picture are taken in together. They were desktop heights,
+     which left a chart filling the screen on its own. */
+  .panel .viz--line,
+  .panel .viz--market,
+  .panel .viz--bars,
+  .panel .viz--flow,
+  .panel--rows .viz:not(.viz--chat) {
+    aspect-ratio: auto;
+    height: min(30vh, 200px);
+  }
+
+  /* The conversations are the exception: they are text, and text has to have
+     the room it needs. Given a fixed height they overflowed their own frame,
+     and the first bubble came to rest on top of the caption above it.
+
+     Their caption is in the flow here rather than floating in the frame's
+     corner (it wraps on a phone), so the frame does not need the band of
+     padding that an absolute caption sits in either. */
+  .panel .viz--chat,
+  .pp-hero .viz--chat {
+    height: auto;
+    min-height: 0;
+    padding-top: 1.1rem;
+  }
+
+  /* Both contexts, not just the landing's: on a 320px screen the caption
+     wraps to two lines wherever it is, and floating in the corner it came to
+     rest on the first bubble. */
+  .viz--chat .viz__caption {
+    position: static;
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+
+  /* --- The small print -------------------------------------------------- */
+
+  /* The mono labels are 11px on a desktop, where they sit at arm's length in
+     a wide frame. Held in a hand they are the smallest thing on the page and
+     the first thing to give up on, so they go up to 12px. */
+  .viz__caption,
+  .chat__route,
+  .chat__src,
+  .flow__label,
+  .eyebrow {
+    font-size: 0.75rem;
+  }
+
+  /* The labels inside a chart are drawn in the picture's own units, so they
+     shrink with it: 11 units in a 480-unit frame 340px wide renders at about
+     7px. These sizes bring them back to roughly the 11px they are meant to
+     be. */
+  .panel .line__mark,
+  .pp-hero .line__mark {
+    font-size: 16px;
+  }
+
+  .panel .mkt__legend,
+  .pp-hero .mkt__legend {
+    font-size: 14px;
+  }
+
+  /* The two legends are placed side by side at a width measured for the
+     desktop size, so the larger type ran the second one into the first.
+     Transforms on SVG text move in the picture's own units, which is what
+     this needs: the same gap between them, at the size actually drawn. */
+  .panel .mkt__legend--internal,
+  .pp-hero .mkt__legend--internal {
+    transform: translateX(16px);
+  }
+
+  /* --- The two figures under a hook ------------------------------------- */
+
+  /* Two columns that keep their rows: a value that wraps to two lines (say
+     "Golden queries") used to push its own label down past the other one,
+     and the pair read as two unrelated things. Subgrid lines the values up
+     with each other and the labels with each other. */
+  .panel__stats,
+  .mcard__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem 1.25rem;
+  }
+
+  .panel__stats .stat,
+  .mcard__stats .stat {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0.25rem;
+  }
+
+  /* The markup reads label, then value (a dl); the value shows on top, as
+     the flex column-reverse does elsewhere. */
+  .panel__stats .stat__value,
+  .mcard__stats .stat__value {
+    grid-row: 1;
+  }
+
+  .panel__stats .stat__label,
+  .mcard__stats .stat__label {
+    grid-row: 2;
+    margin-top: 0;
+  }
+
+  .panel .stat__value {
+    font-size: clamp(1.5rem, 1.1rem + 2.4vw, 2rem);
+  }
+
+  /* --- The closing row -------------------------------------------------- */
+
+  /* The section's own gutter is the row's, so a card starts flush with the
+     heading above it and the row still runs to both edges. */
+  .recap .wrap {
+    padding-inline: var(--gutter);
+  }
+
+  .recap .section-label {
+    margin-bottom: 1.25rem;
+  }
+
+  /* --- Contact ---------------------------------------------------------- */
+
+  .contact {
+    padding-bottom: calc(clamp(3rem, 9vh, 5.5rem) + env(safe-area-inset-bottom));
+  }
+}
+
+/* The carousel or the swipe row, and the test is not only the window's width.
+   The drift, the cursor spotlight and the tilt are a mouse's; on a touch
+   screen the carousel just stands still, which leaves five full project cards
+   stacked in a column — the page repeating itself. Anything touched, at any
+   width, gets the row instead. */
+@media (max-width: 779.98px), (pointer: coarse) {
+  .recap .marquee,
+  .recap .marquee-toggle {
+    display: none;
+  }
+
+  .mstrip {
+    display: flex;
+  }
+}
+
+/* One-handed reach: under 560px the page actions are the widest thing a thumb
+   has to hit, so they share the bar's width instead of huddling in a corner.
+   A project page carries two of them ("All work" and "Contact me"), and there
+   is no room for the name beside both: its own page title is right below, and
+   "All work" leads back to the page the name is on. */
+@media (max-width: 559.98px) {
+  .topbar--project .topbar__actions {
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .topbar--project .topbar__actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .topbar--project .topbar__name {
+    display: none;
   }
 }

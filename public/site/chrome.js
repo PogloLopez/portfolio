@@ -40,7 +40,49 @@
      sequence smooth on a machine with a weak GPU and few cores.
   ------------------------------------------------------------------------- */
 
+  /* On a phone the whole sequence is one tall column of five projects, so the
+     section-wide switch above would keep all five loops running from the
+     first project to the last. Each project block and each carousel card gets
+     its own switch there instead, which is what keeps a phone animating only
+     the one picture its owner is looking at.
+
+     Static layout only: in the pinned sequence the panels are stacked in one
+     sticky stage, where a panel's own box says nothing about whether it can
+     be seen. */
+  var blocks = [].slice.call(document.querySelectorAll(".panel, .mcard, .pp-hero__viz"));
+  var perBlock = false;
+
+  function syncPerBlock() {
+    var on = !document.documentElement.classList.contains("seq-live");
+    if (on === perBlock) return;
+    perBlock = on;
+    blocks.forEach(function (el) {
+      if (on) {
+        el.setAttribute("data-idle", "1");
+        if (blockObserver) blockObserver.observe(el);
+      } else {
+        el.removeAttribute("data-idle");
+        if (blockObserver) blockObserver.unobserve(el);
+      }
+    });
+  }
+
   var idleTargets = [].slice.call(document.querySelectorAll("[data-idle]"));
+  var blockObserver = null;
+
+  if (blocks.length && window.IntersectionObserver) {
+    blockObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          entry.target.setAttribute("data-idle", entry.isIntersecting ? "0" : "1");
+        });
+      },
+      { rootMargin: "120px 0px" },
+    );
+    syncPerBlock();
+    document.addEventListener("seq:mode", syncPerBlock);
+    window.matchMedia("(min-width: 780px)").addEventListener("change", syncPerBlock);
+  }
 
   if (idleTargets.length && window.IntersectionObserver) {
     var idleObserver = new IntersectionObserver(
@@ -64,11 +106,66 @@
     });
   }
 
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  /* -------------------------------------------------------------------------
+     Arrival on scroll (static layout only).
+
+     With the pinned sequence a project assembles itself as you scrub into it.
+     A phone gets the plain stacked layout instead, and five blocks that are
+     simply there, fully formed, before you reach them read as a long document
+     rather than as work being shown to you. Each block's parts now rise into
+     place as it comes up the screen: the same move as the sequence's, once
+     per part, transform and opacity only.
+
+     Hidden from JavaScript, never from the markup: with the script blocked,
+     or reduced motion asked for, every part is visible from the first paint.
+  ------------------------------------------------------------------------- */
+
+  var REVEAL =
+    ".panel [data-part], .pp-story__body > *, .pp-demo__live, .pp-more__inner > *, .recap .section-label, .mstrip";
+  var revealObserver = null;
+
+  function startReveals() {
+    if (revealObserver || reduced.matches || !window.IntersectionObserver) return;
+    if (document.documentElement.classList.contains("seq-live")) return;
+    var parts = [].slice.call(document.querySelectorAll(REVEAL));
+    if (!parts.length) return;
+    revealObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.setAttribute("data-reveal", "in");
+          revealObserver.unobserve(entry.target);
+        });
+      },
+      // Bottom margin: a block starts arriving just before its top edge clears
+      // the fold, so it is settled by the time it is properly on screen.
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.01 },
+    );
+    parts.forEach(function (el) {
+      // Anything already on screen at load keeps its place: an arrival the
+      // reader never sees is just a flash.
+      var r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.9) return;
+      el.setAttribute("data-reveal", "off");
+      // A short stagger inside each block, so the parts land in reading order.
+      var siblings = el.parentNode ? [].slice.call(el.parentNode.children) : [];
+      var n = Math.min(siblings.indexOf(el), 5);
+      if (n > 0) el.style.transitionDelay = n * 70 + "ms";
+      revealObserver.observe(el);
+    });
+  }
+
+  startReveals();
+  // A window narrowed past the sequence's threshold drops to the same stacked
+  // layout, and gets the same arrivals from there on.
+  document.addEventListener("seq:mode", startReveals);
+
   /* -------------------------------------------------------------------------
      Anchor scrolling that clears the fixed bar, and respects reduced motion.
   ------------------------------------------------------------------------- */
 
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   document.addEventListener("click", function (e) {
     var link = e.target.closest ? e.target.closest('a[href^="#"]') : null;

@@ -36,7 +36,7 @@ export function Select<T extends string>({
           borderColor: "color-mix(in srgb, var(--accent, var(--color-iris)) 45%, transparent)",
           backgroundColor: "color-mix(in srgb, var(--accent, var(--color-iris)) 8%, transparent)",
         }}
-        className="w-full appearance-none rounded-lg border py-2.5 pr-9 pl-3 text-sm font-medium text-fg transition-all hover:brightness-125 focus:outline-none"
+        className="min-h-11 w-full appearance-none rounded-lg border py-2.5 pr-9 pl-3 text-base font-medium text-fg transition-all hover:brightness-125 focus:outline-none sm:min-h-0 sm:text-sm"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-surface-2 text-fg">
@@ -80,7 +80,7 @@ export function Toggle({
         borderColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${checked ? 100 : 45}%, transparent)`,
         backgroundColor: `color-mix(in srgb, var(--accent, var(--color-iris)) ${checked ? 18 : 8}%, transparent)`,
       }}
-      className={`inline-flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all hover:brightness-125 ${
+      className={`inline-flex min-h-11 items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all hover:brightness-125 sm:min-h-0 ${
         checked ? "text-fg" : "text-fg-2"
       }`}
     >
@@ -139,7 +139,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       style={style}
-      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 ${styles}`}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-0 ${styles}`}
     >
       {children}
     </button>
@@ -169,7 +169,7 @@ export function Segmented<T extends string>({
           role="tab"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+          className={`min-h-11 rounded-md px-3 py-1.5 text-sm transition-colors sm:min-h-0 ${
             value === o.value ? "bg-white/10 text-fg" : "text-fg-3 hover:text-fg-2"
           }`}
         >
