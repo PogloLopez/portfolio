@@ -2446,7 +2446,7 @@ a {
 
   /* Solid, not tinted: at 92% the page showed through the bar as it scrolled
      under it, and on a phone the bar sits over the content the whole way
-     down. The safe-area inset keeps it clear of a notch in landscape. */
+     down. */
   .topbar {
     background: var(--ground);
     /* The page is drawn under the status bar and the island
